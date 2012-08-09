@@ -3,17 +3,18 @@
 
 #include <stdint.h>
 
-
-
 #define MMU_CTRL_MMU_EN             (1 << 0)
+#define MMU_CTRL_MMU_DES            (0 << 0)
 #define MMU_CTRL_ALIGN_FAULT_EN     (1 << 1)
 #define MMU_CTRL_D_CACHE_EN         (1 << 2)
+#define MMU_CTRL_D_CACHE_DEN        (0 << 2)
 #define MMU_CTRL_DEFAULT            (0xf << 3)
 #define MMU_CTRL_LITTLE_ENDIAN      (0 << 7)
 #define MMU_CTRL_BIG_ENDIAN         (1 << 7)
 #define MMU_CTRL_SYS_PROT           (1 << 8)
 #define MMU_CTRL_ROM_PROT           (1 << 9)
 #define MMU_CTRL_I_CACHE_EN         (1 << 12)
+#define MMU_CTRL_I_CACHE_DES        (0 << 12)
 #define MMU_CTRL_LOW_VECT           (0 << 13)
 #define MMU_CTRL_HIGH_VECT          (1 << 13)
 
@@ -70,13 +71,14 @@ extern uint32_t _ttbl_base;
 
 /* This Control Structure applies for most ARM architectures */
 typedef struct{
+uint32_t vAddress;
 uint32_t ptAdress;  /* physical address for page table lvl2 or lvl1 controlling a region */
 uint32_t ptlvl1Adress; /* physical address for  level 1 page table */
-uint16_t pageNumbers /* Number of used PTEs from this page table */
+uint16_t pagesNumber /* Number of used PTEs from this page table */
 pt_type  type; /* lvl2 , lvl1 */
 uint8_t  AP;
 uint8_t  CB;
 uint8_t domain;
-} arm_bsp;
+} arm_bsp_mm_mpe;
 
 #endif 

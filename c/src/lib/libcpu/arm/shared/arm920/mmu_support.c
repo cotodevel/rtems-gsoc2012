@@ -89,7 +89,13 @@ static inline rtems_status_code arm_PT_Delete(arm_bsp_mm_mpe *);
 static inline rtems_status_code arm_PT_Change_Attr(arm_bsp_mm_mpe *,uint32_t AP, uint32_t CB);
 
 /* Verify that size must is multiple of page size */
-inline rtems_status_code _CPU_Memory_management_Verify_size(uint32_t size);
+inline rtems_status_code _CPU_Memory_management_Verify_size(uint32_t size)
+{
+  if ( (size % MMU_SECT_SIZE) != 0)
+    return RTEMS_INVALID_SIZE;
+
+  return RTEMS_SUCCESSFUL;
+}
 
 /* Verify that size must is multiple of page size */
 inline rtems_status_code _CPU_Memory_management_Initialize(uint32_t size)
@@ -145,29 +151,64 @@ rtems_status_code _CPU_Memory_management_Install_MPE(
 )
 {
   arm_bsp_mm_mpe *cpu_mpe;
-  mmu_lvl2_t     *lvl2_pt;
-  int             numPages;
-  size_t          size;
-  lvl2_pt = arm_PT_Allocate();
-  
-  if ( lvl2_pt == NULL ) 
-    return RTEMS_UNSATISFIED;
-  
+  mmu_lvl1_t     *lvl1_pt;
+  int             sectionsNumber; /* 1MB sections */
+  size_t          size; /* per Byte */
+  uint32_t        vAddress;
+  int             PTEIndex;
+  uint32_t        paddr;
+
+  lvl1_pt = (mmu_lvl1_t *) _ttbl_base; 
+  PTEIndex = ((mpe->region.base & 0xfff00000) >> 20);
+  paddr = (mpe->region.base & 0xfff00000);  
+  size = mpe->region.size;
+
   cpu_mpe = (arm_bsp_mm_mpe *) malloc(sizeof(arm_bsp_mm_mpe));
 
   if ( cpu_mpe == NULL )
-    return RTEMS_UNSATISFIED;
+    return RTEMS_NO_MEMORY;
 
-  size = mpe->region.size;
+  sectionsNumber = (size / MMU_SECT_SIZE);
+ 
+  /* flush the cache and TLB */
+  arm_cp15_cache_invalidate();
+  arm_cp15_tlb_invalidate(); 
 
-  numPages =  (size / 0x1000);
+  /*  I & D caches turned off */
+  arm_cp15_set_control(MMU_CTRL_DEFAULT |
+                       MMU_CTRL_D_CACHE_DES |
+                       MMU_CTRL_I_CACHE_DES |
+                       MMU_CTRL_ALIGN_FAULT_EN |
+                       MMU_CTRL_LITTLE_ENDIAN |
+                       MMU_CTRL_MMU_DES);
 
-  if ( size % 0x1000 != 0 ) 
-    numPages++; /*align to 4KB pages */
+  /* Set AP for this region to NO ACCESS */
 
-  /* TODO: Check if size exceeds page table limit and allocate another one 
-   * for it, also embed the number of page table allocated to this region at
-   * arm_bsp_mm_mpe 
-   */
+  int i;
+  for ( i = 0; i < numPages; i++) {
+    uint32_t paddr_base = paddr;
+    paddr_base = (i<<20) + paddr;
+
+    lvl1_pt[PTEIndex++] = MMU_SET_LVL1_SECT(paddr_base,
+                                            ARM_MMU_AP_NO_ACCESS,
+                                            0,
+                                            1,
+                                            0);
+  }
+  cpu_mpe->vAddress = mpe->region.base;
+  /* for level 1 page table ptAddress is the same as ptlvl1Adress */
+  cpu_mpe->ptAddress = lvl1_pt;
+  cpu_mpe->ptlvl1Adress = lvl1_pt;
+  cpu_mpe->pagesNumber = sectionsNumber;
+  cpu_mpe->type = LVL1_PT; /* Default value now */
+  cpu_mpe->AP   = ARM_MMU_AP_NO_ACCESS; /* Default when installing entry */
+  cpu_mpe->CB   = ARM_MMU_WT; /* Default */
+  /* TODO: Domain may be defined as read only, write.. and any page may
+   * be attached to it */  
+  cpu_mpe->domain = 0; 
+
+  /* install a pointer to high-level API to bsp_mm_mpe */
+  mpe->cpu_mpe = cpu_mpe;
   
+  return RTEMS_SUCCESSFUL;
 }
