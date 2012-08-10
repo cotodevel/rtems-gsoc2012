@@ -20,7 +20,14 @@ extern uint32_t _ttbl_base;
  */
 static inline rtems_status_code _CPU_Memory_management_Delete_MPE(rtems_memory_management_entry *mpe)
 {
+  arm_bsp_mm_mpe *arm_mpe;
+  arm_mpe = mpe->cpu_mpe;
+  if ( arm_mpe == NULL )
+    return RTEMS_NO_MEMORY;
 
+  free(arm_mpe);
+
+  return RTEMS_SUCCESFUL;
 }
 
 /* Changing Page table attributes to new attributes */
@@ -88,7 +95,7 @@ rtems_status_code _CPU_Memory_management_Install_MPE(
   rtems_memory_management_entry *mpe
 )
 {
-  arm_bsp_mm_mpe *cpu_mpe;
+  arm_bsp_mm_mpe *arm_mpe;
   mmu_lvl1_t     *lvl1_pt;
   int             sectionsNumber; /* 1MB sections */
   size_t          size; /* per Byte */
@@ -103,7 +110,7 @@ rtems_status_code _CPU_Memory_management_Install_MPE(
 
   cpu_mpe = (arm_bsp_mm_mpe *) malloc(sizeof(arm_bsp_mm_mpe));
 
-  if ( cpu_mpe == NULL )
+  if ( arm_mpe == NULL )
     return RTEMS_NO_MEMORY;
 
   sectionsNumber = (size / MMU_SECT_SIZE);
@@ -133,20 +140,20 @@ rtems_status_code _CPU_Memory_management_Install_MPE(
                                             1,
                                             0);
   }
-  cpu_mpe->vAddress = mpe->region.base;
+  arm_mpe->vAddress = mpe->region.base;
   /* for level 1 page table ptAddress is the same as ptlvl1Adress */
-  cpu_mpe->ptAddress = lvl1_pt;
-  cpu_mpe->ptlvl1Adress = lvl1_pt;
-  cpu_mpe->pagesNumber = sectionsNumber;
-  cpu_mpe->type = LVL1_PT; /* Default value now */
-  cpu_mpe->AP   = ARM_MMU_AP_NO_ACCESS; /* Default when installing entry */
-  cpu_mpe->CB   = ARM_MMU_WT; /* Default */
+  arm_mpe->ptAddress = lvl1_pt;
+  arm_mpe->ptlvl1Adress = lvl1_pt;
+  arm_mpe->pagesNumber = sectionsNumber;
+  arm_mpe->type = LVL1_PT; /* Default value now */
+  arm_mpe->AP   = ARM_MMU_AP_NO_ACCESS; /* Default when installing entry */
+  arm_mpe->CB   = ARM_MMU_WT; /* Default */
   /* TODO: Domain may be defined as read only, write.. and any page may
    * be attached to it */  
-  cpu_mpe->domain = 0; 
+  arm_mpe->domain = 0; 
 
   /* install a pointer to high-level API to bsp_mm_mpe */
-  mpe->cpu_mpe = cpu_mpe;
+  mpe->cpu_mpe = arm_mpe;
   
   /* flush the cache and TLB */
   arm_cp15_cache_invalidate();
@@ -180,7 +187,7 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
 
   arm_mpe = (arm_bsp_mm_mpe *) mpe->cpu_mpe;
 
-  if ( cpu_mpe == NULL )
+  if ( arm_mpe == NULL )
     return RTEMS_UNSATISFIED;
 
   sectionsNumber = arm_mpe->pagesNumber;
@@ -215,8 +222,8 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
   }
 
 
-  cpu_mpe->AP   = ARM_MMU_AP_NO_ACCESS; /* Default */
-  cpu_mpe->CB   = ARM_MMU_WT; /* Default */
+  arm_mpe->AP   = ARM_MMU_AP_NO_ACCESS; /* Default */
+  arm_mpe->CB   = ARM_MMU_WT; /* Default */
 
     /* flush the cache and TLB */
   arm_cp15_cache_invalidate();
