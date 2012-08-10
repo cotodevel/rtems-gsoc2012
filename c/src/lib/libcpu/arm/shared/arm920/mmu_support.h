@@ -7,7 +7,7 @@
 #define MMU_CTRL_MMU_DES            (0 << 0)
 #define MMU_CTRL_ALIGN_FAULT_EN     (1 << 1)
 #define MMU_CTRL_D_CACHE_EN         (1 << 2)
-#define MMU_CTRL_D_CACHE_DEN        (0 << 2)
+#define MMU_CTRL_D_CACHE_DES        (0 << 2)
 #define MMU_CTRL_DEFAULT            (0xf << 3)
 #define MMU_CTRL_LITTLE_ENDIAN      (0 << 7)
 #define MMU_CTRL_BIG_ENDIAN         (1 << 7)
@@ -66,8 +66,6 @@ typedef enum { LVL1_PT, LVL2_PT } pt_type;
 
 typedef uint32_t mmu_lvl1_t;
 typedef uint32_t mmu_lvl2_t;
-
-extern uint32_t _ttbl_base;
 
 /* This Control Structure applies for most ARM architectures */
 typedef struct{
