@@ -70,12 +70,12 @@ typedef uint32_t mmu_lvl2_t;
 /* This Control Structure applies for most ARM architectures */
 typedef struct{
 uint32_t vAddress;
-uint32_t ptAdress;  /* physical address for page table lvl2 or lvl1 controlling a region */
-uint32_t ptlvl1Adress; /* physical address for  level 1 page table */
-uint16_t pagesNumber /* Number of used PTEs from this page table */
+uint32_t ptAddress;  /* physical address for page table lvl2 or lvl1 controlling a region */
+uint32_t ptlvl1Address; /* physical address for  level 1 page table */
+uint16_t pagesNumber; /* Number of used PTEs from this page table */
 pt_type  type; /* lvl2 , lvl1 */
-uint8_t  AP;
-uint8_t  CB;
+uint8_t  ap;
+uint8_t  cb;
 uint8_t domain;
 } arm_bsp_mm_mpe;
 

@@ -1,5 +1,3 @@
-#ifndef _RTEMS_MMUSUPPORT_H
-#define _RTEMS_MMUSUPPORT_H
 /*
  * COPYRIGHT (c) 1989-2011.
  * On-Line Applications Research Corporation (OAR).
@@ -11,7 +9,7 @@
 #include <libcpu/arm-cp15.h>
 #include <rtems/rtems/status.h>
 #include "mmu_support.h"
-
+#include <libcpu/memorymanagement.h>
 extern uint32_t _ttbl_base;
 
 
@@ -27,11 +25,85 @@ static inline rtems_status_code _CPU_Memory_management_Delete_MPE(rtems_memory_m
 
   free(arm_mpe);
 
-  return RTEMS_SUCCESFUL;
+  return RTEMS_SUCCESSFUL;
 }
 
 /* Changing Page table attributes to new attributes */
-static inline rtems_status_code arm_PT_Change_Attr(arm_bsp_mm_mpe *,uint32_t AP, uint32_t CB);
+static inline rtems_status_code arm_Region_Change_Attr(arm_bsp_mm_mpe *mpe,uint32_t AP, uint32_t CB)
+{
+  mmu_lvl1_t     *lvl1_pt;
+  int             sectionsNumber; /* 1MB sections */
+  uint32_t        vAddress;
+  int             PTEIndex;
+  uint32_t        paddr;
+  
+  sectionsNumber = mpe->pagesNumber;
+  
+  lvl1_pt = (mmu_lvl1_t *) _ttbl_base;
+  PTEIndex = ((mpe->vAddress & 0xfff00000) >> 20);
+  paddr = (mpe->vAddress & 0xfff00000);
+  
+  /* flush the cache and TLB */
+  arm_cp15_cache_invalidate();
+  arm_cp15_tlb_invalidate();
+
+  /*  I & D caches turned off */
+  arm_cp15_set_control(MMU_CTRL_DEFAULT |
+                       MMU_CTRL_D_CACHE_DES |
+                       MMU_CTRL_I_CACHE_DES |
+                       MMU_CTRL_ALIGN_FAULT_EN |
+                       MMU_CTRL_LITTLE_ENDIAN |
+                       MMU_CTRL_MMU_DES);
+
+  int c = 0;
+  int b = 0;
+
+  switch (CB) {
+        case ARM_MMU_cb:
+            c = 0;
+            b = 0;
+            break;
+        case ARM_MMU_cB:
+            c = 0;
+            b = 1;
+            break;
+        case ARM_MMU_WT:
+            c = 1;
+            b = 0;
+            break;
+        case ARM_MMU_WB:
+            c = 1;
+            b = 1;
+            break;
+        }
+  /* Return AP/CB for this region to defaults */
+  int i;
+  for ( i = 0; i < sectionsNumber; i++) {
+    uint32_t paddr_base = paddr;
+    paddr_base = (i<<20) + paddr;
+    lvl1_pt[PTEIndex++] = MMU_SET_LVL1_SECT(paddr_base,
+                                            AP,
+                                            0,
+                                            c,
+                                            b);
+  }
+
+  mpe->ap = AP; /* Default when installing entry */
+  mpe->cb = CB; /* Default */
+
+    /* flush the cache and TLB */
+  arm_cp15_cache_invalidate();
+  arm_cp15_tlb_invalidate();
+
+  /*  I & D caches turned on */
+  arm_cp15_set_control(MMU_CTRL_DEFAULT |
+                       MMU_CTRL_D_CACHE_EN |
+                       MMU_CTRL_I_CACHE_EN |
+                       MMU_CTRL_ALIGN_FAULT_EN |
+                       MMU_CTRL_LITTLE_ENDIAN |
+                       MMU_CTRL_MMU_EN);
+  return RTEMS_SUCCESSFUL;
+}
 
 /* Verify that size must is multiple of page size */
 inline rtems_status_code _CPU_Memory_management_Verify_size(uint32_t size)
@@ -43,7 +115,7 @@ inline rtems_status_code _CPU_Memory_management_Verify_size(uint32_t size)
 }
 
 /* Verify that size must is multiple of page size */
-inline rtems_status_code _CPU_Memory_management_Initialize(uint32_t size)
+inline rtems_status_code _CPU_Memory_management_Initialize(void)
 {
   mmu_lvl1_t *lvl1_base;
 
@@ -104,11 +176,11 @@ rtems_status_code _CPU_Memory_management_Install_MPE(
   uint32_t        paddr;
 
   lvl1_pt = (mmu_lvl1_t *) _ttbl_base; 
-  PTEIndex = ((mpe->region.base & 0xfff00000) >> 20);
-  paddr = (mpe->region.base & 0xfff00000);  
+  PTEIndex = ((((uint32_t)mpe->region.base) & 0xfff00000) >> 20);
+  paddr = ((((uint32_t)mpe->region.base)) & 0xfff00000);  
   size = mpe->region.size;
 
-  cpu_mpe = (arm_bsp_mm_mpe *) malloc(sizeof(arm_bsp_mm_mpe));
+  arm_mpe = (arm_bsp_mm_mpe *) malloc(sizeof(arm_bsp_mm_mpe));
 
   if ( arm_mpe == NULL )
     return RTEMS_NO_MEMORY;
@@ -141,13 +213,13 @@ rtems_status_code _CPU_Memory_management_Install_MPE(
                                             0);
   }
   arm_mpe->vAddress = mpe->region.base;
-  /* for level 1 page table ptAddress is the same as ptlvl1Adress */
+  /* for level 1 page table ptAddress is the same as ptlvl1Address */
   arm_mpe->ptAddress = lvl1_pt;
-  arm_mpe->ptlvl1Adress = lvl1_pt;
+  arm_mpe->ptlvl1Address = lvl1_pt;
   arm_mpe->pagesNumber = sectionsNumber;
   arm_mpe->type = LVL1_PT; /* Default value now */
-  arm_mpe->AP   = ARM_MMU_AP_NO_ACCESS; /* Default when installing entry */
-  arm_mpe->CB   = ARM_MMU_WT; /* Default */
+  arm_mpe->ap   = ARM_MMU_AP_NO_ACCESS; /* Default when installing entry */
+  arm_mpe->cb   = ARM_MMU_WT; /* Default */
   /* TODO: Domain may be defined as read only, write.. and any page may
    * be attached to it */  
   arm_mpe->domain = 0; 
@@ -177,7 +249,7 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
   rtems_memory_management_entry *mpe
 )
 {
-  arm_bsp_mm_mpe *cpu_mpe;
+  arm_bsp_mm_mpe *arm_mpe;
   mmu_lvl1_t     *lvl1_pt;
   int             sectionsNumber; /* 1MB sections */
   size_t          size; /* per Byte */
@@ -193,8 +265,8 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
   sectionsNumber = arm_mpe->pagesNumber;
   
   lvl1_pt = (mmu_lvl1_t *) _ttbl_base;
-  PTEIndex = ((mpe->region.base & 0xfff00000) >> 20);
-  paddr = (mpe->region.base & 0xfff00000);
+  PTEIndex = ((((uint32_t)mpe->region.base) & 0xfff00000) >> 20);
+  paddr = (((uint32_t)mpe->region.base) & 0xfff00000);
   
   /* flush the cache and TLB */
   arm_cp15_cache_invalidate();
@@ -208,7 +280,7 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
                        MMU_CTRL_LITTLE_ENDIAN |
                        MMU_CTRL_MMU_DES);
 
-  /* Return AP/CB for this region to defaults */
+  /* Return ap/CB for this region to defaults */
   int i;
   for ( i = 0; i < sectionsNumber; i++) {
     uint32_t paddr_base = paddr;
@@ -222,8 +294,8 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
   }
 
 
-  arm_mpe->AP   = ARM_MMU_AP_NO_ACCESS; /* Default */
-  arm_mpe->CB   = ARM_MMU_WT; /* Default */
+  arm_mpe->ap   = ARM_MMU_AP_NO_ACCESS; /* Default */
+  arm_mpe->cb   = ARM_MMU_WT; /* Default */
 
     /* flush the cache and TLB */
   arm_cp15_cache_invalidate();
@@ -238,3 +310,4 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
                        MMU_CTRL_MMU_EN);
   return RTEMS_SUCCESSFUL;
 }
+
