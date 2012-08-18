@@ -39,7 +39,7 @@ static inline rtems_status_code arm_Region_Change_Attr(arm_bsp_mm_mpe *mpe,uint3
   
   sectionsNumber = mpe->pagesNumber;
   
-  lvl1_pt = (mmu_lvl1_t *) _ttbl_base;
+  lvl1_pt = (mmu_lvl1_t *) &_ttbl_base;
   PTEIndex = ((mpe->vAddress & 0xfff00000) >> 20);
   paddr = (mpe->vAddress & 0xfff00000);
   
@@ -126,10 +126,11 @@ inline rtems_status_code _CPU_Memory_management_Initialize(void)
   /* set manage mode access for all domains */
   arm_cp15_set_domain_access_control(0xffffffff);
 
-  lvl1_base = (mmu_lvl1_t *) _ttbl_base;
+  lvl1_base = (mmu_lvl1_t *) &_ttbl_base;
 
   /* set up the trans table */
-  mmu_set_map_inval(lvl1_base);
+  //
+  //mmu_set_map_inval(lvl1_base);
   arm_cp15_set_translation_table_base(lvl1_base);
 
   /* fill level 1 pagetable with no protection slots, Cache through attributes
@@ -175,7 +176,7 @@ rtems_status_code _CPU_Memory_management_Install_MPE(
   int             PTEIndex;
   uint32_t        paddr;
 
-  lvl1_pt = (mmu_lvl1_t *) _ttbl_base; 
+  lvl1_pt = (mmu_lvl1_t *) &_ttbl_base; 
   PTEIndex = ((((uint32_t)mpe->region.base) & 0xfff00000) >> 20);
   paddr = ((((uint32_t)mpe->region.base)) & 0xfff00000);  
   size = mpe->region.size;
@@ -264,7 +265,7 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
 
   sectionsNumber = arm_mpe->pagesNumber;
   
-  lvl1_pt = (mmu_lvl1_t *) _ttbl_base;
+  lvl1_pt = (mmu_lvl1_t *) &_ttbl_base;
   PTEIndex = ((((uint32_t)mpe->region.base) & 0xfff00000) >> 20);
   paddr = (((uint32_t)mpe->region.base) & 0xfff00000);
   
@@ -308,6 +309,18 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
                        MMU_CTRL_ALIGN_FAULT_EN |
                        MMU_CTRL_LITTLE_ENDIAN |
                        MMU_CTRL_MMU_EN);
+  return RTEMS_SUCCESSFUL;
+}
+
+rtems_status_code _CPU_Memory_management_Set_read_only(
+    rtems_memory_management_entry *mpe
+){
+  return RTEMS_SUCCESSFUL;
+}
+
+rtems_status_code _CPU_Memory_management_Set_write(
+    rtems_memory_management_entry *mpe
+){
   return RTEMS_SUCCESSFUL;
 }
 
