@@ -315,12 +315,14 @@ rtems_status_code _CPU_Memory_management_UnInstall_MPE(
 rtems_status_code _CPU_Memory_management_Set_read_only(
     rtems_memory_management_entry *mpe
 ){
-  return RTEMS_SUCCESSFUL;
+  arm_bsp_mm_mpe *arm_mpe = (arm_bsp_mm_mpe *)(mpe->cpu_mpe);
+  return arm_Region_Change_Attr(arm_mpe, ARM_MMU_AP_USER_READ_ONLY, ARM_MMU_WT);
 }
 
 rtems_status_code _CPU_Memory_management_Set_write(
     rtems_memory_management_entry *mpe
 ){
-  return RTEMS_SUCCESSFUL;
+  arm_bsp_mm_mpe *arm_mpe = (arm_bsp_mm_mpe *)(mpe->cpu_mpe);
+  return arm_Region_Change_Attr(arm_mpe, ARM_MMU_AP_NOPR, ARM_MMU_WT);
 }
 
