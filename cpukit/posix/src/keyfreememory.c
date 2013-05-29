@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief POSIX Function Keys Free Memory 
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2010.
  *  On-Line Applications Research Corporation (OAR).

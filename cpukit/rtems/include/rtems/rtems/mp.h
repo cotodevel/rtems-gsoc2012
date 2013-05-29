@@ -1,16 +1,21 @@
 /**
  * @file rtems/rtems/mp.h
  *
- *  This include file contains all the constants and structures associated
- *  with the Multiprocessing Manager.
+ * @defgroup ClassicMP Multiprocessing
+ *
+ * @ingroup ClassicRTEMS
+ * @brief Multiprocessing Manager
+ *
+ * This include file contains all the constants and structures associated
+ * with the Multiprocessing Manager.
  */
 
-/*  COPYRIGHT (c) 1989-2008.
- *  On-Line Applications Research Corporation (OAR).
+/* COPYRIGHT (c) 1989-2008.
+ * On-Line Applications Research Corporation (OAR).
  *
- *  The license and distribution terms for this file may be
- *  found in the file LICENSE in this distribution or at
- *  http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef _RTEMS_RTEMS_MP_H
@@ -30,14 +35,14 @@ extern "C" {
 #endif
 
 /**
- *  @brief Multiprocessing_Manager_initialization
+ *  @brief Multiprocessing Manager Initialization
  *
  *  This routine performs the initialization necessary for this manager.
  */
 void _Multiprocessing_Manager_initialization ( void );
 
 /**
- *  @brief rtems_multiprocessing_announce
+ *  @brief RTEMS Multiprocessing Announce
  *
  *  This routine implements the MULTIPROCESSING_ANNOUNCE directive.
  *  It is invoked by the MPCI layer to indicate that an MPCI packet

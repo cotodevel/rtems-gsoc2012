@@ -1,6 +1,8 @@
 /**
- * @file rtems/dumpbuf.h
+ * @file
  *
+ * @brief Print a Memory Buffer
+ * 
  * This file defines the interface to the RTEMS methods to print a
  * memory buffer in a style similar to many ROM monitors and debuggers.
  */
@@ -17,19 +19,25 @@
 #ifndef __DUMP_BUFFER_h
 #define __DUMP_BUFFER_h
 
+/**
+ *  @defgroup libmisc_dumpbuf Print Memory Buffer
+ *
+ *  @ingroup libmisc
+ */
+/**@{*/
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- *  @brief Print Memory Buffer
+ * @brief Print memory buffer.
  *
- *  This method prints @a length bytes beginning at @a buffer in
- *  a nice format similar to what one would expect from a debugger
- *  or ROM monitor.
+ * This method prints @a length bytes beginning at @a buffer in
+ * a nice format similar to what one would expect from a debugger
+ * or ROM monitor.
  *
- *  @param[in] buffer is the address of the buffer
- *  @param[in] length is the length of the buffer
+ * @param[in] buffer is the address of the buffer
+ * @param[in] length is the length of the buffer
  */
 void rtems_print_buffer(
   const unsigned char *buffer,
@@ -39,6 +47,6 @@ void rtems_print_buffer(
 #ifdef __cplusplus
 }
 #endif
-
+/**@}*/
 #endif
 /* end of include file */

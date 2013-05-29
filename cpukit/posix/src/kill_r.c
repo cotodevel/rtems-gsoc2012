@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Send a Signal to a Process
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  3.3.2 Send a Signal to a Process, P1003.1b-1993, p. 68
  *
@@ -18,7 +25,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 
 #if defined(RTEMS_NEWLIB)
 

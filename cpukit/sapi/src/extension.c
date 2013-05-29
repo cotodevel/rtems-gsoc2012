@@ -1,3 +1,11 @@
+/**
+ * @file
+ *
+ * @brief Initialize Extension Manager
+ *
+ * @ingroup ClassicUserExtensions
+ */
+
 /*
  *  Extension Manager
  *
@@ -20,23 +28,13 @@
 #include <rtems/score/thread.h>
 #include <rtems/extension.h>
 
-/*
- *  _Extension_Manager_initialization
- *
- *  This routine initializes all extension manager related data structures.
- *
- *  Input parameters:   NONE
- *
- *  Output parameters:  NONE
- */
-
 void _Extension_Manager_initialization(void)
 {
   _Objects_Initialize_information(
     &_Extension_Information,
     OBJECTS_CLASSIC_API,                 /* object API */
     OBJECTS_RTEMS_EXTENSIONS,
-    Configuration.maximum_extensions,
+    rtems_configuration_get_maximum_extensions(),
     sizeof( Extension_Control ),
     false,                     /* true if the name is a string */
     RTEMS_MAXIMUM_NAME_LENGTH  /* maximum length of an object name */

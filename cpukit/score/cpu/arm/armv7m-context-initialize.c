@@ -1,3 +1,9 @@
+/**
+ *  @file
+ *
+ *  @brief CPU Initialize Context
+ */
+
 /*
  * Copyright (c) 2011 Sebastian Huber.  All rights reserved.
  *
@@ -18,11 +24,10 @@
 
 #include <string.h>
 
+#include <rtems/score/armv7m.h>
 #include <rtems/score/thread.h>
 
 #ifdef ARM_MULTILIB_ARCH_V7M
-
-#include <rtems/score/armv7m.h>
 
 void _CPU_Context_Initialize(
   Context_Control *context,

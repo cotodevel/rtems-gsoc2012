@@ -28,12 +28,21 @@
 static void _Heap_Free_block( Heap_Control *heap, Heap_Block *block )
 {
   Heap_Statistics *const stats = &heap->stats;
+  Heap_Block *first_free;
 
   /* Statistics */
   ++stats->used_blocks;
   --stats->frees;
 
-  _Heap_Free( heap, (void *) _Heap_Alloc_area_of_block( block ));
+  /*
+   * The _Heap_Free() will place the block to the head of free list.  We want
+   * the new block at the end of the free list.  So that initial and earlier
+   * areas are consumed first.
+   */
+  _Heap_Free( heap, (void *) _Heap_Alloc_area_of_block( block ) );
+  first_free = _Heap_Free_list_first( heap );
+  _Heap_Free_list_remove( first_free );
+  _Heap_Free_list_insert_before( _Heap_Free_list_tail( heap ), first_free );
 }
 
 static void _Heap_Merge_below(
@@ -108,11 +117,11 @@ static void _Heap_Link_above(
   last_block->size_and_flag |= HEAP_PREV_BLOCK_USED;
 }
 
-bool _Heap_Extend(
+uintptr_t _Heap_Extend(
   Heap_Control *heap,
   void *extend_area_begin_ptr,
   uintptr_t extend_area_size,
-  uintptr_t *extended_size_ptr
+  uintptr_t unused __attribute__((unused))
 )
 {
   Heap_Statistics *const stats = &heap->stats;
@@ -134,7 +143,7 @@ bool _Heap_Extend(
   bool extend_area_ok = false;
 
   if ( extend_area_end < extend_area_begin ) {
-    return false;
+    return 0;
   }
 
   extend_area_ok = _Heap_Get_first_and_last_block(
@@ -147,7 +156,7 @@ bool _Heap_Extend(
   );
   if (!extend_area_ok ) {
     /* For simplicity we reject extend areas that are too small */
-    return false;
+    return 0;
   }
 
   do {
@@ -160,7 +169,7 @@ bool _Heap_Extend(
     if (
       sub_area_end > extend_area_begin && extend_area_end > sub_area_begin
     ) {
-      return false;
+      return 0;
     }
 
     if ( extend_area_end == sub_area_begin ) {
@@ -234,8 +243,5 @@ bool _Heap_Extend(
   /* Statistics */
   stats->size += extended_size;
 
-  if ( extended_size_ptr != NULL )
-    *extended_size_ptr = extended_size;
-
-  return true;
+  return extended_size;
 }

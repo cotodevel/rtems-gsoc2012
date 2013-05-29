@@ -313,7 +313,7 @@ static BSP_START_TEXT_SECTION void lpc17xx_set_pll(
 
     /* Set the CCLK, PCLK and EMCCLK divider */
     scb->cclksel = cclksel_cclkdiv;
-    scb->pclksel = LPC17XX_SCB_PCLKSEL_PCLKDIV(LPC24XX_PCLKDIV);
+    scb->pclksel = LPC17XX_SCB_PCLKSEL_PCLKDIV(cclkdiv * LPC24XX_PCLKDIV);
     scb->emcclksel = LPC24XX_EMCCLKDIV == 1 ? 0 : LPC17XX_SCB_EMCCLKSEL_EMCDIV;
 
     /* Enable PLL */
@@ -527,6 +527,7 @@ BSP_START_TEXT_SECTION void bsp_start_hook_1(void)
   lpc24xx_stop_ethernet();
   lpc24xx_stop_usb();
   bsp_start_copy_sections();
+  bsp_start_clear_bss();
 
   /* At this point we can use objects outside the .start section */
 }

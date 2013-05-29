@@ -456,6 +456,8 @@ SCORE_EXTERN void CPU_delay( uint32_t   microseconds );
 
 #define CPU_STACK_MINIMUM_SIZE          4096
 
+#define CPU_SIZEOF_POINTER 4
+
 /*
  *  CPU's worst alignment requirement for data types on a byte boundary.  This
  *  alignment does not take into account the requirements for the stack.
@@ -787,11 +789,12 @@ extern uint8_t   _bit_set_table[];
 /* functions */
 
 /*
+ *  @brief CPU Initialize
+ *
  *  _CPU_Initialize
  *
  *  This routine performs CPU dependent initialization.
  */
-
 void _CPU_Initialize(void);
 
 /*
@@ -864,25 +867,41 @@ void _CPU_Context_restore(
 ) RTEMS_COMPILER_NO_RETURN_ATTRIBUTE;
 
 /*
+ *  @brief This routine saves the floating point context passed to it.
+ *
  *  _CPU_Context_save_fp
  *
- *  This routine saves the floating point context passed to it.
  */
-
 void _CPU_Context_save_fp(
   Context_Control_fp **fp_context_ptr
 );
 
 /*
+ *  @brief This routine restores the floating point context passed to it.
+ *
  *  _CPU_Context_restore_fp
  *
- *  This routine restores the floating point context passed to it.
  */
-
 void _CPU_Context_restore_fp(
   Context_Control_fp **fp_context_ptr
 );
 
+static inline void _CPU_Context_volatile_clobber( uintptr_t pattern )
+{
+  /* TODO */
+}
+
+static inline void _CPU_Context_validate( uintptr_t pattern )
+{
+  while (1) {
+    /* TODO */
+  }
+}
+
+/* FIXME */
+typedef CPU_Interrupt_frame CPU_Exception_frame;
+
+void _CPU_Exception_frame_print( const CPU_Exception_frame *frame );
 
 #ifdef __cplusplus
 }

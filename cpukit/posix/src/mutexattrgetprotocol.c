@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Get protocol Attribute of Mutex Attribute Obect
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).

@@ -1,42 +1,49 @@
 /**
  * @file rtems/rtems/timer.h
  *
- *  This include file contains all the constants, structures, and
- *  prototypes associated with the Timer Manager.  This manager provides
- *  facilities to configure, initiate, cancel, and delete timers which will
- *  fire at specified intervals of time.
+ * @defgroup ClassicTimer Timers
  *
- *  Directives provided are:
+ * @ingroup ClassicRTEMS
+ * @brief Instantiate RTEMS Timer Data
  *
- *     - create a timer
- *     - get an ID of a timer
- *     - delete a timer
- *     - set timer to fire in context of clock tick
- *        - after a number of ticks have passed
- *        - when a specified date and time has been reached
- *     - initiate the timer server task
- *     - set timer to fire in context of the timer server task
- *        - after a number of ticks have passed
- *        - when a specified date and time has been reached
- *     - reset a timer
- *     - cancel a time
+ * This include file contains all the constants, structures, and
+ * prototypes associated with the Timer Manager. This manager provides
+ * facilities to configure, initiate, cancel, and delete timers which will
+ * fire at specified intervals of time.
+ *
+ * Directives provided are:
+ *
+ * - create a timer
+ * - get an ID of a timer
+ * - delete a timer
+ * - set timer to fire in context of clock tick
+ * - after a number of ticks have passed
+ * - when a specified date and time has been reached
+ * - initiate the timer server task
+ * - set timer to fire in context of the timer server task
+ * - after a number of ticks have passed
+ * - when a specified date and time has been reached
+ * - reset a timer
+ * - cancel a time
  */
 
 /*
- *  COPYRIGHT (c) 1989-2011.
- *  On-Line Applications Research Corporation (OAR).
+ * COPYRIGHT (c) 1989-2011.
+ * On-Line Applications Research Corporation (OAR).
  *
- *  Copyright (c) 2009 embedded brains GmbH.
+ * Copyright (c) 2009 embedded brains GmbH.
  *
- *  The license and distribution terms for this file may be
- *  found in the file LICENSE in this distribution or at
- *  http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef _RTEMS_RTEMS_TIMER_H
 #define _RTEMS_RTEMS_TIMER_H
 
 /**
+ *  @brief Instantiate RTEMS Timer Data
+ *
  *  This constant is defined to extern most of the time when using
  *  this header file.  However by defining it to nothing, the data
  *  declared in this header file can be instantiated.  This is done
@@ -220,18 +227,23 @@ RTEMS_TIMER_EXTERN Timer_server_Control *volatile _Timer_server;
 RTEMS_TIMER_EXTERN Objects_Information  _Timer_Information;
 
 /**
- *  @brief _Timer_Manager_initialization
+ *  @brief Timer Manager Initialization
  *
  *  This routine performs the initialization necessary for this manager.
  */
 void _Timer_Manager_initialization(void);
 
 /**
- *  @brief rtems_timer_create
+ * @brief RTEMS Create Timer
  *
- *  This routine implements the rtems_timer_create directive.  The
- *  timer will have the name name.  It returns the id of the
- *  created timer in ID.
+ * This routine implements the rtems_timer_create directive. The
+ * timer will have the name name. It returns the id of the
+ * created timer in ID.
+ *
+ * @param[in] name is the timer name
+ * @param[out] id is the pointer to timer id
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful
  */
 rtems_status_code rtems_timer_create(
   rtems_name    name,
@@ -239,12 +251,18 @@ rtems_status_code rtems_timer_create(
 );
 
 /**
- *  @brief rtems_timer_ident
+ * @brief RTEMS Timer Name to Id
  *
- *  This routine implements the rtems_timer_ident directive.
- *  This directive returns the timer ID associated with name.
- *  If more than one timer is named name, then the timer
- *  to which the ID belongs is arbitrary.
+ * This routine implements the rtems_timer_ident directive.
+ * This directive returns the timer ID associated with name.
+ * If more than one timer is named name, then the timer
+ * to which the ID belongs is arbitrary.
+ *
+ * @param[in] name is the user defined message queue name
+ * @param[in] id is the pointer to timer id
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful and
+ * id filled with the message queue id
  */
 rtems_status_code rtems_timer_ident(
   rtems_name    name,
@@ -262,23 +280,38 @@ rtems_status_code rtems_timer_cancel(
 );
 
 /**
- *  @brief rtems_timer_delete
+ * @brief RTEMS Delete Timer
  *
- *  This routine implements the rtems_timer_delete directive.  The
- *  timer indicated by ID is deleted.
+ * This routine implements the rtems_timer_delete directive. The
+ * timer indicated by ID is deleted.
+ *
+ * @param[in] id is the timer id
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_timer_delete(
   rtems_id   id
 );
 
 /**
- *  @brief rtems_timer_fire_after
+ * @brief RTEMS Timer Fire After
  *
- *  This routine implements the rtems_timer_fire_after directive.  It
- *  initiates the timer associated with ID to fire in ticks clock ticks.
- *  When the timer fires, the routine will be invoked in the context
- *  of the rtems_clock_tick directive which is normally invoked as
- *  part of servicing a periodic interupt.
+ * This routine implements the rtems_timer_fire_after directive. It
+ * initiates the timer associated with ID to fire in ticks clock ticks.
+ * When the timer fires, the routine will be invoked in the context
+ * of the rtems_clock_tick directive which is normally invoked as
+ * part of servicing a periodic interupt.
+ *
+ * @param[in] id is the timer id
+ * @param[in] ticks is the interval until routine is fired
+ * @param[in] routine is the routine to schedule
+ * @param[in] user_data is the passed as argument to routine when it is fired
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_timer_fire_after(
   rtems_id                           id,
@@ -288,13 +321,22 @@ rtems_status_code rtems_timer_fire_after(
 );
 
 /**
- *  @brief rtems_timer_server_fire_after
+ * @brief RTEMS Timer Server Fire After
  *
- *  This routine implements the rtems_timer_server_fire_after directive.  It
- *  initiates the timer associated with ID to fire in ticks clock
- *  ticks.  When the timer fires, the routine will be invoked by the
- *  Timer Server in the context of a task NOT IN THE CONTEXT of the
- *  clock tick interrupt.
+ * This routine implements the rtems_timer_server_fire_after directive. It
+ * initiates the timer associated with ID to fire in ticks clock
+ * ticks. When the timer fires, the routine will be invoked by the
+ * Timer Server in the context of a task NOT IN THE CONTEXT of the
+ * clock tick interrupt.
+ *
+ * @param[in] id is the timer id
+ * @param[in] ticks is the interval until routine is fired
+ * @param[in] routine is the routine to schedule
+ * @param[in] user_data is the passed as argument to routine when it is fired
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_timer_server_fire_after(
   rtems_id                           id,
@@ -304,13 +346,22 @@ rtems_status_code rtems_timer_server_fire_after(
 );
 
 /**
- *  @brief rtems_timer_fire_when
+ * @brief RTEMS Timer Fire When
  *
- *  This routine implements the rtems_timer_fire_when directive.  It
- *  initiates the timer associated with ID to fire at wall_time
- *  When the timer fires, the routine will be invoked in the context
- *  of the rtems_clock_tick directive which is normally invoked as
- *  part of servicing a periodic interupt.
+ * This routine implements the rtems_timer_fire_when directive. It
+ * initiates the timer associated with ID to fire at wall_time
+ * When the timer fires, the routine will be invoked in the context
+ * of the rtems_clock_tick directive which is normally invoked as
+ * part of servicing a periodic interupt.
+ *
+ * @param[in] id is the timer id
+ * @param[in] wall_time is the time of day to fire timer
+ * @param[in] routine is the routine to schedule
+ * @param[in] user_data is the passed as argument to routine when it is fired
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_timer_fire_when(
   rtems_id                            id,
@@ -320,7 +371,9 @@ rtems_status_code rtems_timer_fire_when(
 );
 
 /**
- *  @brief rtems_timer_server_fire_when
+ *  @brief RTEMS Timer Server Fire When Directive
+ *
+ *  Timer Manager - RTEMS Timer Server Fire When Directive
  *
  *  This routine implements the rtems_timer_server_fire_when directive.  It
  *  initiates the timer associated with ID to fire at wall_time
@@ -336,7 +389,9 @@ rtems_status_code rtems_timer_server_fire_when(
 );
 
 /**
- *  @brief rtems_timer_reset
+ *  @brief RTEMS Timer Reset
+ *
+ *  Timer Manager - RTEMS Timer Reset
  *
  *  This routine implements the rtems_timer_reset directive.  It is used
  *  to reinitialize the interval timer associated with ID just as if
@@ -383,10 +438,16 @@ typedef struct {
 } rtems_timer_information;
 
 /**
- *  @brief rtems_timer_get_information
+ * @brief RTEMS Get Timer Information
  *
- *  This routine implements the rtems_timer_get_information directive.
- *  This directive returns information about the timer.
+ * This routine implements the rtems_timer_get_information directive.
+ * This directive returns information about the timer.
+ *
+ * @param[in] id is the timer id
+ * @param[in] the_info is the pointer to timer information block
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful and
+ * 		*the_info region information block filled in
  */
 rtems_status_code rtems_timer_get_information(
   rtems_id                 id,

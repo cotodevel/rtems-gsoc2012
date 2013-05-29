@@ -7,7 +7,7 @@
  */
 
 /*
- * Copyright (c) 2008-2011 embedded brains GmbH.  All rights reserved.
+ * Copyright (c) 2008-2012 embedded brains GmbH.  All rights reserved.
  *
  *  embedded brains GmbH
  *  Obere Lagerstr. 30
@@ -22,8 +22,7 @@
 
 #include <bsp/mpc55xx-config.h>
 
-BSP_START_TEXT_SECTION const mpc55xx_clock_config
-  mpc55xx_start_config_clock [1] = { {
+const mpc55xx_clock_config mpc55xx_start_config_clock [1] = { {
   #ifdef MPC55XX_HAS_FMPLL
     .syncr_tmp = {
       .B = {
@@ -49,7 +48,7 @@ BSP_START_TEXT_SECTION const mpc55xx_clock_config
     #define EMFD_VAL    (MPC55XX_FMPLL_MFD-16)
     #define VCO_CLK_REF (MPC55XX_REFERENCE_CLOCK/(EPREDIV_VAL+1))
     #define VCO_CLK_OUT (VCO_CLK_REF*(EMFD_VAL+16))
-    #define ERFD_VAL    ((VCO_CLK_OUT/MPC55XX_FMPLL_CLK_OUT)-1)
+    #define ERFD_VAL    ((VCO_CLK_OUT/MPC55XX_SYSTEM_CLOCK)-1)
 
     .esyncr2_tmp = {
       .B = {
@@ -71,7 +70,7 @@ BSP_START_TEXT_SECTION const mpc55xx_clock_config
         .LOLIRQ = 0,
         .LOCIRQ = 0,
         .ERATE = 0,
-        #if MPC55XX_CHIP_TYPE / 10  == 567
+        #if MPC55XX_CHIP_FAMILY  == 567
           .CLKCFG_DIS = 1,
         #endif
         .EDEPTH = 0,
@@ -80,7 +79,7 @@ BSP_START_TEXT_SECTION const mpc55xx_clock_config
     },
     .esyncr1_final = {
       .B = {
-        .CLKCFG = 7,
+        .CLKCFG = MPC55XX_FMPLL_ESYNCR1_CLKCFG,
         .EPREDIV = EPREDIV_VAL,
         .EMFD = EMFD_VAL
       }

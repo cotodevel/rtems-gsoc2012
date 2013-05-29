@@ -1,11 +1,11 @@
+/**
+ * @file
+ *
+ * @brief Surrender the Mutex
+ * @ingroup ScoreMutex
+ */
+
 /*
- *  Mutex Handler
- *
- *  DESCRIPTION:
- *
- *  This package is the implementation of the Mutex Handler.
- *  This handler provides synchronization and mutual exclusion capabilities.
- *
  *  COPYRIGHT (c) 1989-2006.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -47,7 +47,7 @@
      *  Check whether the holder release the mutex in LIFO order if not return
      *  error code.
      */
-    if ( _Chain_First( holder->lock_mutex ) != &mutex->queue.lock_queue ) {
+    if ( _Chain_First( &holder->lock_mutex ) != &mutex->queue.lock_queue ) {
       mutex->nest_count++;
 
       return CORE_MUTEX_RELEASE_NOT_ORDER;

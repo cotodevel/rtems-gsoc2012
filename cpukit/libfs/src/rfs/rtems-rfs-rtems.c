@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief RTEMS File System Interface for RTEMS
+ * @ingroup rtems_rfs
+ */
+
 /*
  *  COPYRIGHT (c) 2010 Chris Johns <chrisj@rtems.org>
  *
@@ -7,13 +14,6 @@
  *  The license and distribution terms for this file may be
  *  found in the file LICENSE in this distribution or at
  *  http://www.rtems.com/license/LICENSE.
- */
-/**
- * @file
- *
- * @ingroup rtems-rfs
- *
- * RTEMS File System Interface for RTEMS.
  */
 
 #if HAVE_CONFIG_H
@@ -609,13 +609,8 @@ rtems_rfs_rtems_mknod (const rtems_filesystem_location_info_t *parentloc,
   gid_t                   gid;
   int                     rc;
 
-#if defined(RTEMS_POSIX_API)
   uid = geteuid ();
   gid = getegid ();
-#else
-  uid = 0;
-  gid = 0;
-#endif
 
   rc = rtems_rfs_inode_create (fs, parent, name, namelen,
                                rtems_rfs_rtems_imode (mode),
@@ -677,9 +672,6 @@ rtems_rfs_rtems_rmnod (const rtems_filesystem_location_info_t* parent_pathloc,
   if (rtems_rfs_rtems_trace (RTEMS_RFS_RTEMS_DEBUG_RMNOD))
     printf ("rtems-rfs: rmnod: parent:%" PRId32 " doff:%" PRIu32 ", ino:%" PRId32 "\n",
             parent, doff, ino);
-
-  if (ino == RTEMS_RFS_ROOT_INO)
-    return rtems_rfs_rtems_error ("rmnod: root inode", EBUSY);
 
   rc = rtems_rfs_unlink (fs, parent, ino, doff, rtems_rfs_unlink_dir_if_empty);
   if (rc)

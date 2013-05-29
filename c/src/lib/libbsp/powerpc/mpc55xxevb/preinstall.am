@@ -93,6 +93,10 @@ $(PROJECT_LIB)/linkcmds.phycore_mpc5554: startup/linkcmds.phycore_mpc5554 $(PROJ
 	$(INSTALL_DATA) $< $(PROJECT_LIB)/linkcmds.phycore_mpc5554
 PREINSTALL_FILES += $(PROJECT_LIB)/linkcmds.phycore_mpc5554
 
+$(PROJECT_LIB)/linkcmds.mpc5674f_ecu508: startup/linkcmds.mpc5674f_ecu508 $(PROJECT_LIB)/$(dirstamp)
+	$(INSTALL_DATA) $< $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508
+PREINSTALL_FILES += $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508
+
 $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508_boot: startup/linkcmds.mpc5674f_ecu508_boot $(PROJECT_LIB)/$(dirstamp)
 	$(INSTALL_DATA) $< $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508_boot
 PREINSTALL_FILES += $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508_boot
@@ -100,6 +104,14 @@ PREINSTALL_FILES += $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508_boot
 $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508_app: startup/linkcmds.mpc5674f_ecu508_app $(PROJECT_LIB)/$(dirstamp)
 	$(INSTALL_DATA) $< $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508_app
 PREINSTALL_FILES += $(PROJECT_LIB)/linkcmds.mpc5674f_ecu508_app
+
+$(PROJECT_LIB)/linkcmds.mpc5674f_rsm6: startup/linkcmds.mpc5674f_rsm6 $(PROJECT_LIB)/$(dirstamp)
+	$(INSTALL_DATA) $< $(PROJECT_LIB)/linkcmds.mpc5674f_rsm6
+PREINSTALL_FILES += $(PROJECT_LIB)/linkcmds.mpc5674f_rsm6
+
+$(PROJECT_LIB)/linkcmds.mpc5674f_rsm6_base: startup/linkcmds.mpc5674f_rsm6_base $(PROJECT_LIB)/$(dirstamp)
+	$(INSTALL_DATA) $< $(PROJECT_LIB)/linkcmds.mpc5674f_rsm6_base
+PREINSTALL_FILES += $(PROJECT_LIB)/linkcmds.mpc5674f_rsm6_base
 
 $(PROJECT_INCLUDE)/bsp.h: include/bsp.h $(PROJECT_INCLUDE)/$(dirstamp)
 	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/bsp.h
@@ -156,10 +168,6 @@ PREINSTALL_FILES += $(PROJECT_INCLUDE)/bsp/tictac.h
 $(PROJECT_INCLUDE)/bsp/mpc55xx-config.h: include/mpc55xx-config.h $(PROJECT_INCLUDE)/bsp/$(dirstamp)
 	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/bsp/mpc55xx-config.h
 PREINSTALL_FILES += $(PROJECT_INCLUDE)/bsp/mpc55xx-config.h
-
-$(PROJECT_INCLUDE)/bsp/mpc55xxevb.h: include/mpc55xxevb.h $(PROJECT_INCLUDE)/bsp/$(dirstamp)
-	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/bsp/mpc55xxevb.h
-PREINSTALL_FILES += $(PROJECT_INCLUDE)/bsp/mpc55xxevb.h
 
 $(PROJECT_INCLUDE)/bsp/smsc9218i.h: include/smsc9218i.h $(PROJECT_INCLUDE)/bsp/$(dirstamp)
 	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/bsp/smsc9218i.h

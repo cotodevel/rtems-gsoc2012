@@ -1,6 +1,11 @@
-/*
- *  Event Manager
+/**
+ *  @file
  *
+ *  @brief Event Manager Initialization
+ *  @ingroup ClassicEvent
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2008.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -23,17 +28,10 @@
 #include <rtems/score/thread.h>
 #include <rtems/rtems/tasks.h>
 
-/*
- *  _Event_Manager_initialization
- *
- *  DESCRIPTION:
- *
- *  This routine performs the initialization necessary for this manager.
- */
-
 void _Event_Manager_initialization( void )
 {
   _Event_Sync_state = THREAD_BLOCKING_OPERATION_SYNCHRONIZED;
+  _System_event_Sync_state = THREAD_BLOCKING_OPERATION_SYNCHRONIZED;
 
   /*
    *  Register the MP Process Packet routine.

@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Process Timer
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2008.
  *  On-Line Applications Research Corporation (OAR).
@@ -32,7 +39,6 @@
 #include <rtems/rtems/types.h>
 #include <rtems/rtems/timer.h>
 #include <rtems/rtems/clock.h>
-#include <rtems/posix/psignal.h>
 #include <rtems/score/wkspace.h>
 #include <pthread.h>
 #include <stdio.h>

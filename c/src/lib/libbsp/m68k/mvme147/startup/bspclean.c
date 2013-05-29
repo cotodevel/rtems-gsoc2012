@@ -13,9 +13,8 @@
  *  May 1996
  */
 
-#include <rtems.h>
 #include <bsp.h>
-#include <rtems/clockdrv.h>
+#include <bsp/bootcard.h>
 
 extern void start( void  );
 
@@ -32,8 +31,10 @@ void bsp_return_to_monitor_trap(void)
   __asm__ volatile ( "jmp %0@" : "=a" (start_addr) : "0" (start_addr) );
 }
 
-void bsp_cleanup(
-  uint32_t status
+void bsp_fatal_extension(
+  rtems_fatal_source source,
+  bool is_internal,
+  rtems_fatal_code error
 )
 {
    pcc->timer1_int_control = 0; /* Disable Timer 1 */

@@ -1,9 +1,11 @@
+/**
+ * @file
+ *
+ * @brief IMFS Node Removal Handler
+ * @ingroup IMFS
+ */
+
 /*
- *  IMFS Node Removal Handler
- *
- *  This file contains the handler used to remove a node when a file type
- *  does not require special actions.
- *
  *  COPYRIGHT (c) 1989-1999.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -29,10 +31,7 @@ int IMFS_rmnod(
   int rv = 0;
   IMFS_jnode_t *node = loc->node_access;
 
-  node = (*node->control->node_remove)(
-    node,
-    loc->mt_entry->mt_fs_root->location.node_access
-  );
+  node = (*node->control->node_remove)( node );
   if ( node != NULL ) {
     --node->reference_count;
     --node->st_nlink;

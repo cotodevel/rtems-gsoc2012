@@ -1,36 +1,47 @@
 /**
  * @file rtems/rtems/sem.h
  *
- *  This include file contains all the constants and structures associated
- *  with the Semaphore Manager.  This manager utilizes standard Dijkstra
- *  counting semaphores to provide synchronization and mutual exclusion
- *  capabilities.
+ * @brief Semaphore Manager
  *
- *  Directives provided are:
+ * @defgroup ClassicSem Semaphores
  *
- *     - create a semaphore
- *     - get an ID of a semaphore
- *     - delete a semaphore
- *     - acquire a semaphore
- *     - release a semaphore
+ * @ingroup ClassicRTEMS
+ *
+ * This include file contains all the constants and structures associated
+ * with the Semaphore Manager. This manager utilizes standard Dijkstra
+ * counting semaphores to provide synchronization and mutual exclusion
+ * capabilities.
+ *
+ * Directives provided are:
+ *
+ * - create a semaphore
+ * - get an ID of a semaphore
+ * - delete a semaphore
+ * - acquire a semaphore
+ * - release a semaphore
  */
 
-/*  COPYRIGHT (c) 1989-2008.
- *  On-Line Applications Research Corporation (OAR).
+/* COPYRIGHT (c) 1989-2008.
+ * On-Line Applications Research Corporation (OAR).
  *
- *  The license and distribution terms for this file may be
- *  found in the file LICENSE in this distribution or at
- *  http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef _RTEMS_RTEMS_SEM_H
 #define _RTEMS_RTEMS_SEM_H
 
 /**
- *  This constant is defined to extern most of the time when using
- *  this header file.  However by defining it to nothing, the data
- *  declared in this header file can be instantiated.  This is done
- *  in a single per manager file.
+ * @brief Instantiate Semaphore Data
+ *
+ * Semaphore Manager -- Data Instantiation
+ *
+ * This constant is defined to extern most of the time when using
+ * this header file. However by defining it to nothing, the data
+ * declared in this header file can be instantiated. This is done
+ * in a single per manager file.
+ *
  */
 #ifndef RTEMS_SEM_EXTERN
 #define RTEMS_SEM_EXTERN extern
@@ -104,7 +115,7 @@ typedef struct {
 RTEMS_SEM_EXTERN Objects_Information  _Semaphore_Information;
 
 /**
- *  @brief Semaphore_Manager_initialization
+ *  @brief Semaphore Manager Initialization
  *
  *  This routine performs the initialization necessary for this manager.
  */
@@ -118,6 +129,8 @@ void _Semaphore_Manager_initialization(void);
  *  the semaphore is count.  The attribute_set determines if
  *  the semaphore is global or local and the thread queue
  *  discipline.  It returns the id of the created semaphore in ID.
+ *
+ *  Semaphore Manager
  */
 rtems_status_code rtems_semaphore_create(
   rtems_name           name,
@@ -128,15 +141,22 @@ rtems_status_code rtems_semaphore_create(
 );
 
 /**
- *  @brief rtems_semaphore_ident
+ * @brief RTEMS Semaphore Name to Id
  *
- *  This routine implements the rtems_semaphore_ident directive.
- *  This directive returns the semaphore ID associated with name.
- *  If more than one semaphore is named name, then the semaphore
- *  to which the ID belongs is arbitrary.  node indicates the
- *  extent of the search for the ID of the semaphore named name.
- *  The search can be limited to a particular node or allowed to
- *  encompass all nodes.
+ * This routine implements the rtems_semaphore_ident directive.
+ * This directive returns the semaphore ID associated with name.
+ * If more than one semaphore is named name, then the semaphore
+ * to which the ID belongs is arbitrary. node indicates the
+ * extent of the search for the ID of the semaphore named name.
+ * The search can be limited to a particular node or allowed to
+ * encompass all nodes.
+ *
+ * @param[in] name is the user defined semaphore name
+ * @param[in] node is(are) the node(s) to be searched
+ * @param[in] id is the pointer to semaphore id
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful and
+ * *id filled in with the semaphore id
  */
 rtems_status_code rtems_semaphore_ident(
   rtems_name    name,
@@ -145,25 +165,39 @@ rtems_status_code rtems_semaphore_ident(
 );
 
 /**
- *  @brief rtems_semaphore_delete
+ * @brief RTEMS Delete Semaphore
  *
- *  This routine implements the rtems_semaphore_delete directive.  The
- *  semaphore indicated by ID is deleted.
+ * This routine implements the rtems_semaphore_delete directive. The
+ * semaphore indicated by ID is deleted.
+ *
+ * @param[in] id is the semaphore id
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_semaphore_delete(
   rtems_id   id
 );
 
 /**
- *  @brief rtems_semaphore_obtain
+ * @brief RTEMS Obtain Semaphore
  *
- *  This routine implements the rtems_semaphore_obtain directive.  It
- *  attempts to obtain a unit from the semaphore associated with ID.
- *  If a unit can be allocated, the calling task will return immediately.
- *  If no unit is available, then the task may return immediately or
- *  block waiting for a unit with an optional timeout of timeout
- *  clock ticks.  Whether the task blocks or returns immediately
- *  is based on the RTEMS_NO_WAIT option in the option_set.
+ * This routine implements the rtems_semaphore_obtain directive. It
+ * attempts to obtain a unit from the semaphore associated with ID.
+ * If a unit can be allocated, the calling task will return immediately.
+ * If no unit is available, then the task may return immediately or
+ * block waiting for a unit with an optional timeout of timeout
+ * clock ticks. Whether the task blocks or returns immediately
+ * is based on the RTEMS_NO_WAIT option in the option_set.
+ *
+ * @param[in] id is the semaphore id
+ * @param[in] option_set is the wait option
+ * @param[in] timeout is the number of ticks to wait (0 means wait forever)
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_semaphore_obtain(
   rtems_id       id,
@@ -172,7 +206,9 @@ rtems_status_code rtems_semaphore_obtain(
 );
 
 /**
- *  @brief rtems_semaphore_release
+ *  @brief RTEMS Semaphore Release
+ *
+ *  Semaphore Manager
  *
  *  This routine implements the rtems_semaphore_release directive.  It
  *  frees a unit to the semaphore associated with ID.  If a task was
@@ -185,8 +221,18 @@ rtems_status_code rtems_semaphore_release(
 );
 
 /**
- *  @brief rtems_semaphore_flush
- *  pending on the semaphore.
+ * @brief RTEMS Semaphore Flush
+ *
+ * DESCRIPTION:
+ * This package is the implementation of the flush directive
+ * of the Semaphore Manager.
+ *
+ * This directive allows a thread to flush the threads
+ * pending on the semaphore.
+ *
+ * @param[in] id is the semaphore id
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful
  */
 rtems_status_code rtems_semaphore_flush(
   rtems_id	   id
@@ -206,20 +252,28 @@ bool _Semaphore_Seize(
 );
 
 /**
- *  @brief _Semaphore_Translate_core_mutex_return_code
+ * @brief Semaphore Translate Core Mutex Return Code
  *
- *  This function returns a RTEMS status code based on the mutex
- *  status code specified.
+ * This function returns a RTEMS status code based on the mutex
+ * status code specified.
+ *
+ * @param[in] the_mutex_status is the mutex status code to translate
+ *
+ * @retval translated RTEMS status code
  */
 rtems_status_code _Semaphore_Translate_core_mutex_return_code (
   uint32_t   the_mutex_status
 );
 
 /**
- *  @brief _Semaphore_Translate_core_semaphore_return_code
+ * @brief Semaphore Translate Core Semaphore Return Code
  *
- *  This function returns a RTEMS status code based on the semaphore
- *  status code specified.
+ * This function returns a RTEMS status code based on the semaphore
+ * status code specified.
+ *
+ * @param[in] the_mutex_status is the semaphore status code to translate
+ *
+ * @retval translated RTEMS status code
  */
 rtems_status_code _Semaphore_Translate_core_semaphore_return_code (
   uint32_t   the_mutex_status

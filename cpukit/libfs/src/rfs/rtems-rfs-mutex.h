@@ -1,19 +1,22 @@
+/**
+ * @file
+ *
+ * @brief RTEMS File System Mutex
+ *
+ * @ingroup rtems_rfs
+ *
+ * RTEMS File System Mutex.
+ *
+ * It may be suprising we abstract this for the RTEMS file system but this code
+ * is designed to be run on host operating systems.
+ */
+
 /*
  *  COPYRIGHT (c) 2010 Chris Johns <chrisj@rtems.org>
  *
  *  The license and distribution terms for this file may be
  *  found in the file LICENSE in this distribution or at
  *  http://www.rtems.com/license/LICENSE.
- */
-/**
- * @file
- *
- * @ingroup rtems-rfs
- *
- * RTEMS File System Mutex.
- *
- * It may be suprising we abstract this for the RTEMS file system but this code
- * is designed to be run on host operating systems.
  */
 
 #if !defined (_RTEMS_RFS_MUTEX_H_)
@@ -38,27 +41,33 @@ typedef uint32_t rtems_rfs_mutex; /* place holder */
 #endif
 
 /**
- * Create the mutex.
+ * @brief Create the mutex.
  *
- * @param mutex Reference to the mutex handle returned to the caller.
- * @return int The error number (errno). No error if 0.
+ * @param [in] mutex is pointer to the mutex handle returned to the caller.
+ *
+ * @retval 0 Successful operation.
+ * @retval EIO An error occurred.
+ *
  */
 int rtems_rfs_mutex_create (rtems_rfs_mutex* mutex);
 
 /**
- * Create the mutex.
+ * @brief Destroy the mutex.
  *
- * @param mutex Reference to the mutex handle returned to the caller.
- * @return int The error number (errno). No error if 0.
+ * @param[in] mutex Reference to the mutex handle returned to the caller.
+ *
+ * @retval 0 Successful operation.
+ * @retval EIO An error occurred.
  */
 int rtems_rfs_mutex_destroy (rtems_rfs_mutex* mutex);
 
 /**
- * Lock the mutex.
+ * @brief Lock the mutex.
  *
- * @param mutex The mutex to lock.
- * @retval true The mutex is locked.
- * @retval false The mutex could not be locked.
+ * @param[in] mutex is a pointer to the mutex to lock.
+ *
+ * @retval 0 Successful operation.
+ * @retval EIO An error occurred.
  */
 static inline int
 rtems_rfs_mutex_lock (rtems_rfs_mutex* mutex)
@@ -79,11 +88,12 @@ rtems_rfs_mutex_lock (rtems_rfs_mutex* mutex)
 }
 
 /**
- * Unlock the mutex.
+ * @brief Unlock the mutex.
  *
- * @param mutex The mutex to unlock.
- * @retval true The mutex is unlocked.
- * @retval false The mutex could not be unlocked.
+ * @param[in] mutex is a pointer to the mutex to unlock.
+ *
+ * @retval 0 Successful operation.
+ * @retval EIO An error occurred.
  */
 static inline int
 rtems_rfs_mutex_unlock (rtems_rfs_mutex* mutex)

@@ -1,7 +1,11 @@
+/**
+ *  @file
+ *
+ *  @brief Initialize Thread Handler
+ *  @ingroup ScoreThread
+ */
+
 /*
- *  Thread Handler
- *
- *
  *  COPYRIGHT (c) 1989-2011.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -27,23 +31,12 @@
 #include <rtems/score/sysstate.h>
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
-#include <rtems/score/userext.h>
 #include <rtems/score/wkspace.h>
 #include <rtems/config.h>
 
 #if defined(RTEMS_SMP)
   #include <rtems/bspsmp.h>
 #endif
-
-/*
- *  _Thread_Handler_initialization
- *
- *  This routine initializes all thread manager related data structures.
- *
- *  Input parameters:   NONE
- *
- *  Output parameters:  NONE
- */
 
 void _Thread_Handler_initialization(void)
 {
@@ -91,7 +84,7 @@ void _Thread_Handler_initialization(void)
    *  coupled multiprocessing system, account for the MPCI Server Thread.
    */
   #if defined(RTEMS_SMP)
-    maximum_internal_threads = rtems_configuration_smp_maximum_processors;
+    maximum_internal_threads = rtems_configuration_get_maximum_processors();
   #else
     maximum_internal_threads = 1;
   #endif

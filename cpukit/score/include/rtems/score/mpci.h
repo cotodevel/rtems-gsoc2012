@@ -1,6 +1,8 @@
 /**
  *  @file  rtems/score/mpci.h
  *
+ *  @brief Constants and Structures Associated with the MPCI Layer
+ *
  *  This include file contains all the constants and structures associated
  *  with the MPCI layer.  It provides mechanisms to utilize packets.
  */
@@ -180,7 +182,7 @@ SCORE_EXTERN Thread_queue_Control _MPCI_Remote_blocked_threads;
 SCORE_EXTERN MPCI_Control *_MPCI_table;
 
 /**
- *  @brief Pointer to MP Thread Control Block
+ *  @brief Pointer to MP thread control block.
  *
  *  The following is used to determine when the multiprocessing receive
  *  thread is executing so that a proxy can be allocated instead of
@@ -196,6 +198,8 @@ SCORE_EXTERN MPCI_Packet_processor
                _MPCI_Packet_processors[MP_PACKET_CLASSES_LAST+1];
 
 /**
+ *  @brief Initialize the MPCI handler.
+ *
  *  This routine performs the initialization necessary for this handler.
  *
  *  @param[in] timeout_status is the value which should be returned to
@@ -206,11 +210,15 @@ void _MPCI_Handler_initialization(
 );
 
 /**
+ *  @brief Create the MPCI server thread.
+ *
  *  This routine creates the packet receive server used in MP systems.
  */
 void _MPCI_Create_server( void );
 
 /**
+ *  @brief Initialize the MPCI driver.
+ *
  *  This routine initializes the MPCI driver by
  *  invoking the user provided MPCI initialization callout.
  */
@@ -235,13 +243,15 @@ void _MPCI_Register_packet_processor(
  *  This function obtains a packet by invoking the user provided
  *  MPCI get packet callout.
  *
- *  @return This method returns a pointer to a MPCI packet which can be
+ *  @retval This method returns a pointer to a MPCI packet which can be
  *          filled in by the caller and used to perform a subsequent
  *          remote operation.
  */
 MP_packet_Prefix *_MPCI_Get_packet ( void );
 
 /**
+ *  @brief Deallocate a packet.
+ *
  *  This routine deallocates a packet by invoking the user provided
  *  MPCI return packet callout.
  *
@@ -252,6 +262,8 @@ void _MPCI_Return_packet (
 );
 
 /**
+ *  @brief Send a process packet.
+ *
  *  This routine sends a process packet by invoking the user provided
  *  MPCI send callout.
  *
@@ -264,6 +276,8 @@ void _MPCI_Send_process_packet (
 );
 
 /**
+ *  @brief Send a request packet.
+ *
  *  This routine sends a request packet by invoking the user provided
  *  MPCI send callout.
  *
@@ -274,7 +288,7 @@ void _MPCI_Send_process_packet (
  *             may indicate the caller is blocking on a message queue
  *             operation.
  *
- *  @return This method returns the operation status from the remote node.
+ *  @retval This method returns the operation status from the remote node.
  */
 uint32_t _MPCI_Send_request_packet (
   uint32_t           destination,
@@ -283,6 +297,8 @@ uint32_t _MPCI_Send_request_packet (
 );
 
 /**
+ *  @brief Send a response packet.
+ *
  *  This routine sends a response packet by invoking the user provided
  *  MPCI send callout.
  *
@@ -295,21 +311,25 @@ void _MPCI_Send_response_packet (
 );
 
 /**
+ *  @brief Receive a packet.
+ *
  *  This routine receives a packet by invoking the user provided
  *  MPCI receive callout.
  *
- *  @return This method returns the packet received.
+ *  @retval This method returns the packet received.
  */
 MP_packet_Prefix  *_MPCI_Receive_packet ( void );
 
 /**
+ *  @brief Pass a packet to the thread.
+ *
  *  This routine is responsible for passing @a the_packet to the thread
  *  waiting on the remote operation to complete.  The unblocked thread is
  *  responsible for eventually freeing @a the_packet.
  *
  *  @param[in] the_packet is the response packet to be processed.
  *
- *  @return This method returns a pointer to the thread which was if unblocked
+ *  @retval This method returns a pointer to the thread which was if unblocked
  *          or NULL if the waiting thread no longer exists.
  */
 Thread_Control *_MPCI_Process_response (
@@ -317,6 +337,8 @@ Thread_Control *_MPCI_Process_response (
 );
 
 /**
+ *  @brief Receive and process all packets.
+ *
  *  This is the server thread which receives and processes all MCPI packets.
  *
  *  @param[in] ignored is the thread argument.  It is not used.
@@ -326,11 +348,15 @@ Thread _MPCI_Receive_server(
 );
 
 /**
+ *  @brief Announce the availability of a packet.
+ *
  *  This routine informs RTEMS of the availability of an MPCI packet.
  */
 void _MPCI_Announce ( void );
 
 /**
+ *  @brief Perform a process on another node.
+ *
  *  This routine performs a remote procedure call so that a
  *  process operation can be performed on another node.
  *
@@ -361,6 +387,8 @@ void _MPCI_Internal_packets_Send_process_packet (
  */
 
 /**
+ *  @brief Perform requested action from another node.
+ *
  *  This routine performs the actions specific to this package for
  *  the request from another node.
  */
@@ -391,7 +419,9 @@ void _MPCI_Internal_packets_Process_packet (
  */
 
 /**
- *  This routine is used to obtain a internal threads mp packet.
+ *  @brief Obtain an internal thread.
+ *
+ *  This routine is used to obtain an internal threads MP packet.
  */
 MPCI_Internal_packet *_MPCI_Internal_packets_Get_packet ( void );
 

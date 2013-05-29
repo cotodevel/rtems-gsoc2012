@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Initialize Condition Variable Attributes
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).

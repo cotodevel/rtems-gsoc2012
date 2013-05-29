@@ -146,8 +146,8 @@ typedef struct {
   smsc9218i_state state;
   rtems_id receive_task;
   rtems_id transmit_task;
-  mpc55xx_edma_channel_entry edma_receive;
-  mpc55xx_edma_channel_entry edma_transmit;
+  edma_channel_context edma_receive;
+  edma_channel_context edma_transmit;
   unsigned phy_interrupts;
   unsigned received_frames;
   unsigned receiver_errors;
@@ -205,12 +205,12 @@ typedef struct {
 static smsc9218i_receive_job_control smsc_rx_jc __attribute__((aligned (32)));
 
 static void smsc9218i_transmit_dma_done(
-  mpc55xx_edma_channel_entry *channel_entry,
+  edma_channel_context *ctx,
   uint32_t error_status
 );
 
 static void smsc9218i_receive_dma_done(
-  mpc55xx_edma_channel_entry *e,
+  edma_channel_context *ctx,
   uint32_t error_status
 );
 
@@ -219,14 +219,12 @@ static smsc9218i_driver_entry smsc9218i_driver_data = {
   .receive_task = RTEMS_ID_NONE,
   .transmit_task = RTEMS_ID_NONE,
   .edma_receive = {
-    .channel = SMSC9218I_EDMA_RX_CHANNEL,
-    .done = smsc9218i_receive_dma_done,
-    .id = RTEMS_ID_NONE
+    .edma_tcd = EDMA_TCD_BY_CHANNEL_INDEX(SMSC9218I_EDMA_RX_CHANNEL),
+    .done = smsc9218i_receive_dma_done
   },
   .edma_transmit = {
-    .channel = SMSC9218I_EDMA_TX_CHANNEL,
-    .done = smsc9218i_transmit_dma_done,
-    .id = RTEMS_ID_NONE
+    .edma_tcd = EDMA_TCD_BY_CHANNEL_INDEX(SMSC9218I_EDMA_TX_CHANNEL),
+    .done = smsc9218i_transmit_dma_done
   }
 };
 
@@ -471,18 +469,18 @@ static void smsc9218i_register_dump(volatile smsc9218i_registers *regs)
   reg = regs->afc_cfg;
   printf("afc_cfg: 0x%08" PRIx32 "\n", SMSC9218I_SWAP(reg));
 
-  printf("mac: cr: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_CR));
-  printf("mac: addrh: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_ADDRH));
-  printf("mac: addrl: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_ADDRL));
-  printf("mac: hashh: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_HASHH));
-  printf("mac: hashl: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_HASHL));
-  printf("mac: mii_acc: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_MII_ACC));
-  printf("mac: mii_data: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_MII_DATA));
-  printf("mac: flow: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_FLOW));
-  printf("mac: vlan1: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_VLAN1));
-  printf("mac: vlan2: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_VLAN2));
-  printf("mac: wuff: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_WUFF));
-  printf("mac: wucsr: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_WUCSR));
+  printf("mac: cr: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_CR, NULL));
+  printf("mac: addrh: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_ADDRH, NULL));
+  printf("mac: addrl: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_ADDRL, NULL));
+  printf("mac: hashh: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_HASHH, NULL));
+  printf("mac: hashl: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_HASHL, NULL));
+  printf("mac: mii_acc: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_MII_ACC, NULL));
+  printf("mac: mii_data: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_MII_DATA, NULL));
+  printf("mac: flow: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_FLOW, NULL));
+  printf("mac: vlan1: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_VLAN1, NULL));
+  printf("mac: vlan2: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_VLAN2, NULL));
+  printf("mac: wuff: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_WUFF, NULL));
+  printf("mac: wucsr: 0x%08" PRIx32 "\n", smsc9218i_mac_read(regs, SMSC9218I_MAC_WUCSR, NULL));
 
   printf("phy: bcr: 0x%08" PRIx32 "\n", smsc9218i_phy_read(regs, MII_BMCR));
   printf("phy: bsr: 0x%08" PRIx32 "\n", smsc9218i_phy_read(regs, MII_BMSR));
@@ -604,7 +602,7 @@ static void smsc9218i_setup_receive_dma(
   jc->produce = p;
 
   if (last != NULL) {
-    volatile struct tcd_t *channel = &EDMA.TCD [e->edma_receive.channel];
+    volatile struct tcd_t *channel = e->edma_receive.edma_tcd;
 
     /* Setup last TCD */
     last->BMF.R = SMSC9218I_TCD_BMF_LAST;
@@ -625,7 +623,7 @@ static void smsc9218i_setup_receive_dma(
 }
 
 static void smsc9218i_receive_dma_done(
-  mpc55xx_edma_channel_entry *channel_entry,
+  edma_channel_context *ctx,
   uint32_t error_status
 )
 {
@@ -644,14 +642,14 @@ static void smsc9218i_receive_dma_done(
     ++e->receive_dma_errors;
   }
 
-  sc = rtems_event_send(channel_entry->id, SMSC9218I_EVENT_DMA);
+  sc = rtems_bsdnet_event_send(e->receive_task, SMSC9218I_EVENT_DMA);
   ASSERT_SC(sc);
 
   jc->done = jc->produce;
 }
 
 static void smsc9218i_transmit_dma_done(
-  mpc55xx_edma_channel_entry *channel_entry,
+  edma_channel_context *ctx,
   uint32_t error_status
 )
 {
@@ -668,7 +666,7 @@ static void smsc9218i_transmit_dma_done(
 
   ++e->transmit_dma_interrupts;
 
-  sc = rtems_event_send(channel_entry->id, event);
+  sc = rtems_bsdnet_event_send(e->transmit_task, event);
   ASSERT_SC(sc);
 }
 
@@ -721,7 +719,7 @@ static void smsc9218i_interrupt_handler(void *arg)
     int_en &= ~SMSC9218I_INT_RSFL;
     ++e->receive_interrupts;
 
-    sc = rtems_event_send(e->receive_task, SMSC9218I_EVENT_RX);
+    sc = rtems_bsdnet_event_send(e->receive_task, SMSC9218I_EVENT_RX);
     ASSERT_SC(sc);
   }
 
@@ -730,7 +728,7 @@ static void smsc9218i_interrupt_handler(void *arg)
     SMSC9218I_PRINTK("interrupt: phy\n");
     int_en &= ~SMSC9218I_INT_PHY;
     ++e->phy_interrupts;
-    sc = rtems_event_send(e->receive_task, SMSC9218I_EVENT_PHY);
+    sc = rtems_bsdnet_event_send(e->receive_task, SMSC9218I_EVENT_PHY);
     ASSERT_SC(sc);
   }
 
@@ -739,7 +737,7 @@ static void smsc9218i_interrupt_handler(void *arg)
     SMSC9218I_PRINTK("interrupt: transmit\n");
     int_en &= ~SMSC9218I_INT_TDFA;
     ++e->transmit_interrupts;
-    sc = rtems_event_send(e->transmit_task, SMSC9218I_EVENT_TX);
+    sc = rtems_bsdnet_event_send(e->transmit_task, SMSC9218I_EVENT_TX);
     ASSERT_SC(sc);
   }
 
@@ -810,23 +808,37 @@ static void smsc9218i_media_status_change(
   smsc9218i_mac_write(regs, SMSC9218I_MAC_CR, mac_cr);
 }
 
-static void smsc9218i_new_mbuf(
+static bool smsc9218i_new_mbuf(
   struct ifnet *ifp,
   smsc9218i_receive_job_control *jc,
-  int i
+  int i,
+  struct mbuf *old_m
 )
 {
-  struct mbuf *m = m_gethdr(M_WAIT, MT_DATA);
+  bool ok = false;
+  int wait = old_m != NULL ? M_DONTWAIT : M_WAIT;
+  struct mbuf *new_m = m_gethdr(wait, MT_DATA);
   struct tcd_t *tcd = &jc->tcd_table [i];
   char *data = NULL;
 
-  m->m_pkthdr.rcvif = ifp;
-  MCLGET(m, M_WAIT);
+  if (new_m != NULL ) {
+    new_m->m_pkthdr.rcvif = ifp;
+    MCLGET(new_m, wait);
 
-  data = mtod(m, char *);
-  m->m_data = data + SMSC9218I_RX_DATA_OFFSET + ETHER_HDR_LEN;
+    if ((new_m->m_flags & M_EXT) != 0) {
+      ok = true;
+    } else {
+      m_free(new_m);
+      new_m = old_m;
+    }
+  } else {
+    new_m = old_m;
+  }
 
-  jc->mbuf_table [i] = m;
+  data = mtod(new_m, char *);
+  new_m->m_data = data + SMSC9218I_RX_DATA_OFFSET + ETHER_HDR_LEN;
+
+  jc->mbuf_table [i] = new_m;
 
   tcd->DADDR = (uint32_t) data;
   tcd->BMF.R = SMSC9218I_TCD_BMF_LINK;
@@ -836,6 +848,8 @@ static void smsc9218i_new_mbuf(
     data,
     SMSC9218I_RX_DATA_OFFSET + ETHER_HDR_LEN + ETHERMTU + ETHER_CRC_LEN
   );
+
+  return ok;
 }
 
 static void smsc9218i_init_receive_jobs(
@@ -850,7 +864,6 @@ static void smsc9218i_init_receive_jobs(
   int i = 0;
 
   /* Obtain receive eDMA channel */
-  e->edma_receive.id = e->receive_task;
   sc = mpc55xx_edma_obtain_channel(
     &e->edma_receive,
     MPC55XX_INTC_DEFAULT_PRIORITY
@@ -868,7 +881,7 @@ static void smsc9218i_init_receive_jobs(
     tcd->CDF.B.DOFF = 4;
     tcd->DLAST_SGA = (int32_t) next_tcd;
 
-    smsc9218i_new_mbuf(ifp, jc, i);
+    smsc9218i_new_mbuf(ifp, jc, i, NULL);
   }
 }
 
@@ -889,8 +902,9 @@ static void smsc9218i_ether_input(
       (mtod(m, char *) - ETHER_HDR_LEN);
 
     ++e->received_frames;
-    ether_input(ifp, eh, m);
-    smsc9218i_new_mbuf(ifp, jc, c);
+    if (smsc9218i_new_mbuf(ifp, jc, c, m)) {
+      ether_input(ifp, eh, m);
+    }
 
     c = (c + 1) % SMSC9218I_RX_JOBS;
   }
@@ -1253,7 +1267,7 @@ static void smsc9218i_transmit_do_jobs(
     }
 
     if (i > 0) {
-      volatile struct tcd_t *channel = &EDMA.TCD [e->edma_transmit.channel];
+      volatile struct tcd_t *channel = e->edma_transmit.edma_tcd;
       struct tcd_t *start = &jc->command_tcd_table [jc->transfer_index];
       struct tcd_t *last = &jc->data_tcd_table [last_index];
 
@@ -1410,7 +1424,6 @@ static void smsc9218i_transmit_task(void *arg)
   SMSC9218I_PRINTF("%s\n", __func__);
 
   /* Obtain transmit eDMA channel */
-  e->edma_transmit.id = e->transmit_task;
   sc = mpc55xx_edma_obtain_channel(
     &e->edma_transmit,
     MPC55XX_INTC_DEFAULT_PRIORITY
@@ -1549,9 +1562,31 @@ static bool smsc9218i_wait_for_eeprom_access(
   return !busy;
 }
 
+static bool smsc9218i_get_mac_address(
+  volatile smsc9218i_registers *regs,
+  uint8_t address [6]
+)
+{
+  bool ok = false;
+
+  uint32_t low = smsc9218i_mac_read(regs, SMSC9218I_MAC_ADDRL, &ok);
+  address [0] = (uint8_t) low;
+  address [1] = (uint8_t) (low >> 8) & 0xff;
+  address [2] = (uint8_t) (low >> 16);
+  address [3] = (uint8_t) (low >> 24);
+
+  if (ok) {
+    uint32_t high = smsc9218i_mac_read(regs, SMSC9218I_MAC_ADDRH, &ok);
+    address [4] = (uint8_t) high;
+    address [5] = (uint8_t) (high >> 8);
+  }
+
+  return ok;
+}
+
 static bool smsc9218i_set_mac_address(
   volatile smsc9218i_registers *regs,
-  unsigned char address [6]
+  const uint8_t address [6]
 )
 {
   bool ok = smsc9218i_mac_write(
@@ -1572,22 +1607,48 @@ static bool smsc9218i_set_mac_address(
   return ok;
 }
 
+/* Sometimes the write of the MAC address was not reliable */
+static bool smsc9218i_set_and_verify_mac_address(
+  volatile smsc9218i_registers *regs,
+  const uint8_t address [6]
+)
+{
+  bool ok = true;
+  int i;
+
+  for (i = 0; ok && i < 3; ++i) {
+    ok = smsc9218i_set_mac_address(regs, address);
+
+    if (ok) {
+      uint8_t actual_address [6];
+
+      ok = smsc9218i_get_mac_address(regs, actual_address)
+        && memcmp(address, actual_address, sizeof(actual_address)) == 0;
+    }
+  }
+
+  return ok;
+}
+
 #if defined(DEBUG)
 static void smsc9218i_mac_address_dump(volatile smsc9218i_registers *regs)
 {
-  uint32_t low = smsc9218i_mac_read(regs, SMSC9218I_MAC_ADDRL, NULL);
-  uint32_t high = smsc9218i_mac_read(regs, SMSC9218I_MAC_ADDRH, NULL);
+  uint8_t mac_address [6];
+  bool ok = smsc9218i_get_mac_address(regs, mac_address);
 
-  printf(
-    "MAC address: %02" PRIx32 ":%02" PRIx32 ":%02" PRIx32
-      ":%02" PRIx32 ":%02" PRIx32 ":%02" PRIx32 "\n",
-    low & 0xff,
-    (low >> 8) & 0xff,
-    (low >> 16) & 0xff,
-    (low >> 24) & 0xff,
-    high & 0xff,
-    (high >> 8) & 0xff
-  );
+  if (ok) {
+    printf(
+      "MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
+      mac_address [0],
+      mac_address [1],
+      mac_address [2],
+      mac_address [3],
+      mac_address [4],
+      mac_address [5]
+    );
+  } else {
+    printf("cannot read MAC address\n");
+  }
 }
 #endif
 
@@ -1610,7 +1671,7 @@ static void smsc9218i_interrupt_init(
   pcr.B.PA = 2;
   pcr.B.OBE = 0;
   pcr.B.IBE = 1;
-#if MPC55XX_CHIP_TYPE / 10 != 551
+#if MPC55XX_CHIP_FAMILY != 551
   pcr.B.DSC = 0;
 #endif
   pcr.B.ODE = 0;
@@ -1623,7 +1684,7 @@ static void smsc9218i_interrupt_init(
   /* DMA/Interrupt Request Select */
   rtems_interrupt_disable(level);
   dirsr.R = SIU.DIRSR.R;
-#if MPC55XX_CHIP_TYPE / 10 != 551
+#if MPC55XX_CHIP_FAMILY != 551
   dirsr.B.DIRS0 = 0;
 #endif
   SIU.DIRSR.R = dirsr.R;
@@ -1698,7 +1759,7 @@ static void smsc9218i_reset_signal_init(void)
   pcr.B.PA = 0;
   pcr.B.OBE = 1;
   pcr.B.IBE = 0;
-#if MPC55XX_CHIP_TYPE / 10 != 551
+#if MPC55XX_CHIP_FAMILY != 551
   pcr.B.DSC = 0;
 #endif
   pcr.B.ODE = 0;
@@ -1757,7 +1818,7 @@ static void smsc9218i_interface_init(void *arg)
     ok = smsc9218i_wait_for_eeprom_access(regs);
 
     if (ok) {
-      ok = smsc9218i_set_mac_address(regs, e->arpcom.ac_enaddr);
+      ok = smsc9218i_set_and_verify_mac_address(regs, e->arpcom.ac_enaddr);
 
       if (ok) {
 #if defined(DEBUG)
@@ -1908,6 +1969,12 @@ static void smsc9218i_interface_off(struct ifnet *ifp)
   smsc9218i_driver_entry *e = (smsc9218i_driver_entry *) ifp->if_softc;
   rtems_status_code sc = RTEMS_SUCCESSFUL;
 
+  sc = rtems_task_suspend(e->receive_task);
+  ASSERT_SC(sc);
+
+  sc = rtems_task_suspend(e->transmit_task);
+  ASSERT_SC(sc);
+
   /* remove interrupt handler */
   sc = rtems_interrupt_handler_remove(
     MPC55XX_IRQ_SIU_EXTERNAL_0,
@@ -1973,7 +2040,7 @@ static void smsc9218i_interface_start(struct ifnet *ifp)
   /* Interface is now active */
   ifp->if_flags |= IFF_OACTIVE;
 
-  sc = rtems_event_send(e->transmit_task, SMSC9218I_EVENT_TX_START);
+  sc = rtems_bsdnet_event_send(e->transmit_task, SMSC9218I_EVENT_TX_START);
   ASSERT_SC(sc);
 }
 

@@ -1,3 +1,10 @@
+/**
+ *  @file
+ *
+ *  @brief RTEMS File System Location Support
+ *  @ingroup LibIOInternal
+ */
+
 /*
  * Copyright (c) 2012 embedded brains GmbH.  All rights reserved.
  *
@@ -216,7 +223,7 @@ void rtems_filesystem_do_unmount(
 
   if (mt_entry->unmount_task != 0) {
     rtems_status_code sc =
-      rtems_event_send(mt_entry->unmount_task, RTEMS_FILESYSTEM_UNMOUNT_EVENT);
+      rtems_event_transient_send(mt_entry->unmount_task);
     if (sc != RTEMS_SUCCESSFUL) {
       rtems_fatal_error_occurred(0xdeadbeef);
     }

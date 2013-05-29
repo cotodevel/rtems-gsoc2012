@@ -154,10 +154,6 @@ rtems_major=`echo _RTEMS_VERSION | sed "s/\..*//"`
 rtems_minor=`echo _RTEMS_VERSION | sed "s/[[0-9]][[0-9]]*\.//;s/\..*//"`
 rtems_revision=`echo _RTEMS_VERSION | sed "s/[[0-9]][[0-9]]*\.//;s/[[0-9]][[0-9]]*\.//;s/\..*//"`
 
-## This is needed to generate the field offsets of the per CPU 
-## data structure so they can be accessed from assembly code.
-AC_CHECK_SIZEOF([void *])
-
 _RTEMS_CPUOPT_INIT
 
 RTEMS_CPUOPT([RTEMS_DEBUG],
@@ -200,16 +196,6 @@ RTEMS_CPUOPT([__RTEMS_USE_TICKS_FOR_STATISTICS__],
   [1],
   [disable nanosecond granularity for statistics])
 
-RTEMS_CPUOPT([__RTEMS_USE_TICKS_CPU_USAGE_STATISTICS__],
-  [test x"${USE_TICKS_FOR_CPU_USAGE_STATISTICS}" = x"1"],
-  [1],
-  [disable nanosecond granularity for cpu usage statistics])
-
-RTEMS_CPUOPT([__RTEMS_USE_TICKS_RATE_MONOTONIC_STATISTICS__],
-  [test x"${USE_TICKS_FOR_RATE_MONOTONIC_STATISTICS}" = x"1"],
-  [1],
-  [disable nanosecond granularity for period statistics])
-
 ## This improves both the size and coverage analysis.
 RTEMS_CPUOPT([__RTEMS_DO_NOT_INLINE_THREAD_ENABLE_DISPATCH__],
   [test x"${RTEMS_DO_NOT_INLINE_THREAD_ENABLE_DISPATCH}" = x"1"],
@@ -242,11 +228,6 @@ RTEMS_CPUOPT([__RTEMS_ADA__],
 
 ## Then we propagate a private copy of the value into cpuopts.h
 ## so it is always available to the RTEMS header files.
-
-RTEMS_CPUOPT([__RTEMS_SIZEOF_VOID_P__],
-  [true],
-  [$ac_cv_sizeof_void_p],
-  [Size of a void * pointer])
 
 RTEMS_CPUOPT([__RTEMS_MAJOR__],
   [true],
@@ -361,6 +342,7 @@ score/cpu/m68k/Makefile
 score/cpu/m32c/Makefile
 score/cpu/m32r/Makefile
 score/cpu/mips/Makefile
+score/cpu/moxie/Makefile
 score/cpu/nios2/Makefile
 score/cpu/powerpc/Makefile
 score/cpu/sh/Makefile

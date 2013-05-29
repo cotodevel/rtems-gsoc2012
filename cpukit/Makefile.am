@@ -43,7 +43,7 @@ if NEWLIB
 include_sysdir = $(includedir)/sys
 include_sys_HEADERS =
 
-include_HEADERS += libnetworking/memory.h
+include_HEADERS += include/memory.h
 include_HEADERS += libmd/md4.h
 include_HEADERS += libmd/md5.h
 
@@ -56,7 +56,8 @@ include_sys_HEADERS += libcsupport/include/sys/ttycom.h
 include_sys_HEADERS += libcsupport/include/sys/termios.h
 include_sys_HEADERS += libcsupport/include/sys/utsname.h
 
-include_sys_HEADERS += libnetworking/sys/uio.h
+include_sys_HEADERS += include/sys/uio.h
+include_sys_HEADERS += include/sys/_iovec.h
 include_sys_HEADERS += include/sys/priority.h
 
 if LIBNETWORKING
@@ -125,6 +126,7 @@ include_rtems_HEADERS += libblock/include/rtems/flashdisk.h
 include_rtems_HEADERS += libblock/include/rtems/ramdisk.h
 include_rtems_HEADERS += libblock/include/rtems/nvdisk.h
 include_rtems_HEADERS += libblock/include/rtems/nvdisk-sram.h
+include_rtems_HEADERS += libblock/include/rtems/sparse-disk.h
 include_rtems_HEADERS += libblock/include/rtems/ide_part_table.h
 include_rtems_HEADERS += libblock/include/rtems/bdpart.h
 include_rtems_HEADERS += libblock/include/rtems/media.h

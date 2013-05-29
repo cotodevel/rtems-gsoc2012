@@ -16,8 +16,8 @@
  *  RTEMS above.
  */
 
-#include <rtems.h>
 #include <bsp.h>
+#include <bsp/bootcard.h>
 #include <rtems/zilog/z8036.h>
 #include <page_table.h>
 
@@ -46,8 +46,10 @@ void bsp_return_to_monitor_trap(void)
 #endif
 }
 
-void bsp_cleanup(
-  uint32_t status
+void bsp_fatal_extension(
+  rtems_fatal_source source,
+  bool is_internal,
+  rtems_fatal_code error
 )
 {
    M68Kvec[ 45 ] = bsp_return_to_monitor_trap;   /* install handler */

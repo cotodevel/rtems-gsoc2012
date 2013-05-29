@@ -1,6 +1,4 @@
 /*
- *  This is a dummy bsp_cleanup routine.
- *
  *  COPYRIGHT (c) 1989-1999.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -9,14 +7,14 @@
  *  http://www.rtems.com/license/LICENSE.
  */
 
-#include <rtems.h>
-#include <rtems/bspIo.h>
 #include <bsp.h>
-#include <bspopts.h>
 #include <bsp/bootcard.h>
+#include <rtems/bspIo.h>
 
-void bsp_cleanup(
-  uint32_t status
+void bsp_fatal_extension(
+  rtems_fatal_source source,
+  bool is_internal,
+  rtems_fatal_code code
 )
 {
   #if (BSP_PRESS_KEY_FOR_RESET)
@@ -29,6 +27,12 @@ void bsp_cleanup(
       ;
 
     printk("\n");
+  #endif
+
+  #if (BSP_PRINT_EXCEPTION_CONTEXT)
+    if ( source == RTEMS_FATAL_SOURCE_EXCEPTION ) {
+      rtems_exception_frame_print( (const rtems_exception_frame *) code );
+    }
   #endif
 
   /*

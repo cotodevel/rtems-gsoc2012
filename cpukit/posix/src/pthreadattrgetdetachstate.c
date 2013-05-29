@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Function gets the detachstate Attribute in the attr Object
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  16.1.1 Thread Creation Attributes, P1003.1c/Draft 10, p, 140
  *

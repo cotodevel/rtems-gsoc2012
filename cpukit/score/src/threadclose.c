@@ -1,6 +1,11 @@
-/*
- *  Thread Handler / Thread Close
+/**
+ *  @file
  *
+ *  @brief Thread Close
+ *  @ingroup ScoreThread
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2011.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -25,7 +30,7 @@
 #include <rtems/score/sysstate.h>
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
-#include <rtems/score/userext.h>
+#include <rtems/score/userextimpl.h>
 #include <rtems/score/wkspace.h>
 
 void _Thread_Close(

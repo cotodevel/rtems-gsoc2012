@@ -1,16 +1,21 @@
 /**
  * @file rtems/rtems/status.h
  *
- *  This include file contains the status codes returned from the
- *  executive directives.
+ * @defgroup ClassicStatus Status Codes
+ *
+ * @ingroup ClassicRTEMS
+ * @brief Status Codes Returned from Executive Directives
+ *
+ * This include file contains the status codes returned from the
+ * executive directives.
  */
 
-/*  COPYRIGHT (c) 1989-2008.
- *  On-Line Applications Research Corporation (OAR).
+/* COPYRIGHT (c) 1989-2008.
+ * On-Line Applications Research Corporation (OAR).
  *
- *  The license and distribution terms for this file may be
- *  found in the file LICENSE in this distribution or at
- *  http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef _RTEMS_RTEMS_STATUS_H
@@ -183,6 +188,8 @@ typedef enum {
 #define RTEMS_STATUS_CODES_LAST  RTEMS_PROXY_BLOCKING
 
 /**
+ *  @brief Status Object Name Errors to Status Array
+ *
  *  This array is used to map SuperCore Object Handler return
  *  codes to Classic API status codes.
  */

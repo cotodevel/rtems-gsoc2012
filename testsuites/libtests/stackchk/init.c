@@ -86,18 +86,19 @@ rtems_task Init(
   directive_failed( status, "rtems_task_delete of RTEMS_SELF" );
 }
 
-void Fatal_extension( uint32_t source, bool is_internal, uint32_t error )
+void Fatal_extension(
+  rtems_fatal_source source,
+  bool               is_internal,
+  rtems_fatal_code   error
+)
 {
-  if ( source != INTERNAL_ERROR_RTEMS_API ) {
+  if ( source != RTEMS_FATAL_SOURCE_STACK_CHECKER ) {
     printk( "unexpected fatal source\n" );
   } else if ( is_internal ) {
     printk( "unexpected fatal is internal\n" );
-  } else if ( error != 0x81 ) {
+  } else if ( error != rtems_build_name( 'T', 'A', '1', ' ' ) ) {
     printk( "unexpected fatal error\n" );
   } else {
     printk( "*** END OF TEST STACK CHECKER ***\n" );
   }
-
-  if ( _System_state_Is_up( _System_state_Get() ) )
-    _Thread_Stop_multitasking();
 }

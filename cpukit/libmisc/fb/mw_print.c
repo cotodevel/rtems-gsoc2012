@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief MicroWindows Print
+ * @ingroup libmisc_fb_mw Input Devices for MicroWindows
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2011.
  *  On-Line Applications Research Corporation (OAR).
@@ -11,10 +18,11 @@
 #include "config.h"
 #endif
 
-#include <rtems/mw_uid.h>
 #include <stdio.h>
 
-const char *uid_buttons(
+#include <rtems/mw_uid.h>
+
+static const char *uid_buttons(
   unsigned short  btns,
   char           *buffer,
   size_t          max
@@ -85,6 +93,5 @@ void uid_print_message_with_plugin(
       (*handler)( context, "Invalid device type\n" );
       break;
   }
- 
-}
 
+}

@@ -1,3 +1,8 @@
+/**
+ *  @file
+ *
+ *  @brief ARMV7M Get Exception Priority
+ */
 /*
  * Copyright (c) 2011 Sebastian Huber.  All rights reserved.
  *
@@ -16,11 +21,9 @@
   #include "config.h"
 #endif
 
-#include <rtems/score/cpu.h>
+#include <rtems/score/armv7m.h>
 
 #ifdef ARM_MULTILIB_ARCH_V7M
-
-#include <rtems/score/armv7m.h>
 
 int _ARMV7M_Get_exception_priority( int vector )
 {

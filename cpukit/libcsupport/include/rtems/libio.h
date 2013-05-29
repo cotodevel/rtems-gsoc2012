@@ -3,7 +3,11 @@
  *
  * @ingroup LibIO
  *
- * @brief Basic IO API.
+ * @brief Basic IO API
+ *
+ * This file contains the support infrastructure used to manage the
+ * table of integer style file descriptors used by the low level
+ * POSIX system calls like open(), read, fstat(), etc.
  */
 
 /*
@@ -43,9 +47,8 @@ extern "C" {
  * @ingroup LibIO
  *
  * @brief File system operations.
- *
- * @{
  */
+/**@{**/
 
 /**
  * @brief File system node types.
@@ -172,7 +175,7 @@ typedef void (*rtems_filesystem_eval_path_t)(
  * @param[in] namelen Length of the name for the new link in characters.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_link().
  */
@@ -190,7 +193,7 @@ typedef int (*rtems_filesystem_link_t)(
  * @param[in] mode The new mode of the node
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_fchmod().
  */
@@ -207,7 +210,7 @@ typedef int (*rtems_filesystem_fchmod_t)(
  * @param[in] group Group ID for the node.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_chown().
  */
@@ -228,7 +231,7 @@ typedef int (*rtems_filesystem_chown_t)(
  * @param[in, out] loc Location to clone.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_clonenode().
  */
@@ -259,7 +262,7 @@ typedef void (*rtems_filesystem_freenode_t)(
  * @param[in] mt_entry The mount table entry.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_mount().
  */
@@ -277,7 +280,7 @@ typedef int (*rtems_filesystem_mount_t) (
  * @param[in] data The data provided by the user.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  */
 typedef int (*rtems_filesystem_fsmount_me_t)(
   rtems_filesystem_mount_table_entry_t *mt_entry,
@@ -294,7 +297,7 @@ typedef int (*rtems_filesystem_fsmount_me_t)(
  * @param[in] mt_entry The mount table entry.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_unmount().
  */
@@ -361,7 +364,7 @@ typedef rtems_filesystem_node_types_t (*rtems_filesystem_node_type_t)(
  * @param[in] dev Optional device identifier for the new node.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_mknod().
  */
@@ -380,7 +383,7 @@ typedef int (*rtems_filesystem_mknod_t)(
  * @param[in] loc The location of the node.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_rmnod().
  */
@@ -397,7 +400,7 @@ typedef int (*rtems_filesystem_rmnod_t)(
  * @param[in] modtime Modification for the node.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_utime().
  */
@@ -417,7 +420,7 @@ typedef int (*rtems_filesystem_utime_t)(
  * @param[in] target Contents for the symbolic link.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_symlink().
  */
@@ -436,7 +439,7 @@ typedef int (*rtems_filesystem_symlink_t)(
  * @param[in] bufsize The size of the buffer in characters.
  *
  * @retval non-negative Size of the actual contents in characters.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_readlink().
  */
@@ -456,7 +459,7 @@ typedef ssize_t (*rtems_filesystem_readlink_t)(
  * @param[in] namelen Length of the name for the new node in characters.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_rename().
  */
@@ -475,7 +478,7 @@ typedef int (*rtems_filesystem_rename_t)(
  * @param[out] buf Buffer for file system information.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_statvfs().
  */
@@ -745,9 +748,8 @@ int rtems_filesystem_default_statvfs(
  * @ingroup LibIO
  *
  * @brief File system node handler.
- *
- * @{
  */
+/**@{**/
 
 /**
  * @brief Opens a node.
@@ -758,7 +760,7 @@ int rtems_filesystem_default_statvfs(
  * @param[in] mode Optional mode for node creation.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_open().
  */
@@ -775,7 +777,7 @@ typedef int (*rtems_filesystem_open_t)(
  * @param[in, out] iop The IO pointer.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_close().
  */
@@ -793,7 +795,7 @@ typedef int (*rtems_filesystem_close_t)(
  * @param[in] count The size of the buffer in characters.
  *
  * @retval non-negative Count of read characters.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_read().
  */
@@ -813,7 +815,7 @@ typedef ssize_t (*rtems_filesystem_read_t)(
  * @param[in] count The size of the buffer in characters.
  *
  * @retval non-negative Count of written characters.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_write().
  */
@@ -831,7 +833,7 @@ typedef ssize_t (*rtems_filesystem_write_t)(
  * @param[in, out] buffer The buffer for IO control request data.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_ioctl().
  */
@@ -849,7 +851,7 @@ typedef int (*rtems_filesystem_ioctl_t)(
  * @param[in] whence The reference position for the offset.
  *
  * @retval non-negative The new offset from the beginning of the file.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_lseek(),
  * rtems_filesystem_default_lseek_file(), and
@@ -868,7 +870,7 @@ typedef off_t (*rtems_filesystem_lseek_t)(
  * @param[out] stat The buffer to status information.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_fstat().
  */
@@ -884,7 +886,7 @@ typedef int (*rtems_filesystem_fstat_t)(
  * @param[in] length The new length in characters.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_ftruncate() and
  * rtems_filesystem_default_ftruncate_directory().
@@ -900,7 +902,7 @@ typedef int (*rtems_filesystem_ftruncate_t)(
  * @param[in, out] iop The IO pointer.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_fsync_or_fdatasync() and
  * rtems_filesystem_default_fsync_or_fdatasync_success().
@@ -915,7 +917,7 @@ typedef int (*rtems_filesystem_fsync_t)(
  * @param[in, out] iop The IO pointer.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The errno is set to indicate the error.
+ * @retval -1 An error occurred.  The errno is set to indicate the error.
  *
  * @see rtems_filesystem_default_fsync_or_fdatasync() and
  * rtems_filesystem_default_fsync_or_fdatasync_success().
@@ -931,7 +933,7 @@ typedef int (*rtems_filesystem_fdatasync_t)(
  * @param[in] cmd Control command.
  *
  * @retval 0 Successful operation.
- * @retval errno An error occured.  This value is assigned to errno.
+ * @retval errno An error occurred.  This value is assigned to errno.
  *
  * @see rtems_filesystem_default_fcntl().
  */
@@ -1053,7 +1055,7 @@ off_t rtems_filesystem_default_lseek_directory(
  *
  * This function has no protection against concurrent access.
  *
- * @retval -1 An error occured.  In case an integer overflow occured, then the
+ * @retval -1 An error occurred.  In case an integer overflow occurred, then the
  * errno will be set to EOVERFLOW.  In case the new offset is negative, then
  * the errno will be set to EINVAL.  In case the whence is SEEK_END and the
  * fstat() handler to obtain the current file size returned an error status,
@@ -1139,9 +1141,8 @@ int rtems_filesystem_default_fcntl(
  * system call behavior under RTEMS.  Initially this supported only
  * IO to devices but has since been enhanced to support networking
  * and support for mounted file systems.
- *
- * @{
  */
+/**@{**/
 
 typedef off_t rtems_off64_t __attribute__((deprecated));
 
@@ -1236,9 +1237,8 @@ typedef struct {
 
 /**
  * @name Flag Values
- *
- * @{
  */
+/**@{**/
 
 #define LIBIO_FLAGS_NO_DELAY      0x0001U  /* return immediately if no data */
 #define LIBIO_FLAGS_READ          0x0002U  /* reading */
@@ -1251,13 +1251,17 @@ typedef struct {
 
 /** @} */
 
+/**
+ * @brief RTEMS LibIO Initialization
+ *
+ * Called by BSP startup code to initialize the libio subsystem.
+ */
 void rtems_libio_init(void);
 
 /**
  * @name External I/O Handlers
- *
- * @{
  */
+/**@{**/
 
 typedef int (*rtems_libio_open_t)(
   const char  *pathname,
@@ -1297,9 +1301,8 @@ typedef off_t (*rtems_libio_lseek_t)(
 
 /**
  * @name Permission Macros
- *
- * @{
  */
+/**@{**/
 
 /*
  *  The following macros are used to build up the permissions sets
@@ -1373,18 +1376,31 @@ static inline rtems_device_minor_number rtems_filesystem_dev_minor_t(
  *  Prototypes for filesystem
  */
 
+/**
+ *  @brief Base File System Initialization
+ *
+ *  Initialize the foundation of the file system.  This is specified
+ *  by the structure rtems_filesystem_mount_table.  The usual
+ *  configuration is a single instantiation of the IMFS or miniIMFS with
+ *  a single "/dev" directory in it.
+ */
 void rtems_filesystem_initialize( void );
 
-typedef void (*rtems_libio_init_functions_t)(void);
-extern  rtems_libio_init_functions_t rtems_libio_init_helper;
+typedef void (*rtems_libio_helper)(void);
 
-void    open_dev_console(void);
+extern const rtems_libio_helper rtems_libio_init_helper;
 
-typedef void (*rtems_libio_supp_functions_t)(void);
-extern  rtems_libio_supp_functions_t rtems_libio_supp_helper;
+extern const rtems_libio_helper rtems_libio_post_driver_helper;
 
-typedef void (*rtems_fs_init_functions_t)(void);
-extern  rtems_fs_init_functions_t    rtems_fs_init_helper;
+extern const rtems_libio_helper rtems_libio_exit_helper;
+
+extern const rtems_libio_helper rtems_fs_init_helper;
+
+void rtems_libio_helper_null(void);
+
+void rtems_libio_post_driver(void);
+
+void rtems_libio_exit(void);
 
 /**
  * @brief Creates a directory and all its parent directories according to
@@ -1393,7 +1409,7 @@ extern  rtems_fs_init_functions_t    rtems_fs_init_helper;
  * The @a mode value selects the access permissions of the directory.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The @c errno indicates the error.
+ * @retval -1 An error occurred.  The @c errno indicates the error.
  */
 extern int rtems_mkdir(const char *path, mode_t mode);
 
@@ -1405,15 +1421,13 @@ extern int rtems_mkdir(const char *path, mode_t mode);
  * @ingroup LibIO
  *
  * @brief File system types and mount.
- *
- * @{
  */
+/**@{**/
 
 /**
  * @name File System Types
- *
- * @{
  */
+/**@{**/
 
 #define RTEMS_FILESYSTEM_TYPE_IMFS "imfs"
 #define RTEMS_FILESYSTEM_TYPE_MINIIMFS "mimfs"
@@ -1462,8 +1476,9 @@ struct rtems_filesystem_mount_table_entry_tt {
 
   /**
    * The task that initiated the unmount process.  After unmount process
-   * completion this task will be notified via the
-   * @ref RTEMS_FILESYSTEM_UNMOUNT_EVENT.
+   * completion this task will be notified via the transient event.
+   *
+   * @see ClassicEventTransient.
    */
   rtems_id                               unmount_task;
 };
@@ -1500,7 +1515,7 @@ extern rtems_chain_control rtems_filesystem_mount_table;
  * The @a mount_h handler will be used to mount a file system of this @a type.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The @c errno indicates the error.
+ * @retval -1 An error occurred.  The @c errno indicates the error.
  */
 int rtems_filesystem_register(
   const char                    *type,
@@ -1511,7 +1526,7 @@ int rtems_filesystem_register(
  * @brief Unregisters a file system @a type.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The @c errno indicates the error.
+ * @retval -1 An error occurred.  The @c errno indicates the error.
  */
 int rtems_filesystem_unregister(
   const char *type
@@ -1526,15 +1541,16 @@ int rtems_filesystem_unregister(
  * unmounted file system the function returns with an error status and errno is
  * set to EBUSY.
  *
- * The unmount process completion notification uses the RTEMS classic API
- * event @ref RTEMS_FILESYSTEM_UNMOUNT_EVENT.  It is a fatal error to terminate
- * the calling thread while waiting for this event.
+ * The unmount process completion notification uses the transient event.  It is
+ * a fatal error to terminate the calling thread while waiting for this event.
  *
  * A concurrent unmount request for the same file system instance has
  * unpredictable effects.
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The @c errno indicates the error.
+ * @retval -1 An error occurred.  The @c errno indicates the error.
+ *
+ * @see ClassicEventTransient.
  */
 int unmount(
   const char *mount_path
@@ -1544,10 +1560,11 @@ int unmount(
  * @brief Mounts a file system at @a target.
  *
  * The @a source may be a path to the corresponding device file, or @c NULL.
- * The @a target path must lead to an existing directory, or @c NULL.  In case
- * @a target is @c NULL, the root file system will be mounted.  The @a data
- * parameter will be forwarded to the file system initialization handler.  The
- * file system type is selected by @a filesystemtype and may be one of
+ * The @a target path must lead to an existing directory, or @c NULL.
+ * In case @a target is @c NULL, the root file system will be mounted.
+ * The @a data parameter will be forwarded to the file system
+ * initialization handler.  The file system type is selected by
+ * @a filesystemtype and may be one of
  * - RTEMS_FILESYSTEM_TYPE_DEVFS,
  * - RTEMS_FILESYSTEM_TYPE_DOSFS,
  * - RTEMS_FILESYSTEM_TYPE_FTPFS,
@@ -1557,8 +1574,8 @@ int unmount(
  * - RTEMS_FILESYSTEM_TYPE_RFS, or
  * - RTEMS_FILESYSTEM_TYPE_TFTPFS.
  *
- * Only configured or registered file system types are available.  You can add
- * file system types to your application configuration with
+ * Only configured or registered file system types are available.
+ * You can add file system types to your application configuration with
  * - CONFIGURE_FILESYSTEM_DEVFS,
  * - CONFIGURE_FILESYSTEM_DOSFS,
  * - CONFIGURE_FILESYSTEM_FTPFS,
@@ -1571,7 +1588,7 @@ int unmount(
  * @see rtems_filesystem_register() and mount_and_make_target_path().
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The @c errno indicates the error.
+ * @retval -1 An error occurred.  The @c errno indicates the error.
  */
 int mount(
   const char                 *source,
@@ -1590,7 +1607,7 @@ int mount(
  * @see mount().
  *
  * @retval 0 Successful operation.
- * @retval -1 An error occured.  The @c errno indicates the error.
+ * @retval -1 An error occurred.  The @c errno indicates the error.
  */
 int mount_and_make_target_path(
   const char                 *source,
@@ -1681,9 +1698,8 @@ extern const rtems_filesystem_mount_configuration
  * @ingroup LibIO
  *
  * @brief Termios
- *
- * @{
  */
+/**@{**/
 
 typedef struct rtems_termios_callbacks {
   int    (*firstOpen)(int major, int minor, void *arg);

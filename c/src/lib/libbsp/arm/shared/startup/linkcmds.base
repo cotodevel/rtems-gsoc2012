@@ -7,7 +7,7 @@
  */
 
 /*
- * Copyright (c) 2008-2011 embedded brains GmbH.  All rights reserved.
+ * Copyright (c) 2008-2013 embedded brains GmbH.  All rights reserved.
  *
  *  embedded brains GmbH
  *  Obere Lagerstr. 30
@@ -68,44 +68,6 @@ SECTIONS {
 		bsp_section_start_end = .;
 	} > REGION_START AT > REGION_START
 	bsp_section_start_size = bsp_section_start_end - bsp_section_start_begin;
-
-	.vector : {
-		bsp_section_vector_begin = .;
-
-		. = . + DEFINED (bsp_vector_table_in_start_section) ? 0 : bsp_vector_table_size;
-
-		. = ALIGN (bsp_stack_align);
-
-		bsp_stack_abt_begin = .;
-		. = . + bsp_stack_abt_size;
-		bsp_stack_abt_end = .;
-
-		bsp_stack_fiq_begin = .;
-		. = . + bsp_stack_fiq_size;
-		bsp_stack_fiq_end = .;
-
-		bsp_stack_irq_begin = .;
-		. = . + bsp_stack_irq_size;
-		bsp_stack_irq_end = .;
-
-		bsp_stack_svc_begin = .;
-		. = . + bsp_stack_svc_size;
-		bsp_stack_svc_end = .;
-
-		bsp_stack_und_begin = .;
-		. = . + bsp_stack_und_size;
-		bsp_stack_und_end = .;
-
-		bsp_stack_main_begin = .;
-		. = . + bsp_stack_main_size;
-		bsp_stack_main_end = .;
-
-		*(.bsp_vector)
-		bsp_section_vector_end = .;
-	} > REGION_VECTOR AT > REGION_VECTOR
-	bsp_section_vector_size = bsp_section_vector_end - bsp_section_vector_begin;
-	bsp_vector_table_begin = DEFINED (bsp_vector_table_in_start_section) ? bsp_section_start_begin : bsp_section_vector_begin;
-	bsp_vector_table_end = bsp_vector_table_begin + bsp_vector_table_size;
 
 	.xbarrier : {
 		. = ALIGN (bsp_section_xbarrier_align);
@@ -321,6 +283,44 @@ SECTIONS {
 		. = ALIGN (bsp_section_rwbarrier_align);
 	} > REGION_DATA
 
+	.vector : {
+		bsp_section_vector_begin = .;
+
+		. = . + DEFINED (bsp_vector_table_in_start_section) ? 0 : bsp_vector_table_size;
+
+		. = ALIGN (bsp_stack_align);
+
+		bsp_stack_abt_begin = .;
+		. = . + bsp_stack_abt_size;
+		bsp_stack_abt_end = .;
+
+		bsp_stack_fiq_begin = .;
+		. = . + bsp_stack_fiq_size;
+		bsp_stack_fiq_end = .;
+
+		bsp_stack_irq_begin = .;
+		. = . + bsp_stack_irq_size;
+		bsp_stack_irq_end = .;
+
+		bsp_stack_svc_begin = .;
+		. = . + bsp_stack_svc_size;
+		bsp_stack_svc_end = .;
+
+		bsp_stack_und_begin = .;
+		. = . + bsp_stack_und_size;
+		bsp_stack_und_end = .;
+
+		bsp_stack_main_begin = .;
+		. = . + bsp_stack_main_size;
+		bsp_stack_main_end = .;
+
+		*(.bsp_vector)
+		bsp_section_vector_end = .;
+	} > REGION_VECTOR AT > REGION_VECTOR
+	bsp_section_vector_size = bsp_section_vector_end - bsp_section_vector_begin;
+	bsp_vector_table_begin = DEFINED (bsp_vector_table_in_start_section) ? bsp_section_start_begin : bsp_section_vector_begin;
+	bsp_vector_table_end = bsp_vector_table_begin + bsp_vector_table_size;
+
 	.fast_data : {
 		bsp_section_fast_data_begin = .;
 		*(.bsp_fast_data)
@@ -346,10 +346,16 @@ SECTIONS {
 
 		bsp_section_data_end = .;
 	} > REGION_DATA AT > REGION_DATA_LOAD
+	.tdata : {
+		*(.tdata .tdata.* .gnu.linkonce.td.*)
+	} > REGION_DATA AT > REGION_DATA_LOAD
 	bsp_section_data_size = bsp_section_data_end - bsp_section_data_begin;
 	bsp_section_data_load_begin = LOADADDR (.data);
 	bsp_section_data_load_end = bsp_section_data_load_begin + bsp_section_data_size;
 
+	.tbss : {
+		*(.tbss .tbss.* .gnu.linkonce.tb.*) *(.tcommon)
+	} > REGION_BSS AT > REGION_BSS
 	.bss : {
 		bsp_section_bss_begin = .;
 		*(.dynbss)
@@ -424,6 +430,8 @@ SECTIONS {
 	/* DWARF 3 */
 	.debug_pubtypes 0 : { *(.debug_pubtypes) }
 	.debug_ranges   0 : { *(.debug_ranges) }
+	/* DWARF extension */
+	.debug_macro    0 : { *(.debug_macro) }
 	.ARM.attributes 0 : { KEEP (*(.ARM.attributes)) KEEP (*(.gnu.attributes)) }
 	.note.gnu.arm.ident 0 : { KEEP (*(.note.gnu.arm.ident)) }
 	/DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }

@@ -21,11 +21,8 @@
  */
 
 #include <bsp/mpc55xx-config.h>
-#include <bsp/start.h>
-#include <bsp.h>
 
-BSP_START_TEXT_SECTION const mpc55xx_siu_pcr_config
-  mpc55xx_start_config_siu_pcr [] = {
+const mpc55xx_siu_pcr_config mpc55xx_start_config_siu_pcr [] = {
 #if defined(MPC55XX_BOARD_GWLCFM)
   {  0,16, 0, {.B.PA = 1,           .B.WPE = 0}}, /* PA[ 0..15] analog input */
   { 16, 4, 0, {.B.PA = 0,.B.OBE = 1,.B.WPE = 0}}, /* PB[ 0.. 4] LED/CAN_STBN out */
@@ -83,8 +80,8 @@ BSP_START_TEXT_SECTION const mpc55xx_siu_pcr_config
   {116, 2, 0, {.B.PA = 0,.B.OBE = 1,.B.WPE = 0}}, /* PH[ 4.. 5] FR/HC_TERM    out*/
   {118, 1, 0, {.B.PA = 2,.B.OBE = 1,.B.WPE = 0}}, /* PH[ 6.. 6] LIN_Tx        out*/
   {119, 1, 0, {.B.PA = 2,.B.IBE = 1,.B.WPE = 0}}, /* PH[ 7.. 7] LIN_Rx        in */
-  {120, 1, 0, {.B.PA = 0,.B.OBE = 1,.B.WPE = 0}} /* PH[ 8..11] LIN_SLP,RST   out*/
-  {121, 2, 1, {.B.PA = 0,.B.OBE = 1,.B.WPE = 0}} /* PH[ 8..11] LIN_SLP,RST   out*/
+  {120, 1, 0, {.B.PA = 0,.B.OBE = 1,.B.WPE = 0}}, /* PH[ 8..11] LIN_SLP,RST   out*/
+  {121, 2, 1, {.B.PA = 0,.B.OBE = 1,.B.WPE = 0}}, /* PH[ 8..11] LIN_SLP,RST   out*/
   {120, 1, 0, {.B.PA = 0,.B.OBE = 1,.B.WPE = 0}} /* PH[ 8..11] LIN_SLP,RST   out*/
 #elif defined(MPC55XX_BOARD_PHYCORE_MPC5554)
   {  0, 4, 0, {.B.PA = 1,          .B.DSC = 1,.B.WPE=1,.B.WPS=1}}, /* !CS  [0:3]    */
@@ -112,7 +109,8 @@ BSP_START_TEXT_SECTION const mpc55xx_siu_pcr_config
   { 294,  6, 0, { .B = { .PA = 1, .DSC = 1 } } }, /* D_RD_WR, D_WE0, D_WE1, D_OE, D_TS, D_ALE */
   { 301,  1, 0, { .B = { .PA = 1, .DSC = 1 } } }, /* D_CS1 */
   { 302,  6, 0, { .B = { .PA = 1, .DSC = 1 } } } /* D_BDIP, D_WE2, D_WE3, D_ADD9 .. D_ADD11 */
-#elif defined(MPC55XX_BOARD_MPC5674F_ECU508)
+#elif defined(MPC55XX_BOARD_MPC5674F_ECU508) \
+  && defined(MPC55XX_NEEDS_LOW_LEVEL_INIT)
   { 196,  2, 0, { .B = { .PA = 0, .OBE = 1, .WPE = 0 } } }, /* EMIOS17 .. EMIOS18 (5VS_EN, 80V_EN) */
   { 200,  4, 0, { .B = { .PA = 0, .OBE = 1, .WPE = 0 } } }, /* EMIOS21 .. EMIOS24 (\KS_RST, \LS_RST, \IGNINJ_RST, \INJDI_RST) */
   { 204,  1, 1, { .B = { .PA = 0, .OBE = 1, .WPE = 0 } } }, /* EMIOS25 (HBR12_RST) */
@@ -129,9 +127,22 @@ BSP_START_TEXT_SECTION const mpc55xx_siu_pcr_config
   { 305,  3, 0, { .B = { .PA = 1, .DSC = 0 } } }, /* D_ADD9 .. D_ADD11 */
   { 432,  1, 1, { .B = { .PA = 0, .OBE = 1, .WPE = 0 } } }, /* EMIOS26 (HBR34_RST) */
   { 433,  1, 0, { .B = { .PA = 0, .OBE = 1, .WPE = 0 } } } /* EMIOS27 (\ETH_RST) */
+#elif defined(MPC55XX_BOARD_MPC5674F_RSM6)
+  {  89,  1, 0, { .B = { .PA = 1, .OBE = 1, .IBE = 1, .WPE = 1, .WPS = 1 } } }, /* TXD_A (ESCI_A)*/
+  {  90,  1, 0, { .B = { .PA = 1, .OBE = 0, .IBE = 1, .WPE = 1, .WPS = 1 } } }, /* RXD_A (ESCI_A)*/
+  { 256,  1, 0, { .B = { .PA = 1, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_CS0 */
+  { 257,  1, 0, { .B = { .PA = 2, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_ADD_DAT31 */
+  { 258,  1, 0, { .B = { .PA = 1, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_CS3 */
+  { 259,  4, 0, { .B = { .PA = 1, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_ADD12 .. D_ADD15 */
+  { 263, 15, 0, { .B = { .PA = 2, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_ADD_DAT16 .. D_ADD_DAT30 */
+  { 278, 16, 0, { .B = { .PA = 1, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_ADD_DAT0 .. D_ADD_DAT15 */
+  { 294,  6, 0, { .B = { .PA = 1, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_RD_WR, D_WE0, D_WE1, D_OE, D_TS, D_ALE */
+  { 301,  1, 0, { .B = { .PA = 1, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_CS1 */
+  { 302,  3, 0, { .B = { .PA = 1, .DSC = 3, .WPE = 1, .WPS = 1 } } }, /* D_BDIP, D_WE2, D_WE3 */
+  { 305,  3, 0, { .B = { .PA = 1, .DSC = 3, .WPE = 1, .WPS = 1 } } }  /* D_ADD9 .. D_ADD11 */
 #endif
 };
 
-BSP_START_TEXT_SECTION const size_t mpc55xx_start_config_siu_pcr_count [] = {
-  sizeof(mpc55xx_start_config_siu_pcr) / sizeof(mpc55xx_start_config_siu_pcr [0])
+const size_t mpc55xx_start_config_siu_pcr_count [] = {
+  RTEMS_ARRAY_SIZE(mpc55xx_start_config_siu_pcr)
 };

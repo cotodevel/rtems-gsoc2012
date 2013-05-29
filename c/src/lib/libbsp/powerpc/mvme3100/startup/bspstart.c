@@ -118,13 +118,6 @@ void _BSP_Fatal_error(unsigned int v)
   __asm__ __volatile ("sc");
 }
 
-/*
- *  The original table from the application and our copy of it with
- *  some changes.
- */
-
-extern rtems_configuration_table Configuration;
-
 char *rtems_progname;
 
 /*
@@ -224,7 +217,6 @@ SPR_RW(HID1)
 
 void bsp_start( void )
 {
-rtems_status_code   sc;
 unsigned char       *stack;
 uintptr_t           intrStackStart;
 uintptr_t           intrStackSize;
@@ -277,14 +269,11 @@ VpdBufRec          vpdData [] = {
 	/*
 	 * Initialize default raw exception handlers.
 	 */
-	sc = ppc_exc_initialize(
+	ppc_exc_initialize(
 		PPC_INTERRUPT_DISABLE_MASK_DEFAULT,
 		intrStackStart,
 		intrStackSize
 	);
-	if (sc != RTEMS_SUCCESSFUL) {
-		BSP_panic("cannot initialize exceptions");
-	}
 
 	printk("CPU 0x%x - rev 0x%x\n", myCpu, myCpuRevision);
 

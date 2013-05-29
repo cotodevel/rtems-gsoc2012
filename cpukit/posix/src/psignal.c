@@ -1,3 +1,10 @@
+/**
+ *  @file
+ *
+ *  @brief POSIX Signals Manager Initialization
+ *  @ingroup POSIX_SIGNALS
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2008.
  *  On-Line Applications Research Corporation (OAR).
@@ -28,7 +35,7 @@
 #include <rtems/score/wkspace.h>
 #include <rtems/seterr.h>
 #include <rtems/posix/threadsup.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/posix/pthread.h>
 #include <rtems/posix/time.h>
 #include <stdio.h>
@@ -103,7 +110,7 @@ Watchdog_Control _POSIX_signals_Ualarm_timer;
  *  _POSIX_signals_Post_switch_extension
  */
 
-void _POSIX_signals_Post_switch_extension(
+static void _POSIX_signals_Post_switch_hook(
   Thread_Control  *the_thread
 )
 {
@@ -158,9 +165,9 @@ void _POSIX_signals_Post_switch_extension(
   _Thread_Executing->Wait.return_code = hold_errno;
 }
 
-/*
- *  _POSIX_signals_Manager_Initialization
- */
+API_extensions_Post_switch_control _POSIX_signals_Post_switch = {
+  .hook = _POSIX_signals_Post_switch_hook
+};
 
 void _POSIX_signals_Manager_Initialization(void)
 {

@@ -27,6 +27,13 @@ AC_CHECK_SIZEOF([time_t])
 
 # Explicitly list all Makefiles here
 AC_CONFIG_FILES([Makefile
+spcontext01/Makefile
+spfatal26/Makefile
+spinternalerror02/Makefile
+spinternalerror01/Makefile
+speventsystem01/Makefile
+speventtransient01/Makefile
+spintrcritical18/Makefile
 sp01/Makefile
 sp02/Makefile
 sp03/Makefile
@@ -103,8 +110,16 @@ sp73/Makefile
 sp74/Makefile
 sp75/Makefile
 sp76/Makefile
+sp77/Makefile
 sp2038/Makefile
 spassoc01/Makefile
+spatomic01/Makefile
+spatomic02/Makefile
+spatomic03/Makefile
+spatomic04/Makefile
+spatomic05/Makefile
+spatomic06/Makefile
+spatomic07/Makefile
 spcbssched01/Makefile
 spcbssched02/Makefile
 spcbssched03/Makefile
@@ -137,7 +152,6 @@ spfatal17/Makefile
 spfatal18/Makefile
 spfatal19/Makefile
 spfatal20/Makefile
-spfatal21/Makefile
 spfatal22/Makefile
 spfatal23/Makefile
 spfatal24/Makefile
@@ -174,6 +188,8 @@ spprintk/Makefile
 spprivenv01/Makefile
 spqreslib/Makefile
 sprbtree01/Makefile
+spsem01/Makefile
+spsem02/Makefile
 spsimplesched01/Makefile
 spsimplesched02/Makefile
 spsimplesched03/Makefile
@@ -181,6 +197,7 @@ spsize/Makefile
 spstkalloc/Makefile
 spstkalloc02/Makefile
 spthreadq01/Makefile
+sptimespec01/Makefile
 spwatchdog/Makefile
 spwkspace/Makefile
 ])

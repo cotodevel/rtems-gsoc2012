@@ -7,15 +7,17 @@
  */
 
 /*
- * Copyright (c) 2008
- * Embedded Brains GmbH
- * Obere Lagerstr. 30
- * D-82178 Puchheim
- * Germany
- * rtems@embedded-brains.de
+ * Copyright (c) 2008-2012 embedded brains GmbH.  All rights reserved.
  *
- * The license and distribution terms for this file may be found in the file
- * LICENSE in this distribution or at http://www.rtems.com/license/LICENSE.
+ *  embedded brains GmbH
+ *  Obere Lagerstr. 30
+ *  82178 Puchheim
+ *  Germany
+ *  <rtems@embedded-brains.de>
+ *
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 /**
@@ -23,6 +25,20 @@
  *
  * @brief Board support package dependent code.
  */
+
+#ifndef LIBBSP_SHARED_BOOTCARD_H
+#define LIBBSP_SHARED_BOOTCARD_H
+
+#include <unistd.h>
+
+#include <rtems/malloc.h>
+#include <rtems/bspIo.h>
+
+#include <bspopts.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 /**
  * @defgroup bsp_bootcard Bootcard
@@ -34,18 +50,14 @@
  * @{
  */
 
-#ifndef LIBBSP_SHARED_BOOTCARD_H
-#define LIBBSP_SHARED_BOOTCARD_H
-
-#include <stddef.h>
-#include <stdint.h>
-#include <sys/types.h>
-
-#include <bspopts.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+/**
+ * @brief Generic BSP fatal error codes.
+ */
+typedef enum {
+  BSP_GENERIC_FATAL_EXCEPTION_INITIALIZATION,
+  BSP_GENERIC_FATAL_INTERRUPT_INITIALIZATION,
+  BSP_GENERIC_FATAL_SPURIOUS_INTERRUPT
+} bsp_generic_fatal_code;
 
 /**
  * @brief Global pointer to the command line of boot_card().
@@ -60,48 +72,7 @@ void bsp_predriver_hook(void);
 
 void bsp_postdriver_hook(void);
 
-void bsp_cleanup(uint32_t status);
-
 void bsp_reset(void);
-
-/**
- * @brief Should be used as the heap begin address in bsp_get_work_area() if
- * the heap area is contained in the work area.
- */
-#define BSP_BOOTCARD_HEAP_USES_WORK_AREA NULL
-
-/**
- * @brief Should be used to request the default heap size in bsp_get_work_area().
- *
- * In case that the heap area is contained in the work area this heap size
- * value indicates that the area outside the work space should be used as heap
- * space.
- */
-#define BSP_BOOTCARD_HEAP_SIZE_DEFAULT 0
-
-void bsp_get_work_area(
-  void      **work_area_begin,
-  uintptr_t  *work_area_size,
-  void      **heap_begin,
-  uintptr_t  *heap_size
-);
-
-/**
- * @brief Gives the BSP a chance to reduce the work area size with sbrk() adding more later.
- *
- * bsp_sbrk_init() may reduce the work area size passed in. The routine
- * returns the 'sbrk_amount' to be used when extending the heap.
- * Note that the return value may be zero.
- *
- */
-
-#ifdef CONFIGURE_MALLOC_BSP_SUPPORTS_SBRK
-uintptr_t bsp_sbrk_init(
-  void              *work_area_begin,
-  uintptr_t         *work_area_size_p
-);
-#endif
-
 
 /**
  * @brief Standard system initialization procedure.
@@ -119,11 +90,10 @@ uintptr_t bsp_sbrk_init(
  * - disable interrupts, interrupts will be enabled during the first context
  *   switch
  * - bsp_start() - more advanced initialization
- * - obtain information on BSP memory via bsp_get_work_area() and allocate
- *   RTEMS Workspace
+ * - bsp_work_area_initialize() - initialize the RTEMS Workspace and the C
+ *   Program Heap
  * - rtems_initialize_data_structures()
- * - allocate memory for C Program Heap
- * - initialize C Library and C Program Heap
+ * - initialize C Library
  * - bsp_pretasking_hook()
  * - if defined( RTEMS_DEBUG )
  *   - rtems_debug_enable( RTEMS_DEBUG_ALL_MASK )
@@ -136,19 +106,110 @@ uintptr_t bsp_sbrk_init(
  *   - 1st task executes C++ global constructors
  *   - .... application runs ...
  *   - exit
- * - back to here eventually
- * - bsp_cleanup()
- *
- * If something goes wrong bsp_cleanup() will be called out of order.
+ * - will not return to here
  *
  * This style of initialization ensures that the C++ global constructors are
  * executed after RTEMS is initialized.
  */
-uint32_t boot_card(const char *cmdline);
+void boot_card(const char *cmdline) RTEMS_COMPILER_NO_RETURN_ATTRIBUTE;
+
+#ifdef CONFIGURE_MALLOC_BSP_SUPPORTS_SBRK
+  /**
+   * @brief Gives the BSP a chance to reduce the work area size with sbrk()
+   * adding more later.
+   *
+   * bsp_sbrk_init() may reduce the work area size passed in. The routine
+   * returns the 'sbrk_amount' to be used when extending the heap.  Note that
+   * the return value may be zero.
+   *
+   * In case the @a area size is altered, then the remaining size of the
+   * @a area must be greater than or equal to @a min_size.
+   */
+  ptrdiff_t bsp_sbrk_init(Heap_Area *area, uintptr_t min_size);
+#endif
+
+static inline void bsp_work_area_initialize_default(
+  void *area_begin,
+  uintptr_t area_size
+)
+{
+  Heap_Area area = {
+    .begin = area_begin,
+    .size = area_size
+  };
+
+  #if BSP_DIRTY_MEMORY == 1
+    memset(area.begin, 0xCF,  area.size);
+  #endif
+
+  #ifdef CONFIGURE_MALLOC_BSP_SUPPORTS_SBRK
+    {
+      uintptr_t overhead = _Heap_Area_overhead(CPU_HEAP_ALIGNMENT);
+      uintptr_t work_space_size = rtems_configuration_get_work_space_size();
+      ptrdiff_t sbrk_amount = bsp_sbrk_init(
+        &area,
+        work_space_size
+          + overhead
+          + (rtems_configuration_get_unified_work_area() ? 0 : overhead)
+      );
+
+      rtems_heap_set_sbrk_amount(sbrk_amount);
+    }
+  #endif
+
+  /*
+   *  The following may be helpful in debugging what goes wrong when
+   *  you are allocating the Work Area in a new BSP.
+   */
+  #ifdef BSP_GET_WORK_AREA_DEBUG
+    {
+      void *sp = __builtin_frame_address(0);
+      void *end = (char *) area.begin + area.size;
+      printk(
+        "work_area_start = 0x%p\n"
+        "work_area_size = %lu 0x%08lx\n"
+        "end = 0x%p\n"
+        "current stack pointer = 0x%p%s\n",
+        area.begin,
+        (unsigned long) area.size,  /* decimal */
+        (unsigned long) area.size,  /* hexadecimal */
+        end,
+        sp,
+        (uintptr_t) sp >= (uintptr_t) area.begin
+          && (uintptr_t) sp <= (uintptr_t) end ?
+            " OVERLAPS!" : ""
+      );
+    }
+  #endif
+
+  _Workspace_Handler_initialization(&area, 1, NULL);
+
+  #ifdef BSP_GET_WORK_AREA_DEBUG
+    printk(
+      "heap_start = 0x%p\n"
+      "heap_size = %lu\n",
+      area.begin,
+      (unsigned long) area.size
+    );
+  #endif
+
+  RTEMS_Malloc_Initialize(&area, 1, NULL);
+}
+
+static inline void bsp_work_area_initialize_with_table(
+  Heap_Area *areas,
+  size_t area_count
+)
+{
+  _Workspace_Handler_initialization(areas, area_count, _Heap_Extend);
+  RTEMS_Malloc_Initialize(areas, area_count, _Heap_Extend);
+}
+
+void bsp_work_area_initialize(void);
+
+void bsp_libc_init(void);
 
 /** @} */
-
-void bsp_libc_init(void *heap_begin, uintptr_t heap_size, size_t sbrk_amount);
 
 #ifdef __cplusplus
 }

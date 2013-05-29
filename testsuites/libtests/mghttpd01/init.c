@@ -44,7 +44,7 @@
 #define INDEX_HTML      "HTTP/1.1 200 OK\r\n" \
                         "Date: xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\r\n" \
                         "Last-Modified: xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\r\n" \
-                        "Etag: \"21dae501.a2\"\r\n" \
+                        "Etag: \"21dae500.a2\"\r\n" \
                         "Content-Type: text/html\r\n" \
                         "Content-Length: 162\r\n" \
                         "Connection: close\r\n" \
@@ -172,7 +172,6 @@ static void test_mg_callback(void)
 
 static void test_mongoose(void)
 {
-  rtems_status_code sc = RTEMS_SUCCESSFUL;
   const char *options[] = {
     "listening_ports", "80",
     "document_root", "/www/",

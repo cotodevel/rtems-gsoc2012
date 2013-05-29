@@ -1,6 +1,11 @@
-/*
- * flashdisk.c -- Flash disk block device implementation
+/**
+ * @file
  *
+ * @brief Flash Disk Block Device Implementation
+ * @ingroup libblock
+ */
+
+/*
  * Copyright (C) 2007 Chris Johns
  *
  * The license and distribution terms for this file may be
@@ -2086,8 +2091,7 @@ rtems_fdisk_read (rtems_flashdisk* fd, rtems_blkdev_request* req)
     }
   }
 
-  req->status = ret ? RTEMS_IO_ERROR : RTEMS_SUCCESSFUL;
-  req->req_done (req->done_arg, req->status);
+  rtems_blkdev_request_done (req, ret ? RTEMS_IO_ERROR : RTEMS_SUCCESSFUL);
 
   return 0;
 }
@@ -2122,8 +2126,7 @@ rtems_fdisk_write (rtems_flashdisk* fd, rtems_blkdev_request* req)
     }
   }
 
-  req->status = ret ? RTEMS_IO_ERROR : RTEMS_SUCCESSFUL;
-  req->req_done (req->done_arg, req->status);
+  rtems_blkdev_request_done (req, ret ? RTEMS_IO_ERROR : RTEMS_SUCCESSFUL);
 
   return 0;
 }

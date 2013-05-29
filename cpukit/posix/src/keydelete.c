@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Deletes Thread-specific Data Key Previously Returned by keycreate.c
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).

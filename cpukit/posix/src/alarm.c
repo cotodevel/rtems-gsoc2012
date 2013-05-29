@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief System Generates Signal for process after realtime seconds elapsed
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  3.4.1 Schedule Alarm, P1003.1b-1993, p. 79
  */
@@ -18,7 +25,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 
 /*
  *  _POSIX_signals_Alarm_TSR

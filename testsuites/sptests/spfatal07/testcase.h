@@ -37,11 +37,18 @@ rtems_initialization_tasks_table Initialization_tasks[] = {
 #define FATAL_ERROR_EXPECTED_ERROR       \
           INTERNAL_ERROR_INTERRUPT_STACK_TOO_SMALL
 
+#if CPU_SIMPLE_VECTORED_INTERRUPTS == TRUE
+  #define CONFIGURE_MEMORY_OVERHEAD (sizeof(ISR_Handler_entry) * ISR_NUMBER_OF_VECTORS)
+#endif
+
+#if CPU_ALLOCATE_INTERRUPT_STACK == TRUE
+  #define CONFIGURE_INTERRUPT_STACK_SIZE (STACK_MINIMUM_SIZE - 1)
+#endif
+
 void force_error()
 {
   #if (CPU_ALLOCATE_INTERRUPT_STACK == TRUE)
-    Configuration.interrupt_stack_size = (STACK_MINIMUM_SIZE-1);
-    rtems_initialize_data_structures();
+    /* we will not run this far */
   #else
     printk(
       "WARNING - Test not applicable on this target architecture.\n"
@@ -50,6 +57,4 @@ void force_error()
     );
     rtems_test_exit(0);
   #endif
-
-  /* we will not run this far */
 }

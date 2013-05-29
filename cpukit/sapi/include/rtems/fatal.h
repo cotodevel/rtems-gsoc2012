@@ -1,13 +1,7 @@
 /**
- * @file rtems/fatal.h
+ * @file
  *
- * This include file contains constants and prototypes related
- * to the Fatal Error Manager.  This manager processes all fatal or
- * irrecoverable errors.
- *
- * This manager provides directives to:
- *
- *   - announce a fatal error has occurred
+ * @brief Fatal API.
  */
 
 /*
@@ -23,24 +17,95 @@
 #define _RTEMS_FATAL_H
 
 #include <rtems/score/basedefs.h> /* RTEMS_COMPILER_NO_RETURN_ATTRIBUTE */
+#include <rtems/extension.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*
- *  rtems_fatal_error_occurred
+/**
+ * @defgroup ClassicFatal Fatal
  *
- *  DESCRIPTION:
+ * @ingroup ClassicRTEMS
  *
- *  This is the routine which implements the rtems_fatal_error_occurred
- *  directive.  It is invoked when the application or RTEMS
- *  determines that a fatal error has occurred.
+ * @brief The Fatal Manager provides functions for fatal system states and or
+ * irrecoverable errors.
  */
+/**@{**/
 
+/**
+ * @brief Assert context.
+ */
+typedef struct {
+  const char *file;
+  int         line;
+  const char *function;
+  const char *failed_expression;
+} rtems_assert_context;
+
+/**
+ * @brief Exception frame.
+ */
+typedef CPU_Exception_frame rtems_exception_frame;
+
+/**
+ * @brief Prints the exception frame via printk().
+ *
+ * @see rtems_fatal() and RTEMS_FATAL_SOURCE_EXCEPTION.
+ */
+static inline void rtems_exception_frame_print(
+  const rtems_exception_frame *frame
+)
+{
+  _CPU_Exception_frame_print( frame );
+}
+
+/**
+ * @brief Invokes the internal error handler with a source of
+ * INTERNAL_ERROR_RTEMS_API and is internal set to false.
+ *
+ * @param[in] the_error is a 32-bit fatal error code.
+ *
+ * @see _Internal_error_Occurred().
+ */
 void rtems_fatal_error_occurred(
   uint32_t   the_error
 ) RTEMS_COMPILER_NO_RETURN_ATTRIBUTE;
+
+/**
+ * @brief Invokes the internal error handler with is internal set to false.
+ *
+ * @param[in] source is the fatal source.
+ * @param[in] error is the fatal code.
+ *
+ * @see _Internal_error_Occurred().
+ */
+void rtems_fatal(
+  rtems_fatal_source source,
+  rtems_fatal_code error
+) RTEMS_COMPILER_NO_RETURN_ATTRIBUTE;
+
+/**
+ * @brief Returns a description for a fatal source.
+ *
+ * @param[in] source is the fatal source.
+ *
+ * @retval description The fatal source description.
+ * @retval ? The passed fatal source is invalid.
+ */
+const char *rtems_fatal_source_description( rtems_fatal_source source );
+
+/**
+ * @brief Returns a description for an internal error code.
+ *
+ * @param[in] error is the error code.
+ *
+ * @retval description The error code description.
+ * @retval ? The passed error code is invalid.
+ */
+const char *rtems_internal_error_description( rtems_fatal_code error );
+
+/** @} */
 
 #ifdef __cplusplus
 }

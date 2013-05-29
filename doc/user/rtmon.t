@@ -1,5 +1,5 @@
 @c
-@c  COPYRIGHT (c) 1988-2007.
+@c  COPYRIGHT (c) 1988-2013.
 @c  On-Line Applications Research Corporation (OAR).
 @c  All rights reserved.
 
@@ -176,7 +176,7 @@ worst-case conditions and emphasizes the predictability of the
 system's behavior.  It has been proven that:
 
 @itemize @code{ }
-@b{RMS is an optimal static priority algorithm for
+@item @b{RMS is an optimal static priority algorithm for
 scheduling independent, preemptible, periodic tasks
 on a single processor.}
 @end itemize

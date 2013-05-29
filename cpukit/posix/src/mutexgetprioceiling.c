@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Returns the Current Priority Ceiling of the Mutex
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).

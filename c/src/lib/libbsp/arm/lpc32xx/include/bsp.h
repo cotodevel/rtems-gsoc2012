@@ -25,19 +25,20 @@
 
 #include <bspopts.h>
 
+#define BSP_FEATURE_IRQ_EXTENSION
+
+#ifndef ASM
+
 #include <rtems.h>
 #include <rtems/console.h>
 #include <rtems/clockdrv.h>
 
 #include <bsp/lpc32xx.h>
+#include <bsp/default-initial-extension.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-#define BSP_FEATURE_IRQ_EXTENSION
-
-#ifndef ASM
 
 struct rtems_bsdnet_ifconfig;
 
@@ -148,6 +149,10 @@ void lpc32xx_select_nand_controller(lpc32xx_nand_controller nand_controller);
 
 void bsp_restart(void *addr);
 
+void *bsp_idle_thread(uintptr_t arg);
+
+#define BSP_IDLE_TASK_BODY bsp_idle_thread
+
 #define BSP_CONSOLE_UART_BASE LPC32XX_BASE_UART_5
 
 /**
@@ -247,10 +252,10 @@ extern uint32_t lpc32xx_magic_zero_size [];
  * @brief LPC support package.
  */
 
-#endif /* ASM */
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+#endif /* ASM */
 
 #endif /* LIBBSP_ARM_LPC32XX_BSP_H */

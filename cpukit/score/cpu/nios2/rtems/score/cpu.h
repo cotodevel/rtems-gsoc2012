@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * @brief Altera Nios II CPU Department Source
+ */
+
 /*
  *  Copyright (c) 2011 embedded brains GmbH
  *
@@ -45,7 +51,7 @@ extern "C" {
 
 #define CPU_ALLOCATE_INTERRUPT_STACK TRUE
 
-#define CPU_ISR_PASSES_FRAME_POINTER 1
+#define CPU_ISR_PASSES_FRAME_POINTER FALSE
 
 #define CPU_HARDWARE_FP FALSE
 
@@ -72,6 +78,8 @@ extern "C" {
 #define CPU_LITTLE_ENDIAN TRUE
 
 #define CPU_STACK_MINIMUM_SIZE (4 * 1024)
+
+#define CPU_SIZEOF_POINTER 4
 
 /*
  * Alignment value according to "Nios II Processor Reference" chapter 7
@@ -141,27 +149,7 @@ typedef struct {
 #define _CPU_Context_Get_SP( _context ) \
   (_context)->sp
 
-typedef struct {
-  uint32_t r1;
-  uint32_t r2;
-  uint32_t r3;
-  uint32_t r4;
-  uint32_t r5;
-  uint32_t r6;
-  uint32_t r7;
-  uint32_t r8;
-  uint32_t r9;
-  uint32_t r10;
-  uint32_t r11;
-  uint32_t r12;
-  uint32_t r13;
-  uint32_t r14;
-  uint32_t r15;
-  uint32_t ra;
-  uint32_t gp;
-  uint32_t et;
-  uint32_t ea;
-} CPU_Interrupt_frame;
+typedef void CPU_Interrupt_frame;
 
 typedef struct {
   uint32_t r1;
@@ -251,8 +239,8 @@ void _CPU_Initialize_vectors( void );
  * _CPU_ISR_Disable().  The value is not modified.
  *
  * This flash code is optimal for all Nios II configurations.  The rdctl does
- * not flush the pipeline and has only a late result penalty.  The wrctl on the
- * other hand leads to a pipeline flush.
+ * not flush the pipeline and has only a late result penalty.  The wrctl on
+ * the other hand leads to a pipeline flush.
  */
 #define _CPU_ISR_Flash( _isr_cookie ) \
   do { \
@@ -288,7 +276,7 @@ uint32_t _CPU_ISR_Get_level( void );
 
 /**
  * @brief Initializes the CPU context.
- * 
+ *
  * The following steps are performed:
  *  - setting a starting address
  *  - preparing the stack
@@ -316,14 +304,23 @@ void _CPU_Context_Initialize(
 
 void _CPU_Fatal_halt( uint32_t _error ) RTEMS_COMPILER_NO_RETURN_ATTRIBUTE;
 
+/**
+ * @brief CPU initialization.
+ */
 void _CPU_Initialize( void );
 
+/**
+ * @brief CPU ISR install raw handler.
+ */
 void _CPU_ISR_install_raw_handler(
   uint32_t vector,
   proc_ptr new_handler,
   proc_ptr *old_handler
 );
 
+/**
+ * @brief CPU ISR install vector.
+ */
 void _CPU_ISR_install_vector(
   uint32_t vector,
   proc_ptr new_handler,
@@ -335,6 +332,12 @@ void _CPU_Context_switch( Context_Control *run, Context_Control *heir );
 void _CPU_Context_restore(
   Context_Control *new_context
 ) RTEMS_COMPILER_NO_RETURN_ATTRIBUTE;
+
+void _CPU_Context_volatile_clobber( uintptr_t pattern );
+
+void _CPU_Context_validate( uintptr_t pattern );
+
+void _CPU_Exception_frame_print( const CPU_Exception_frame *frame );
 
 static inline uint32_t CPU_swap_u32( uint32_t value )
 {

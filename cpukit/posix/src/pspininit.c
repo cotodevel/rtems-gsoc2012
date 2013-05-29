@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief POSIX Function Initializes a Spinlock Instance
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  POSIX Spinlock Manager -- Initialize a Spinlock Instance
  *

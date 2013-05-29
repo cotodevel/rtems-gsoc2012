@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Examine and/or change the calling thread's signal mask
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  3.3.5 Examine and Change Blocked Signals, P1003.1b-1993, p. 73
  *
@@ -21,7 +28,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/seterr.h>
 
 int pthread_sigmask(

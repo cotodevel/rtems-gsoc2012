@@ -1,3 +1,9 @@
+/**
+ *  @file
+ *
+ *  @brief ARMV7M Get Exception Handler
+ */
+
 /*
  * Copyright (c) 2011 Sebastian Huber.  All rights reserved.
  *
@@ -16,11 +22,10 @@
   #include "config.h"
 #endif
 
+#include <rtems/score/armv7m.h>
 #include <rtems/score/cpu.h>
 
 #ifdef ARM_MULTILIB_ARCH_V7M
-
-#include <rtems/score/armv7m.h>
 
 ARMV7M_Exception_handler _ARMV7M_Get_exception_handler( int index )
 {

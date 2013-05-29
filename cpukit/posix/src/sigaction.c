@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Allows calling process to examine action of a Specific Signal
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  3.3.4 Examine and Change Signal Action, P1003.1b-1993, p. 70
  *
@@ -19,7 +26,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/seterr.h>
 #include <rtems/score/isr.h>
 

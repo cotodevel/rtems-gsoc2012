@@ -1,6 +1,11 @@
-/*
- *  MSDOS file handlers implementation
+/**
+ * @file
  *
+ * @brief MSDOS File Handlers Implementation
+ * @ingroup libfs
+ */
+
+/*
  *  Copyright (C) 2001 OKTET Ltd., St.-Petersburg, Russia
  *  Author: Eugeny S. Mints <Eugeny.Mints@oktet.ru>
  *
@@ -191,6 +196,7 @@ msdos_file_stat(
     rtems_status_code  sc = RTEMS_SUCCESSFUL;
     msdos_fs_info_t   *fs_info = loc->mt_entry->fs_info;
     fat_file_fd_t     *fat_fd = loc->node_access;
+    uint32_t           cl_mask = fs_info->fat.vol.bpc - 1;
 
     sc = rtems_semaphore_obtain(fs_info->vol_sema, RTEMS_WAIT,
                                 MSDOS_VOLUME_SEMAPHORE_TIMEOUT);
@@ -202,8 +208,9 @@ msdos_file_stat(
     buf->st_mode  = S_IFREG | S_IRWXU | S_IRWXG | S_IRWXO;
     buf->st_rdev = 0ll;
     buf->st_size = fat_fd->fat_file_size;
-    buf->st_blocks = fat_fd->fat_file_size >> FAT_SECTOR512_BITS;
-    buf->st_blksize = fs_info->fat.vol.bps;
+    buf->st_blocks = ((fat_fd->fat_file_size + cl_mask) & ~cl_mask)
+      >> FAT_SECTOR512_BITS;
+    buf->st_blksize = fs_info->fat.vol.bpc;
     buf->st_mtime = fat_fd->mtime;
 
     rtems_semaphore_release(fs_info->vol_sema);
@@ -290,7 +297,7 @@ msdos_file_sync(rtems_libio_t *iop)
         return rc;
     }
 
-    rc = msdos_sync_unprotected(fs_info);
+    rc = fat_sync(&fs_info->fat);
 
     rtems_semaphore_release(fs_info->vol_sema);
     return RC_OK;

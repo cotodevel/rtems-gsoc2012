@@ -1,12 +1,11 @@
+/**
+ *  @file
+ *
+ *  @brief Initialize a Message Queue
+ *  @ingroup ScoreMessageQueue
+ */
+
 /*
- *  CORE Message Queue Handler
- *
- *  DESCRIPTION:
- *
- *  This package is the implementation of the CORE Message Queue Handler.
- *  This core object provides task synchronization and communication functions
- *  via messages passed to queue objects.
- *
  *  COPYRIGHT (c) 1989-2009.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -49,24 +48,6 @@ static inline bool size_t_mult32_with_overflow(
   return true;
 }
 
-/*
- *  _CORE_message_queue_Initialize
- *
- *  This routine initializes a newly created message queue based on the
- *  specified data.
- *
- *  Input parameters:
- *    the_message_queue            - the message queue to initialize
- *    the_class                    - the API specific object class
- *    the_message_queue_attributes - the message queue's attributes
- *    maximum_pending_messages     - maximum message and reserved buffer count
- *    maximum_message_size         - maximum size of each message
- *
- *  Output parameters:
- *    true   - if the message queue is initialized
- *    false  - if the message queue is NOT initialized
- */
-
 bool _CORE_message_queue_Initialize(
   CORE_message_queue_Control    *the_message_queue,
   CORE_message_queue_Attributes *the_message_queue_attributes,
@@ -82,16 +63,22 @@ bool _CORE_message_queue_Initialize(
   the_message_queue->maximum_message_size       = maximum_message_size;
   _CORE_message_queue_Set_notify( the_message_queue, NULL, NULL );
 
-  /*
-   *  Round size up to multiple of a pointer for chain init and
-   *  check for overflow on adding overhead to each message.
-   */
   allocated_message_size = maximum_message_size;
-  if (allocated_message_size & (sizeof(uint32_t) - 1)) {
-    allocated_message_size += sizeof(uint32_t);
-    allocated_message_size &= ~(sizeof(uint32_t) - 1);
+
+  /* 
+   * Check if allocated_message_size is aligned to uintptr-size boundary. 
+   * If not, it will increase allocated_message_size to multiplicity of pointer
+   * size.
+   */
+  if (allocated_message_size & (sizeof(uintptr_t) - 1)) {
+    allocated_message_size += sizeof(uintptr_t);
+    allocated_message_size &= ~(sizeof(uintptr_t) - 1);
   }
 
+  /* 
+   * Check for an overflow. It can occur while increasing allocated_message_size
+   * to multiplicity of uintptr_t above.
+   */
   if (allocated_message_size < maximum_message_size)
     return false;
 

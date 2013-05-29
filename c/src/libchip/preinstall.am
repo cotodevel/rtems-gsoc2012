@@ -126,6 +126,10 @@ $(PROJECT_INCLUDE)/libchip/i2c-2b-eeprom.h: i2c/i2c-2b-eeprom.h $(PROJECT_INCLUD
 	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/libchip/i2c-2b-eeprom.h
 PREINSTALL_FILES += $(PROJECT_INCLUDE)/libchip/i2c-2b-eeprom.h
 
+$(PROJECT_INCLUDE)/libchip/i2c-sc620.h: i2c/i2c-sc620.h $(PROJECT_INCLUDE)/libchip/$(dirstamp)
+	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/libchip/i2c-sc620.h
+PREINSTALL_FILES += $(PROJECT_INCLUDE)/libchip/i2c-sc620.h
+
 $(PROJECT_INCLUDE)/libchip/spi-memdrv.h: i2c/spi-memdrv.h $(PROJECT_INCLUDE)/libchip/$(dirstamp)
 	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/libchip/spi-memdrv.h
 PREINSTALL_FILES += $(PROJECT_INCLUDE)/libchip/spi-memdrv.h
@@ -161,6 +165,10 @@ PREINSTALL_FILES += $(PROJECT_INCLUDE)/libchip/serial.h
 $(PROJECT_INCLUDE)/libchip/sersupp.h: serial/sersupp.h $(PROJECT_INCLUDE)/libchip/$(dirstamp)
 	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/libchip/sersupp.h
 PREINSTALL_FILES += $(PROJECT_INCLUDE)/libchip/sersupp.h
+
+$(PROJECT_INCLUDE)/libchip/ns16550_p.h: serial/ns16550_p.h $(PROJECT_INCLUDE)/libchip/$(dirstamp)
+	$(INSTALL_DATA) $< $(PROJECT_INCLUDE)/libchip/ns16550_p.h
+PREINSTALL_FILES += $(PROJECT_INCLUDE)/libchip/ns16550_p.h
 
 if HAS_MP
 $(PROJECT_INCLUDE)/shm_driver.h: shmdr/shm_driver.h $(PROJECT_INCLUDE)/$(dirstamp)

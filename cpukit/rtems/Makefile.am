@@ -39,6 +39,7 @@ include_rtems_rtems_HEADERS += include/rtems/rtems/support.h
 include_rtems_rtems_HEADERS += include/rtems/rtems/tasks.h
 include_rtems_rtems_HEADERS += include/rtems/rtems/timer.h
 include_rtems_rtems_HEADERS += include/rtems/rtems/types.h
+include_rtems_rtems_HEADERS += include/rtems/rtems/atomic.h
 include_rtems_rtems_HEADERS += mainpage.h
 
 if HAS_MP
@@ -154,6 +155,8 @@ librtems_a_SOURCES += src/clockgettickssinceboot.c
 librtems_a_SOURCES += src/clockgettod.c
 librtems_a_SOURCES += src/clockgettodtimeval.c
 librtems_a_SOURCES += src/clockgetuptime.c
+librtems_a_SOURCES += src/clockgetuptimetimeval.c
+librtems_a_SOURCES += src/clockgetuptimeseconds.c
 librtems_a_SOURCES += src/clockset.c
 librtems_a_SOURCES += src/clocksetnsecshandler.c
 librtems_a_SOURCES += src/clocktick.c
@@ -209,6 +212,8 @@ librtems_a_SOURCES += src/eventsend.c
 librtems_a_SOURCES += src/eventsurrender.c
 librtems_a_SOURCES += src/eventtimeout.c
 librtems_a_SOURCES += src/eventdata.c
+librtems_a_SOURCES += src/systemeventsend.c
+librtems_a_SOURCES += src/systemeventreceive.c
 
 ## SIGNAL_C_FILES
 librtems_a_SOURCES += src/signal.c

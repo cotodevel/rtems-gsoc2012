@@ -72,7 +72,6 @@ void _BSP_Fatal_error(unsigned n)
 
 void bsp_start(void)
 {
-  rtems_status_code sc = RTEMS_SUCCESSFUL;
   unsigned long i = 0;
 
   ppc_cpu_id_t myCpu;
@@ -109,14 +108,11 @@ void bsp_start(void)
 
   /* Initialize exception handler */
   ppc_exc_vector_base = (uint32_t) bsp_exc_vector_base;
-  sc = ppc_exc_initialize(
+  ppc_exc_initialize(
     PPC_INTERRUPT_DISABLE_MASK_DEFAULT,
     (uintptr_t) bsp_section_work_begin,
-    Configuration.interrupt_stack_size
+    rtems_configuration_get_interrupt_stack_size()
   );
-  if (sc != RTEMS_SUCCESSFUL) {
-    BSP_panic("cannot initialize exceptions");
-  }
 
   /* Now it is possible to make the code execute only */
   qoriq_mmu_change_perm(
@@ -126,10 +122,7 @@ void bsp_start(void)
   );
 
   /* Initalize interrupt support */
-  sc = bsp_interrupt_initialize();
-  if (sc != RTEMS_SUCCESSFUL) {
-    BSP_panic("cannot intitialize interrupts\n");
-  }
+  bsp_interrupt_initialize();
 
   /* Disable boot page translation */
   qoriq.lcc.bptr &= ~BPTR_EN;

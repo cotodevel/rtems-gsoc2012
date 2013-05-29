@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <memory.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "fstest.h"
 #include "pmacros.h"
@@ -291,6 +292,8 @@ truncate_test03 (void)
    */
   status = chdir ("..");
   rtems_test_assert (status == 0);
+
+  free(readbuf);
 }
 
 static void
@@ -334,7 +337,7 @@ lseek_test (void)
     rtems_test_assert (n == (ssize_t) len);
     total_written += n;
   }
-  printf ("Successfully wrote %d\n", total_written);
+  printf ("Successfully wrote %zd\n", total_written);
 
   /*
    * Check the current position
@@ -518,6 +521,8 @@ lseek_test (void)
   rtems_test_assert (status == 0);
 
   test_case_leave ();
+
+  free(readbuf);
 }
 
 static void
@@ -556,7 +561,7 @@ random_fill (char *dst, size_t n)
 {
   static uint32_t u = 0x12345678;
   uint32_t v = u;
-  uint32_t w;
+  uint32_t w = u;
   size_t i = 0;
   int j = 0;
 
@@ -744,6 +749,61 @@ block_read_and_write (void)
   test_case_leave ();
 }
 
+static void
+write_until_no_space_is_left (void)
+{
+  static const char file [] = "zero";
+  int fd;
+  struct stat st;
+  int status;
+  blksize_t block_size;
+  char *out;
+  ssize_t chunk_size;
+  ssize_t written;
+  off_t total;
+
+  /* Use the root directory to account for some FAT12 or FAT16 specialities */
+  printf ("test case: %s\n", __func__);
+
+  fd = open (file, O_RDWR | O_CREAT | O_TRUNC, mode);
+  rtems_test_assert (fd >= 0);
+
+  status = fstat (fd, &st);
+  rtems_test_assert (status == 0);
+  rtems_test_assert (st.st_size == 0);
+  rtems_test_assert (st.st_blksize > 0);
+  block_size = st.st_blksize;
+
+  out = calloc (1, block_size);
+  rtems_test_assert (out != NULL);
+
+  total = 0;
+  chunk_size = block_size / 2;
+  do {
+    errno = 0;
+
+    written = write (fd, out, chunk_size);
+    if (written > 0) {
+      total += written;
+    }
+
+    chunk_size = block_size;
+  } while (written > 0);
+
+  rtems_test_assert (written == -1);
+  rtems_test_assert (errno == ENOSPC || errno == EFBIG);
+
+  status = close (fd);
+  rtems_test_assert (status == 0);
+
+  /* Do not use fstat() to do the path evaluation again */
+  status = lstat (file, &st);
+  rtems_test_assert (status == 0);
+  rtems_test_assert (st.st_size == total);
+
+  free (out);
+}
+
 void
 test (void)
 {
@@ -752,4 +812,5 @@ test (void)
   truncate_test03 ();
   truncate_to_zero ();
   block_read_and_write ();
+  write_until_no_space_is_left ();
 }

@@ -1,11 +1,13 @@
 /**
- * @file rtems/score/cpu.h
+ * @file
+ * 
+ * @brief Intel I386 CPU Dependent Source
+ * 
+ * This include file contains information pertaining to the Intel
+ * i386 processor.
  */
 
 /*
- *  This include file contains information pertaining to the Intel
- *  i386 processor.
- *
  *  COPYRIGHT (c) 1989-2011.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -322,6 +324,8 @@ SCORE_EXTERN Context_Control_fp  _CPU_Null_fp_context;
  */
 
 #define CPU_STACK_MINIMUM_SIZE          4096
+
+#define CPU_SIZEOF_POINTER 4
 
 /*
  *  i386 is pretty tolerant of alignment.  Just put things on 4 byte boundaries.
@@ -662,6 +666,20 @@ void _CPU_Context_restore_fp(
    }                                                  \
   } while (0)
 #endif
+
+static inline void _CPU_Context_volatile_clobber( uintptr_t pattern )
+{
+  /* TODO */
+}
+
+static inline void _CPU_Context_validate( uintptr_t pattern )
+{
+  while (1) {
+    /* TODO */
+  }
+}
+
+void _CPU_Exception_frame_print( const CPU_Exception_frame *frame );
 
 #endif /* ASM */
 

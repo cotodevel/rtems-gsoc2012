@@ -12,6 +12,9 @@
 #ifndef _BSP_H
 #define _BSP_H
 
+#include <bspopts.h>
+#include <bsp/default-initial-extension.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

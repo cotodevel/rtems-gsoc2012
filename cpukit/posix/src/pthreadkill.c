@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Sends a signal Asynchronously directed to a thread
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  3.3.10 Send a Signal to a Thread, P1003.1c/D10, p. 43
  *
@@ -19,7 +26,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/score/isr.h>
 #include <rtems/seterr.h>
 
@@ -45,6 +52,8 @@ int pthread_kill(
       /*
        *  If sig == 0 then just validate arguments
        */
+
+      _POSIX_signals_Add_post_switch_extension();
 
       api = the_thread->API_Extensions[ THREAD_API_POSIX ];
 

@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Function Returns the Resolution of any Clock
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).

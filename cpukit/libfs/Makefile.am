@@ -80,7 +80,7 @@ libdosfs_a_SOURCES += src/dosfs/msdos_create.c src/dosfs/msdos_dir.c \
     src/dosfs/msdos_handlers_file.c src/dosfs/msdos_init.c \
     src/dosfs/msdos_initsupp.c src/dosfs/msdos_misc.c \
     src/dosfs/msdos_mknod.c src/dosfs/msdos_node_type.c \
-    src/dosfs/msdos_rmnod.c \
+    src/dosfs/msdos_rmnod.c src/dosfs/msdos_statvfs.c \
     src/dosfs/msdos_conv.c src/dosfs/msdos.h src/dosfs/msdos_format.c \
     src/dosfs/dosfs.h src/dosfs/msdos_rename.c
 endif
@@ -94,7 +94,7 @@ librfs_a_SOURCES = \
     src/rfs/rtems-rfs-group.c src/rfs/rtems-rfs-inode.c \
     src/rfs/rtems-rfs-rtems-dev.c src/rfs/rtems-rfs-rtems-utils.c \
     src/rfs/rtems-rfs-rtems.c src/rfs/rtems-rfs-shell.c \
-    src/rfs/rtems-rfs-bitmaps-ut.c src/rfs/rtems-rfs-dir.c \
+    src/rfs/rtems-rfs-dir.c \
     src/rfs/rtems-rfs-file-system.c src/rfs/rtems-rfs-format.c \
     src/rfs/rtems-rfs-link.c src/rfs/rtems-rfs-mutex.c \
     src/rfs/rtems-rfs-rtems-dir.c src/rfs/rtems-rfs-rtems-file.c \

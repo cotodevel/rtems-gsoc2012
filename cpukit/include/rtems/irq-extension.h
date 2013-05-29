@@ -16,8 +16,9 @@
  * Germany
  * rtems@embedded-brains.de
  *
- * The license and distribution terms for this file may be found in the file
- * LICENSE in this distribution or at http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef RTEMS_IRQ_EXTENSION_H
@@ -37,9 +38,8 @@ extern "C" {
  * In addition to the Classic API interrupt handler with a handle are
  * supported.  You can also install multiple shared handler for one interrupt
  * vector.
- *
- * @{
  */
+/**@{**/
 
 /**
  * @brief Makes the interrupt handler unique.  Prevents other handler from

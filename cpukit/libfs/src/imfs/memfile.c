@@ -1,12 +1,11 @@
+/**
+ * @file
+ *
+ * @brief IMFS Memory File Handlers
+ * @ingroup IMFS
+ */
+
 /*
- *  IMFS Device Node Handlers
- *
- *  This file contains the set of handlers used to process operations on
- *  IMFS memory file nodes.  The memory files are created in memory using
- *  malloc'ed memory.  Thus any data stored in one of these files is lost
- *  at system shutdown unless special arrangements to copy the data to
- *  some type of non-volailte storage are made by the application.
- *
  *  COPYRIGHT (c) 1989-2010.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -40,7 +39,7 @@ MEMFILE_STATIC int IMFS_memfile_addblock(
    unsigned int   block
 );
 
-MEMFILE_STATIC int IMFS_memfile_remove_block(
+MEMFILE_STATIC void IMFS_memfile_remove_block(
    IMFS_jnode_t  *the_jnode,
    unsigned int   block
 );
@@ -71,12 +70,6 @@ void memfile_free_block(
   void *memory
 );
 
-/*
- *  memfile_open
- *
- *  This routine processes the open() system call.  Note that there is
- *  nothing special to be done at open() time.
- */
 int memfile_open(
   rtems_libio_t *iop,
   const char    *pathname,
@@ -109,11 +102,6 @@ int memfile_open(
   return 0;
 }
 
-/*
- *  memfile_read
- *
- *  This routine processes the read() system call.
- */
 ssize_t memfile_read(
   rtems_libio_t *iop,
   void          *buffer,
@@ -133,11 +121,6 @@ ssize_t memfile_read(
   return status;
 }
 
-/*
- *  memfile_write
- *
- *  This routine processes the write() system call.
- */
 ssize_t memfile_write(
   rtems_libio_t *iop,
   const void    *buffer,
@@ -166,11 +149,6 @@ ssize_t memfile_write(
  *  This IMFS_stat() can be used.
  */
 
-/*
- *  memfile_ftruncate
- *
- *  This routine processes the ftruncate() system call.
- */
 int memfile_ftruncate(
   rtems_libio_t        *iop,
   off_t                 length
@@ -295,6 +273,9 @@ MEMFILE_STATIC int IMFS_memfile_addblock(
    * Obtain the pointer for the specified block number
    */
   block_entry_ptr = IMFS_memfile_get_block_pointer( the_jnode, block, 1 );
+  if ( !block_entry_ptr )
+    return 1;
+
   if ( *block_entry_ptr )
     return 0;
 
@@ -319,7 +300,7 @@ MEMFILE_STATIC int IMFS_memfile_addblock(
  *         block from the middle of a file would be exceptionally
  *         dangerous and the results unpredictable.
  */
-MEMFILE_STATIC int IMFS_memfile_remove_block(
+MEMFILE_STATIC void IMFS_memfile_remove_block(
    IMFS_jnode_t  *the_jnode,
    unsigned int   block
 )
@@ -328,13 +309,11 @@ MEMFILE_STATIC int IMFS_memfile_remove_block(
   block_p  ptr;
 
   block_ptr = IMFS_memfile_get_block_pointer( the_jnode, block, 0 );
-  IMFS_assert( block_ptr );
-
-  ptr = *block_ptr;
-  *block_ptr = 0;
-  memfile_free_block( ptr );
-
-  return 1;
+  if ( block_ptr ) {
+    ptr = *block_ptr;
+    *block_ptr = 0;
+    memfile_free_block( ptr );
+  }
 }
 
 /*

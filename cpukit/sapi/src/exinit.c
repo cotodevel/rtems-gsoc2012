@@ -1,3 +1,11 @@
+/**
+ * @file
+ *
+ * @brief Device Driver Initialization Functions
+ *
+ * @ingroup ClassicRTEMS
+ */
+
 /*
  *  Initialization Manager
  *
@@ -43,7 +51,7 @@
 #include <rtems/score/scheduler.h>
 #include <rtems/score/thread.h>
 #include <rtems/score/tod.h>
-#include <rtems/score/userext.h>
+#include <rtems/score/userextimpl.h>
 #include <rtems/score/watchdog.h>
 #include <rtems/score/wkspace.h>
 
@@ -79,7 +87,7 @@ void rtems_initialize_data_structures(void)
      *  In an MP configuration, internally we view single processor
      *  systems as a very restricted multiprocessor system.
      */
-    _Configuration_MP_table = Configuration.User_multiprocessing_table;
+    _Configuration_MP_table = rtems_configuration_get_user_multiprocessing_table();
 
     if ( _Configuration_MP_table == NULL ) {
       _Configuration_MP_table =
@@ -110,12 +118,6 @@ void rtems_initialize_data_structures(void)
   _API_extensions_Initialization();
 
   _Thread_Dispatch_initialization();
-
-  /*
-   *  Before this is called, we are not allowed to allocate memory
-   *  from the Workspace because it is not initialized.
-   */
-  _Workspace_Handler_initialization();
 
   #if defined(RTEMS_SMP)
     _SMP_Handler_initialize();
@@ -162,7 +164,7 @@ void rtems_initialize_data_structures(void)
    */
   #if defined(RTEMS_SMP)
     _SMP_Processor_count =
-        bsp_smp_initialize( rtems_configuration_smp_maximum_processors );
+        bsp_smp_initialize( rtems_configuration_get_maximum_processors() );
   #endif
 
   _System_state_Set( SYSTEM_STATE_BEFORE_MULTITASKING );
@@ -223,8 +225,10 @@ void rtems_initialize_device_drivers(void)
   _API_extensions_Run_postdriver();
 }
 
-uint32_t rtems_initialize_start_multitasking(void)
+void rtems_initialize_start_multitasking(void)
 {
+  uint32_t status;
+
   _System_state_Set( SYSTEM_STATE_BEGIN_MULTITASKING );
 
   _Thread_Start_multitasking();
@@ -238,5 +242,6 @@ uint32_t rtems_initialize_start_multitasking(void)
    *******************************************************************
    *******************************************************************/
   
-  return _Per_CPU_Information[0].idle->Wait.return_code;
+  status = _Per_CPU_Information[0].idle->Wait.return_code;
+  rtems_fatal( RTEMS_FATAL_SOURCE_EXIT, status );
 }

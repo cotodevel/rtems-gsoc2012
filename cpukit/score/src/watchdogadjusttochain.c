@@ -1,10 +1,12 @@
 /**
- *  @file watchdogadjusttochain.c
+ *  @file
  *
- *  This is used by the Timer Server task.
+ *  @brief Watchdog Adjust to Chain
+ *  @ingroup ScoreWatchdog
  */
 
-/*  COPYRIGHT (c) 1989-2009.
+/*
+ *  COPYRIGHT (c) 1989-2009.
  *  On-Line Applications Research Corporation (OAR).
  *
  *  The license and distribution terms for this file may be
@@ -31,16 +33,9 @@ void _Watchdog_Adjust_to_chain(
   ISR_Level          level;
   Watchdog_Control  *first;
 
-  if ( units <= 0 ) {
-    return;
-  }
-
   _ISR_Disable( level );
 
   while ( 1 ) {
-    if ( units <= 0 ) {
-      break;
-    }
     if ( _Chain_Is_empty( header ) ) {
       break;
     }

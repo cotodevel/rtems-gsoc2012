@@ -198,6 +198,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #include <rtems.h>
 #include <rtems/rtems_bsdnet.h>
@@ -1419,6 +1420,29 @@ command_mdtm(FTPD_SessionInfo_t  *info, char const* fname)
   }
 }
 
+static void
+command_size(FTPD_SessionInfo_t *info, char const* fname)
+{
+  struct stat stbuf;
+  char buf[FTPD_BUFSIZE];
+
+  if(!info->auth)
+  {
+    send_reply(info, 550, "Access denied.");
+    return;
+  }
+
+  if (info->xfer_mode != TYPE_I || 0 > stat(fname, &stbuf) || stbuf.st_size < 0)
+  {
+    send_reply(info, 550, "Could not get file size.");
+  }
+  else
+  {
+    snprintf(buf, FTPD_BUFSIZE, "%" PRIuMAX, (uintmax_t) stbuf.st_size);
+    send_reply(info, 213, buf);
+  }
+}
+
 /*
  * command_port
  *
@@ -1700,6 +1724,11 @@ exec_command(FTPD_SessionInfo_t *info, char* cmd, char* args)
     strncpy(fname, args, 254);
     command_mdtm(info, fname);
   }
+  else if (!strcmp("SIZE", cmd))
+  {
+    strncpy(fname, args, 254);
+    command_size(info, fname);
+  }
   else if (!strcmp("SYST", cmd))
   {
     send_reply(info, 215, FTPD_SYSTYPE);
@@ -1885,39 +1914,57 @@ session(rtems_task_argument arg)
   while(1)
   {
     rtems_event_set set;
+    int rv;
 
     rtems_event_receive(FTPD_RTEMS_EVENT, RTEMS_EVENT_ANY, RTEMS_NO_TIMEOUT,
       &set);
 
     chroot_made = chroot_made || chroot(ftpd_root) == 0;
 
+    rv = chroot_made ? chdir("/") : -1;
+
     errno = 0;
 
-    send_reply(info, 220, FTPD_SERVER_MESSAGE);
-
-    while (1)
+    if (rv == 0)
     {
-      char buf[FTPD_BUFSIZE];
-      char *cmd, *opts, *args;
+      send_reply(info, 220, FTPD_SERVER_MESSAGE);
 
-      if (fgets(buf, FTPD_BUFSIZE, info->ctrl_fp) == NULL)
+      while (1)
       {
-        syslog(LOG_INFO, "ftpd: Connection aborted.");
-        break;
-      }
+        char buf[FTPD_BUFSIZE];
+        char *cmd, *opts, *args;
 
-      split_command(buf, &cmd, &opts, &args);
+        if (fgets(buf, FTPD_BUFSIZE, info->ctrl_fp) == NULL)
+        {
+          syslog(LOG_INFO, "ftpd: Connection aborted.");
+          break;
+        }
 
-      if (!strcmp("QUIT", cmd))
-      {
-        send_reply(info, 221, "Goodbye.");
-        break;
-      }
-      else
-      {
-        exec_command(info, cmd, args);
+        split_command(buf, &cmd, &opts, &args);
+
+        if (!strcmp("QUIT", cmd))
+        {
+          send_reply(info, 221, "Goodbye.");
+          break;
+        }
+        else
+        {
+          exec_command(info, cmd, args);
+        }
       }
     }
+    else
+    {
+      send_reply(info, 421, "Service not available, closing control connection.");
+    }
+
+    /*
+     * Go back to the root directory.  A use case is to release a current
+     * directory in a mounted file system on dynamic media, e.g. USB stick.
+     * The return value can be ignored since the next session will try do the
+     * operation again and an error check is performed in this case.
+     */
+    chdir("/");
 
     /* Close connection and put ourselves back into the task pool. */
     close_data_socket(info);
@@ -1925,8 +1972,6 @@ session(rtems_task_argument arg)
     free(info->user);
     free(info->pass);
     task_pool_release(info);
-
-    chdir("/");
   }
 }
 

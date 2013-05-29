@@ -1,6 +1,10 @@
-/*
- *  Thread Handler / Thread Initialize
+/**
+ *  @file
  *
+ *  @brief Initialize Thread
+ *  @ingroup ScoreThread
+ */
+/*
  *  COPYRIGHT (c) 1989-2011.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -25,18 +29,9 @@
 #include <rtems/score/sysstate.h>
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
-#include <rtems/score/userext.h>
+#include <rtems/score/userextimpl.h>
 #include <rtems/score/watchdog.h>
 #include <rtems/score/wkspace.h>
-
-/*
- *  _Thread_Initialize
- *
- *  This routine initializes the specified the thread.  It allocates
- *  all memory associated with this thread.  It completes by adding
- *  the thread to the local object table so operations on this
- *  thread id are allowed.
- */
 
 bool _Thread_Initialize(
   Objects_Information                  *information,

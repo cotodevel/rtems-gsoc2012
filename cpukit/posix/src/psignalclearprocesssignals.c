@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief POSIX_signals clear_process_signals
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).
@@ -22,7 +29,7 @@
 #include <rtems/score/wkspace.h>
 #include <rtems/seterr.h>
 #include <rtems/posix/threadsup.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/posix/pthread.h>
 #include <rtems/posix/time.h>
 #include <stdio.h>

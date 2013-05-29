@@ -1,5 +1,4 @@
-/*  bsp_cleanup()
- *
+/*
  *  This routine normally is part of start.s and usually returns
  *  control to a monitor.
  *
@@ -32,17 +31,23 @@
  *  http://www.rtems.com/license/LICENSE.
  */
 
-#include <rtems.h>
 #include <bsp.h>
+#include <bsp/bootcard.h>
 
 static void _noopfun(void) {}
 
 void app_bsp_cleanup(void)
 __attribute__(( weak, alias("_noopfun") ));
 
-void bsp_cleanup( void )
+void bsp_fatal_extension(
+  rtems_fatal_source source,
+  bool is_internal,
+  rtems_fatal_code error
+)
 {
-  app_bsp_cleanup();
+  if ( source == RTEMS_FATAL_SOURCE_EXIT ) {
+    app_bsp_cleanup();
+  }
 
   /* All done.  Hang out. */
   BSP_ask_for_reset();

@@ -15,10 +15,10 @@
 void
 rtems_monitor_task_canonical(
     rtems_monitor_task_t  *canonical_task,
-    void                  *thread_void
+    const void            *thread_void
 )
 {
-    Thread_Control       *rtems_thread = (Thread_Control *) thread_void;
+    const Thread_Control *rtems_thread = (const Thread_Control *) thread_void;
     RTEMS_API_Control    *api;
 
     api = rtems_thread->API_Extensions[ THREAD_API_RTEMS ];
@@ -30,7 +30,7 @@ rtems_monitor_task_canonical(
     canonical_task->priority = rtems_thread->current_priority;
     canonical_task->state = rtems_thread->current_state;
     canonical_task->wait_id = rtems_thread->Wait.id;
-    canonical_task->events = api->pending_events;
+    canonical_task->events = api->Event.pending_events;
     /*
      * FIXME: make this optionally cpu_time_executed
      */

@@ -1,16 +1,15 @@
+/**
+ *  @file
+ *
+ *  @brief Mounts a File System
+ *  @ingroup FileSystemTypesAndMount
+ */
+
 /*
- *  mount()
- *
- *  XXX
- *
- *  XXX make sure no required ops are NULL
- *  XXX make sure no optional ops you are using are NULL
- *  XXX unmount should be required.
- *
  *  COPYRIGHT (c) 1989-2010.
  *  On-Line Applications Research Corporation (OAR).
  *
- *  Copyright (c) 2010 embedded brains GmbH.
+ *  Copyright (c) 2010-2012 embedded brains GmbH.
  *
  *  The license and distribution terms for this file may be
  *  found in the file LICENSE in this distribution or at
@@ -28,9 +27,6 @@
 
 RTEMS_CHAIN_DEFINE_EMPTY(rtems_filesystem_mount_table);
 
-/*
- * Default pathconfs.
- */
 const rtems_filesystem_limits_and_options_t rtems_filesystem_default_pathconf = {
    5,    /* link_max: count */
    128,  /* max_canon: max formatted input line size */
@@ -73,9 +69,11 @@ static rtems_filesystem_mount_table_entry_t *alloc_mount_table_entry(
     mt_entry->type = str;
     str += filesystemtype_size;
 
-    memcpy( str, source_or_null, source_size );
-    mt_entry->dev = str;
-    str += source_size;
+    if ( source_or_null != NULL ) {
+      memcpy( str, source_or_null, source_size );
+      mt_entry->dev = str;
+      str += source_size;
+    }
 
     memcpy( str, target, target_size );
     mt_entry->target = str;
@@ -115,7 +113,7 @@ static int register_subordinate_file_system(
   rtems_filesystem_location_info_t *currentloc =
     rtems_filesystem_eval_path_start( &ctx, target, eval_flags );
 
-  if ( !rtems_filesystem_location_is_root( currentloc ) ) {
+  if ( !rtems_filesystem_location_is_instance_root( currentloc ) ) {
     rtems_filesystem_location_info_t targetloc;
     rtems_filesystem_global_location_t *mt_point_node;
 

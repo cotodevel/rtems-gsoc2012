@@ -3,7 +3,7 @@
  *
  * @ingroup ScoreHeap
  *
- * @brief Heap Handler API.
+ * @brief Heap Handler API
  */
 
 /*
@@ -126,9 +126,8 @@ extern "C" {
  * block indicates that the previous block is used, this ensures that the
  * last block appears as used for the _Heap_Is_used() and _Heap_Is_free()
  * functions.
- *
- * @{
  */
+/**@{**/
 
 typedef struct Heap_Control Heap_Control;
 
@@ -388,6 +387,33 @@ typedef enum {
 } Heap_Resize_status;
 
 /**
+ * @brief Heap area structure for table based heap initialization and
+ * extension.
+ *
+ * @see Heap_Initialization_or_extend_handler.
+ */
+typedef struct {
+  void *begin;
+  uintptr_t size;
+} Heap_Area;
+
+/**
+ * @brief Heap initialization and extend handler type.
+ *
+ * This helps to do a table based heap initialization and extension.  Create a
+ * table of Heap_Area elements and iterate through it.  Set the handler to
+ * _Heap_Initialize() in the first iteration and then to _Heap_Extend().
+ *
+ * @see Heap_Area, _Heap_Initialize(), _Heap_Extend(), or _Heap_No_extend().
+ */
+typedef uintptr_t (*Heap_Initialization_or_extend_handler)(
+  Heap_Control *heap,
+  void *area_begin,
+  uintptr_t area_size,
+  uintptr_t page_size_or_unused
+);
+
+/**
  * @brief Gets the first and last block for the heap area with begin
  * @a heap_area_begin and size @a heap_area_size.
  *
@@ -419,6 +445,8 @@ bool _Heap_Get_first_and_last_block(
  * @c CPU_ALIGNMENT, it is aligned up to the nearest @c CPU_ALIGNMENT boundary.
  *
  * Returns the maximum memory available, or zero in case of failure.
+ *
+ * @see Heap_Initialization_or_extend_handler.
  */
 uintptr_t _Heap_Initialize(
   Heap_Control *heap,
@@ -431,22 +459,40 @@ uintptr_t _Heap_Initialize(
  * @brief Extends the memory available for the heap @a heap using the memory
  * area starting at @a area_begin of size @a area_size bytes.
  *
- * The extended space available for allocation will be returned in
- * @a amount_extended.  This pointer may be @c NULL.
- *
  * There are no alignment requirements.  The memory area must be big enough to
  * contain some maintainance blocks.  It must not overlap parts of the current
  * heap areas.  Disconnected subordinate heap areas will lead to used blocks
  * which cover the gaps.  Extending with an inappropriate memory area will
  * corrupt the heap.
  *
- * Returns @c true in case of success, and @c false otherwise.
+ * The unused fourth parameter is provided to have the same signature as
+ * _Heap_Initialize().
+ *
+ * Returns the extended space available for allocation, or zero in case of failure.
+ *
+ * @see Heap_Initialization_or_extend_handler.
  */
-bool _Heap_Extend(
+uintptr_t _Heap_Extend(
   Heap_Control *heap,
   void *area_begin,
   uintptr_t area_size,
-  uintptr_t *amount_extended
+  uintptr_t unused
+);
+
+/**
+ * @brief This function returns always zero.
+ *
+ * This function only returns zero and does nothing else.
+ *
+ * Returns always zero.
+ *
+ * @see Heap_Initialization_or_extend_handler.
+ */
+uintptr_t _Heap_No_extend(
+  Heap_Control *unused_0,
+  void *unused_1,
+  uintptr_t unused_2,
+  uintptr_t unused_3
 );
 
 /**
@@ -511,7 +557,7 @@ bool _Heap_Free( Heap_Control *heap, void *addr );
  * If @a dump is @c true, then diagnostic messages will be printed to standard
  * output.  In this case @a source is used to mark the output lines.
  *
- * Returns @c true if no errors occured, and @c false if the heap is corrupt.
+ * Returns @c true if no errors occurred, and @c false if the heap is corrupt.
  */
 bool _Heap_Walk(
   Heap_Control *heap,
@@ -627,6 +673,36 @@ Heap_Resize_status _Heap_Resize_block(
   uintptr_t *old_size,
   uintptr_t *new_size
 );
+
+RTEMS_INLINE_ROUTINE uintptr_t _Heap_Align_up(
+  uintptr_t value,
+  uintptr_t alignment
+)
+{
+  uintptr_t remainder = value % alignment;
+
+  if ( remainder != 0 ) {
+    return value - remainder + alignment;
+  } else {
+    return value;
+  }
+}
+
+/**
+ * @brief Returns the worst case overhead to manage a memory area.
+ */
+RTEMS_INLINE_ROUTINE uintptr_t _Heap_Area_overhead(
+  uintptr_t page_size
+)
+{
+  if ( page_size != 0 ) {
+    page_size = _Heap_Align_up( page_size, CPU_ALIGNMENT );
+  } else {
+    page_size = CPU_ALIGNMENT;
+  }
+
+  return 2 * (page_size - 1) + HEAP_BLOCK_HEADER_SIZE;
+}
 
 #if !defined(__RTEMS_APPLICATION__)
 

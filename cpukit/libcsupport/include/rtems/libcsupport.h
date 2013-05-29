@@ -1,6 +1,8 @@
 /**
- * @file rtems/libcsupport.h
- *
+ * @file
+ * 
+ * @brief Standard C Library Support
+ * 
  * This include file contains the information regarding the
  * RTEMS specific support for the standard C library.
  */
@@ -27,22 +29,50 @@
 extern "C" {
 #endif
 
-void RTEMS_Malloc_Initialize(
-  void *heap_begin,
-  uintptr_t heap_size,
-  size_t sbrk_amount
-);
+/**
+ * @defgroup libcsupport Standard C Library Support
+ *
+ * @brief RTEMS Specific Support for the Standard C Library
+ *
+ */
+/**@{**/
 
 extern void malloc_dump(void);
+
+/**
+ * @brief Malloc walk.
+ */
 extern bool malloc_walk(int source, bool printf_enabled);
+
+/**
+ * @brief Set malloc heap pointer.
+ * 
+ * This routine is primarily used for debugging. 
+ */
 void malloc_set_heap_pointer(Heap_Control *new_heap);
+
+/**
+ * @brief Get malloc heap pointer.
+ * 
+ * This routine is primarily used for debugging. 
+ */
 Heap_Control *malloc_get_heap_pointer( void );
 extern void libc_init(void);
 extern int  host_errno(void);
 extern void fix_syscall_errno(void);
-extern size_t malloc_free_space(void);
-extern void open_dev_console(void);
 
+/**
+ * @brief Get free malloc information.
+ * 
+ * Find amount of free heap remaining
+ */
+extern size_t malloc_free_space(void);
+
+/**
+ * @brief Get malloc status information.
+ * 
+ * Find amount of free heap remaining.
+ */
 extern int malloc_info(Heap_Information_block *the_info);
 
 /*
@@ -71,6 +101,99 @@ void newlib_delete_hook(
   0,                      /* task_exitted */ \
   0                       /* fatal        */ \
 }
+
+typedef struct {
+  uint32_t active_barriers;
+  uint32_t active_extensions;
+  uint32_t active_message_queues;
+  uint32_t active_partitions;
+  uint32_t active_periods;
+  uint32_t active_ports;
+  uint32_t active_regions;
+  uint32_t active_semaphores;
+  uint32_t active_tasks;
+  uint32_t active_timers;
+} rtems_resource_rtems_api;
+
+typedef struct {
+  uint32_t active_barriers;
+  uint32_t active_condition_variables;
+  uint32_t active_keys;
+  uint32_t active_message_queues;
+  uint32_t active_message_queue_descriptors;
+  uint32_t active_mutexes;
+  uint32_t active_rwlocks;
+  uint32_t active_semaphores;
+  uint32_t active_spinlocks;
+  uint32_t active_threads;
+  uint32_t active_timers;
+} rtems_resource_posix_api;
+
+typedef struct {
+  Heap_Information_block workspace_info;
+  Heap_Information_block heap_info;
+  rtems_resource_rtems_api rtems_api;
+  rtems_resource_posix_api posix_api;
+  int open_files;
+} rtems_resource_snapshot;
+
+/**
+ * @brief Tasks a snapshot of the resource usage of the system.
+ *
+ * @param[out] snapshot The snapshot of used resources.
+ *
+ * @see rtems_resource_snapshot_equal() and rtems_resource_snapshot_check().
+ *
+ * @code
+ * #include <assert.h>
+ *
+ * #include <rtems/libcsupport.h>
+ *
+ * void example(void)
+ * {
+ *   rtems_resource_snapshot before;
+ *
+ *   test_setup();
+ *   rtems_resource_snapshot_take(&before);
+ *   test();
+ *   assert(rtems_resource_snapshot_check(&before));
+ *   test_cleanup();
+ * }
+ * @endcode
+ */
+void rtems_resource_snapshot_take(rtems_resource_snapshot *snapshot);
+
+/**
+ * @brief Compares two resource snapshots for equality.
+ *
+ * @param[in] a One resource snapshot.
+ * @param[in] b Another resource snapshot.
+ *
+ * @retval true The resource snapshots are equal.
+ * @retval false Otherwise.
+ *
+ * @see rtems_resource_snapshot_take().
+ */
+bool rtems_resource_snapshot_equal(
+  const rtems_resource_snapshot *a,
+  const rtems_resource_snapshot *b
+);
+
+/**
+ * @brief Takes a new resource snapshot and checks that it is equal to the
+ * given resource snapshot.
+ *
+ * @param[in] snapshot The resource snapshot used for comparison with the new
+ * resource snapshot.
+ *
+ * @retval true The resource snapshots are equal.
+ * @retval false Otherwise.
+ *
+ * @see rtems_resource_snapshot_take().
+ */
+bool rtems_resource_snapshot_check(const rtems_resource_snapshot *snapshot);
+
+/** @} */
 
 #ifdef __cplusplus
 }

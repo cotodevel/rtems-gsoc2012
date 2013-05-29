@@ -82,7 +82,6 @@ void _BSP_Fatal_error(unsigned int v)
  */
 void bsp_start(void)
 {
-  rtems_status_code sc = RTEMS_SUCCESSFUL;
   ppc_cpu_id_t myCpu;
   ppc_cpu_revision_t myCpuRevision;
 
@@ -113,20 +112,14 @@ void bsp_start(void)
 #endif
 
   /* Initialize exception handler */
-  sc = ppc_exc_initialize(
+  ppc_exc_initialize(
     PPC_INTERRUPT_DISABLE_MASK_DEFAULT,
     (uintptr_t) IntrStack_start,
     (uintptr_t) intrStack - (uintptr_t) IntrStack_start
   );
-  if ( sc != RTEMS_SUCCESSFUL ) {
-    BSP_panic( "cannot initialize exceptions" );
-  }
 
   /* Initalize interrupt support */
-  sc = bsp_interrupt_initialize();
-  if ( sc != RTEMS_SUCCESSFUL ) {
-    BSP_panic( "cannot initialize interrupts" );
-  }
+  bsp_interrupt_initialize();
 
   /*
    *  initialize the device driver parameters

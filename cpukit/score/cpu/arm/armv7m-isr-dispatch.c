@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * @brief ARMV7M ISR Dispatch
+ */
+
 /*
  * Copyright (c) 2011 Sebastian Huber.  All rights reserved.
  *
@@ -16,11 +22,10 @@
   #include "config.h"
 #endif
 
+#include <rtems/score/armv7m.h>
 #include <rtems/score/percpu.h>
 
 #ifdef ARM_MULTILIB_ARCH_V7M
-
-#include <rtems/score/armv7m.h>
 
 static void __attribute__((naked)) _ARMV7M_Thread_dispatch( void )
 {

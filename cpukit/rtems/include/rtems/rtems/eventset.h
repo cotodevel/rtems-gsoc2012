@@ -1,17 +1,22 @@
 /**
  * @file rtems/rtems/eventset.h
  *
- *  This include file contains the information pertaining to the
- *  Event Sets Handler.  This handler provides methods for the manipulation
- *  of event sets which will be sent and received by tasks.
+ * @defgroup ClassicEventSet Event Set
+ *
+ * @ingroup ClassicRTEMS
+ * @brief Event Sets Handler
+ *
+ * This include file contains the information pertaining to the
+ * Event Sets Handler. This handler provides methods for the manipulation
+ * of event sets which will be sent and received by tasks.
  */
 
-/*  COPYRIGHT (c) 1989-2008.
- *  On-Line Applications Research Corporation (OAR).
+/* COPYRIGHT (c) 1989-2008.
+ * On-Line Applications Research Corporation (OAR).
  *
- *  The license and distribution terms for this file may be
- *  found in the file LICENSE in this distribution or at
- *  http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef _RTEMS_RTEMS_EVENTSET_H

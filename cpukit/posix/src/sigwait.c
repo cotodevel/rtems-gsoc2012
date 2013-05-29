@@ -1,8 +1,11 @@
+/**
+ * @file
+ *
+ * @brief Synchronously Accept a Signal
+ * @ingroup POSIXAPI
+ */
+
 /*
- *  3.3.8 Synchronously Accept a Signal, P1003.1b-1993, p. 76
- *
- *  NOTE: P1003.1c/D10, p. 39 adds sigwait().
- *
  *  COPYRIGHT (c) 1989-1999.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -15,13 +18,9 @@
 #include "config.h"
 #endif
 
-#include <pthread.h>
+#include <stddef.h>
 #include <signal.h>
 #include <errno.h>
-
-#include <rtems/system.h>
-#include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
 
 int sigwait(
   const sigset_t  *set,

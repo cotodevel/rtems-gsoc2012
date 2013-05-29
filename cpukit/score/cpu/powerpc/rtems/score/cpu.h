@@ -1,5 +1,7 @@
 /**
- * @file rtems/score/cpu.h
+ * @file
+ * 
+ * @brief PowerPC CPU Department Source
  */
 
 /*
@@ -668,6 +670,8 @@ void _BSP_Fatal_error(unsigned int);
 
 #define CPU_STACK_MINIMUM_SIZE          (1024*8)
 
+#define CPU_SIZEOF_POINTER 4
+
 /*
  *  CPU's worst alignment requirement for data types on a byte boundary.  This
  *  alignment does not take into account the requirements for the stack.
@@ -945,17 +949,6 @@ void _CPU_ISR_install_vector(
 );
 
 /*
- *  _CPU_Install_interrupt_stack
- *
- *  This routine installs the hardware interrupt stack pointer.
- *
- *  NOTE:  It need only be provided if CPU_HAS_HARDWARE_INTERRUPT_STACK
- *         is TRUE.
- */
-
-void _CPU_Install_interrupt_stack( void );
-
-/*
  *  _CPU_Context_switch
  *
  *  This routine switches from the run context to the heir context.
@@ -998,6 +991,65 @@ void _CPU_Context_save_fp(
 void _CPU_Context_restore_fp(
   Context_Control_fp **fp_context_ptr
 );
+
+void _CPU_Context_volatile_clobber( uintptr_t pattern );
+
+void _CPU_Context_validate( uintptr_t pattern );
+
+typedef struct {
+  uint32_t EXC_SRR0;
+  uint32_t EXC_SRR1;
+  uint32_t _EXC_number;
+  uint32_t EXC_CR;
+  uint32_t EXC_CTR;
+  uint32_t EXC_XER;
+  uint32_t EXC_LR;
+  #ifdef __SPE__
+    uint32_t EXC_SPEFSCR;
+    uint64_t EXC_ACC;
+  #endif
+  PPC_GPR_TYPE GPR0;
+  PPC_GPR_TYPE GPR1;
+  PPC_GPR_TYPE GPR2;
+  PPC_GPR_TYPE GPR3;
+  PPC_GPR_TYPE GPR4;
+  PPC_GPR_TYPE GPR5;
+  PPC_GPR_TYPE GPR6;
+  PPC_GPR_TYPE GPR7;
+  PPC_GPR_TYPE GPR8;
+  PPC_GPR_TYPE GPR9;
+  PPC_GPR_TYPE GPR10;
+  PPC_GPR_TYPE GPR11;
+  PPC_GPR_TYPE GPR12;
+  PPC_GPR_TYPE GPR13;
+  PPC_GPR_TYPE GPR14;
+  PPC_GPR_TYPE GPR15;
+  PPC_GPR_TYPE GPR16;
+  PPC_GPR_TYPE GPR17;
+  PPC_GPR_TYPE GPR18;
+  PPC_GPR_TYPE GPR19;
+  PPC_GPR_TYPE GPR20;
+  PPC_GPR_TYPE GPR21;
+  PPC_GPR_TYPE GPR22;
+  PPC_GPR_TYPE GPR23;
+  PPC_GPR_TYPE GPR24;
+  PPC_GPR_TYPE GPR25;
+  PPC_GPR_TYPE GPR26;
+  PPC_GPR_TYPE GPR27;
+  PPC_GPR_TYPE GPR28;
+  PPC_GPR_TYPE GPR29;
+  PPC_GPR_TYPE GPR30;
+  PPC_GPR_TYPE GPR31;
+} CPU_Exception_frame;
+
+void _BSP_Exception_frame_print( const CPU_Exception_frame *frame );
+
+static inline void _CPU_Exception_frame_print(
+  const CPU_Exception_frame *frame
+)
+{
+  _BSP_Exception_frame_print( frame );
+}
 
 /*
  * _CPU_Initialize_altivec()

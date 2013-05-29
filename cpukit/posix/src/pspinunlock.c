@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Function Unlocks a Spin Lock Object
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  POSIX Spinlock Manager -- Wait at a Spinlock
  *

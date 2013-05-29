@@ -1,34 +1,39 @@
 /**
  * @file rtems/rtems/tasks.h
  *
- *  This include file contains all constants and structures associated
- *  with RTEMS tasks.  This manager provides a comprehensive set of directives
- *  to create, delete, and administer tasks.
+ * @defgroup ClassicTasks Tasks
  *
- *  Directives provided are:
+ * @ingroup ClassicRTEMS
+ * @brief RTEMS Tasks
  *
- *     - create a task
- *     - get an ID of a task
- *     - start a task
- *     - restart a task
- *     - delete a task
- *     - suspend a task
- *     - resume a task
- *     - set a task's priority
- *     - change the current task's mode
- *     - get a task notepad entry
- *     - set a task notepad entry
- *     - wake up after interval
- *     - wake up when specified
+ * This include file contains all constants and structures associated
+ * with RTEMS tasks. This manager provides a comprehensive set of directives
+ * to create, delete, and administer tasks.
+ *
+ * Directives provided are:
+ *
+ * - create a task
+ * - get an ID of a task
+ * - start a task
+ * - restart a task
+ * - delete a task
+ * - suspend a task
+ * - resume a task
+ * - set a task's priority
+ * - change the current task's mode
+ * - get a task notepad entry
+ * - set a task notepad entry
+ * - wake up after interval
+ * - wake up when specified
  */
 
 /*
- *  COPYRIGHT (c) 1989-2011.
- *  On-Line Applications Research Corporation (OAR).
+ * COPYRIGHT (c) 1989-2011.
+ * On-Line Applications Research Corporation (OAR).
  *
- *  The license and distribution terms for this file may be
- *  found in the file LICENSE in this distribution or at
- *  http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef _RTEMS_RTEMS_TASKS_H
@@ -38,12 +43,14 @@
 #include <rtems/score/states.h>
 #include <rtems/score/thread.h>
 #include <rtems/rtems/types.h>
-#include <rtems/rtems/eventset.h>
+#include <rtems/rtems/event.h>
 #include <rtems/rtems/asr.h>
 #include <rtems/rtems/attr.h>
 #include <rtems/rtems/status.h>
 
 /**
+ *  @brief Instantiate RTEMS Classic API Tasks Data
+ *
  *  This constant is defined to extern most of the time when using
  *  this header file.  However by defining it to nothing, the data
  *  declared in this header file can be instantiated.  This is done
@@ -210,10 +217,10 @@ typedef struct {
  *        notespads are disabled by the application configuration.
  */
 typedef struct {
-  /** This field contains the pending events for this task. */
-  rtems_event_set          pending_events;
-  /** This field contains the event wait condition for this task. */
-  rtems_event_set          event_condition;
+  /** This field contains the event control for this task. */
+  Event_Control            Event;
+  /** This field contains the system event control for this task. */
+  Event_Control            System_event;
   /** This field contains the Classic API Signal information for this task. */
   ASR_Information          Signal;
   /**
@@ -240,21 +247,31 @@ RTEMS_TASKS_EXTERN Objects_Information _RTEMS_tasks_Information;
 extern void (*_RTEMS_tasks_Initialize_user_tasks_p)(void);
 
 /**
- *  @brief _RTEMS_tasks_Manager_initialization
+ *  @brief RTEMS Task Manager Initialization
  *
  *  This routine initializes all Task Manager related data structures.
  */
 void _RTEMS_tasks_Manager_initialization(void);
 
 /**
- *  @brief rtems_task_create
+ * @brief RTEMS Task Create
  *
- *  This routine implements the rtems_task_create directive.  The task
- *  will have the name name.  The attribute_set can be used to indicate
- *  that the task will be globally accessible or utilize floating point.
- *  The task's stack will be stack_size bytes.   The task will begin
- *  execution with initial_priority and initial_modes.  It returns the
- *  id of the created task in ID.
+ * This routine implements the rtems_task_create directive. The task
+ * will have the name name. The attribute_set can be used to indicate
+ * that the task will be globally accessible or utilize floating point.
+ * The task's stack will be stack_size bytes. The task will begin
+ * execution with initial_priority and initial_modes. It returns the
+ * id of the created task in ID.
+ *
+ * @param[in] name is the user defined thread name
+ * @param[in] initial_priority is the thread priority
+ * @param[in] stack_size is the stack size in bytes
+ * @param[in] initial_modes is the initial thread mode
+ * @param[in] attribute_set is the thread attributes
+ * @param[in] id is the pointer to thread id
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful
+ *             	and *id thread id filled in
  */
 rtems_status_code rtems_task_create(
   rtems_name           name,
@@ -266,15 +283,24 @@ rtems_status_code rtems_task_create(
 );
 
 /**
- *  @brief rtems_task_ident
+ * @brief RTEMS Task Name to Id
  *
- *  This routine implements the rtems_task_ident directive.
- *  This directive returns the task ID associated with name.
- *  If more than one task is named name, then the task to
- *  which the ID belongs is arbitrary.  node indicates the
- *  extent of the search for the ID of the task named name.
- *  The search can be limited to a particular node or allowed to
- *  encompass all nodes.
+ * This routine implements the rtems_task_ident directive.
+ * This directive returns the task ID associated with name.
+ * If more than one task is named name, then the task to
+ * which the ID belongs is arbitrary. node indicates the
+ * extent of the search for the ID of the task named name.
+ * The search can be limited to a particular node or allowed to
+ * encompass all nodes.
+ *
+ * @param[in] name is the user defined thread name
+ * @param[in] node is(are) the node(s) to be searched
+ * @param[in] id is the pointer to thread id
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error. If successful, the id will
+ *         be filled in with the thread id.
  */
 rtems_status_code rtems_task_ident(
   rtems_name    name,
@@ -283,21 +309,35 @@ rtems_status_code rtems_task_ident(
 );
 
 /**
- *  @brief rtems_task_delete
+ * @brief RTEMS Delete Task
  *
- *  This routine implements the rtems_task_delete directive.  The
- *  task indicated by ID is deleted.
+ * This routine implements the rtems_task_delete directive. The
+ * task indicated by ID is deleted. The executive halts execution
+ * of the thread and frees the thread control block.
+ *
+ * @param[in] id is the thread id
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error and id is not the requesting thread. Status code is
+ *         returned indicating the source of the error. Nothing
+ *         is returned if id is the requesting thread (always succeeds).
  */
 rtems_status_code rtems_task_delete(
   rtems_id   id
 );
 
 /**
- *  @brief rtems_task_get_note
+ * @brief RTEMS Get Task Node
  *
- *  This routine implements the rtems_task_get_note directive.  The
- *  value of the indicated notepad for the task associated with ID
- *  is returned in note.
+ * This routine implements the rtems_task_get_note directive. The
+ * value of the indicated notepad for the task associated with ID
+ * is returned in note.
+ *
+ * @param[in] id is the thread id
+ * @param[in] notepad is the notepad number
+ * @param[out] note is the pointer to note
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful
  */
 rtems_status_code rtems_task_get_note(
   rtems_id    id,
@@ -306,11 +346,19 @@ rtems_status_code rtems_task_get_note(
 );
 
 /**
- *  @brief rtems_task_set_note
+ * @brief RTEMS Set Task Note
  *
- *  This routine implements the rtems_task_set_note directive.  The
- *  value of the indicated notepad for the task associated with ID
- *  is returned in note.
+ * This routine implements the rtems_task_set_note directive. The
+ * value of the indicated notepad for the task associated with ID
+ * is returned in note.
+ *
+ * @param[in] id is the thread id
+ * @param[in] notepad is the notepad number
+ * @param[in] note is the note value
+ *
+ * @return This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_task_set_note(
   rtems_id   id,
@@ -319,12 +367,19 @@ rtems_status_code rtems_task_set_note(
 );
 
 /**
- *  @brief rtems_task_mode
+ * @brief RTEMS Task Mode
  *
- *  This routine implements the rtems_task_mode directive.  The current
- *  values of the modes indicated by mask of the calling task are changed
- *  to that indicated in mode_set.  The former mode of the task is
- *  returned in mode_set.
+ * This routine implements the rtems_task_mode directive. The current
+ * values of the modes indicated by mask of the calling task are changed
+ * to that indicated in mode_set. The former mode of the task is
+ * returned in mode_set.
+ *
+ * @param[in] mode_set is the new mode
+ * @param[in] mask is the mask
+ * @param[in] previous_mode_set is the address of previous mode set
+ *
+ * @retval RTEMS_SUCCESSFUL and previous_mode_set filled in with the
+ * previous mode set
  */
 rtems_status_code rtems_task_mode(
   rtems_mode  mode_set,
@@ -333,11 +388,16 @@ rtems_status_code rtems_task_mode(
 );
 
 /**
- *  @brief rtems_task_restart
+ * @brief RTEMS Task Restart
  *
- *  This routine implements the rtems_task_restart directive.  The
- *  task associated with ID is restarted at its initial entry
- *  point with the new argument.
+ * This routine implements the rtems_task_restart directive. The
+ * task associated with ID is restarted at its initial entry
+ * point with the new argument.
+ *
+ * @param[in] id is the thread id
+ * @param[in] arg is the thread argument
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful
  */
 rtems_status_code rtems_task_restart(
   rtems_id   id,
@@ -345,32 +405,52 @@ rtems_status_code rtems_task_restart(
 );
 
 /**
- *  @brief rtems_task_suspend
+ * @brief RTEMS Suspend Task
  *
- *  This routine implements the rtems_task_suspend directive.  The
- *  SUSPENDED state is set for task associated with ID.
+ * This routine implements the rtems_task_suspend directive. The
+ * SUSPENDED state is set for task associated with ID. Note that the
+ * suspended state can be in addition to other waiting states.
+ *
+ * @param[in] id is the thread id
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_task_suspend(
   rtems_id   id
 );
 
 /**
- *  @brief rtems_task_resume
+ * @brief RTEMS Resume Task
  *
- *  This routine implements the rtems_task_resume Directive.  The
- *  SUSPENDED state is cleared for task associated with ID.
+ * This routine implements the rtems_task_resume Directive. The
+ * SUSPENDED state is cleared for task associated with ID.
+ *
+ * @param[in] id is the thread id
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
  */
 rtems_status_code rtems_task_resume(
   rtems_id   id
 );
 
 /**
- *  @brief rtems_task_set_priority
+ * @brief RTEMS Set Task Priority
  *
- *  This routine implements the rtems_task_set_priority directive.  The
- *  current priority of the task associated with ID is set to
- *  new_priority.  The former priority of that task is returned
- *  in old_priority.
+ * This routine implements the rtems_task_set_priority directive. The
+ * current priority of the task associated with ID is set to
+ * new_priority. The former priority of that task is returned
+ * in old_priority.
+ *
+ * @param[in] id is the thread to extract
+ * @param[in] new_priority is the thread to extract
+ * @param[in] old_priority is the thread to extract
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful and
+ * and *old_priority filled in with the previous previous priority
  */
 rtems_status_code rtems_task_set_priority(
   rtems_id             id,
@@ -379,7 +459,9 @@ rtems_status_code rtems_task_set_priority(
 );
 
 /**
- *  @brief rtems_task_start
+ *  @brief RTEMS Start Task
+ *
+ *  RTEMS Task Manager
  *
  *  This routine implements the rtems_task_start directive.  The
  *  starting execution point of the task associated with ID is
@@ -392,22 +474,29 @@ rtems_status_code rtems_task_start(
 );
 
 /**
- *  @brief rtems_task_wake_when
+ * @brief RTEMS Task Wake When
  *
- *  This routine implements the rtems_task_wake_when directive.  The
- *  calling task is blocked until the current time of day is
- *  equal to that indicated by time_buffer.
+ * This routine implements the rtems_task_wake_when directive. The
+ * calling task is blocked until the current time of day is
+ * equal to that indicated by time_buffer.
+ *
+ * @param[in] time_buffer is the pointer to the time and date structure
+ *
+ * @retval RTEMS_SUCCESSFUL if successful or error code if unsuccessful
  */
 rtems_status_code rtems_task_wake_when(
   rtems_time_of_day *time_buffer
 );
 
 /**
- *  @brief rtems_task_wake_after
+ * @brief RTEMS Task Wake After
  *
- *  This routine implements the rtems_task_wake_after directive.  The
- *  calling task is blocked until the indicated number of clock
- *  ticks have occurred.
+ * This routine implements the rtems_task_wake_after directive. The
+ * calling task is blocked until the indicated number of clock
+ * ticks have occurred.
+ *
+ * @param[in] ticks is the number of ticks to wait
+ * @retval RTEMS_SUCCESSFUL
  */
 rtems_status_code rtems_task_wake_after(
   rtems_interval  ticks
@@ -415,16 +504,18 @@ rtems_status_code rtems_task_wake_after(
 
 /**
  *  @brief rtems_task_is_suspended
-
+ *
  *  This directive returns a status indicating whether or not
  *  the specified task is suspended.
+ *
+ *  RTEMS Task Manager
  */
 rtems_status_code rtems_task_is_suspended(
   rtems_id   id
 );
 
 /**
- *  @brief rtems_task_variable_add
+ *  @brief RTEMS Add Task Variable
  *
  *  This directive adds a per task variable.
  */
@@ -435,7 +526,9 @@ rtems_status_code rtems_task_variable_add(
 );
 
 /**
- *  @brief rtems_task_variable_get
+ *  @brief Get a per-task variable
+ *
+ *  RTEMS Task Variable Get
  *
  *  This directive gets the value of a task variable.
  */
@@ -446,7 +539,7 @@ rtems_status_code rtems_task_variable_get(
 );
 
 /**
- *  @brief rtems_task_variable_delete
+ *  @brief RTEMS Delete Task Variable
  *
  *  This directive removes a per task variable.
  */
@@ -456,33 +549,25 @@ rtems_status_code rtems_task_variable_delete(
 );
 
 /**
- *  @brief rtems_task_self
+ *  @brief RTEMS Get Self Task Id
  *
  *  This directive returns the ID of the currently executing task.
  */
 rtems_id rtems_task_self(void);
 
 /**
- *  @brief _RTEMS_tasks_Initialize_user_tasks
+ *  @brief RTEMS User Task Initialization
  *
  *  This routine creates and starts all configured user
  *  initialization threads.
- *
- *  Input parameters: NONE
- *
- *  Output parameters:  NONE
  */
 void _RTEMS_tasks_Initialize_user_tasks( void );
 
 /**
- *  @brief _RTEMS_Tasks_Invoke_task_variable_dtor
+ *  @brief RTEMS Tasks Invoke Task Variable Destructor
  *
  *  This routine invokes the optional user provided destructor on the
  *  task variable and frees the memory for the task variable.
- *
- *  Input parameters: NONE
- *
- *  Output parameters:  NONE
  */
 void _RTEMS_Tasks_Invoke_task_variable_dtor(
   Thread_Control        *the_thread,
@@ -498,6 +583,8 @@ void _RTEMS_Tasks_Invoke_task_variable_dtor(
  *  Input parameters: NONE
  *
  *  Output parameters:  NONE
+ *
+ *  RTEMS Task Manager
  */
 
 extern void _RTEMS_tasks_Initialize_user_tasks_body( void );

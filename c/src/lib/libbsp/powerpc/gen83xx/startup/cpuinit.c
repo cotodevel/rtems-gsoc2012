@@ -141,14 +141,21 @@ void cpu_init( void)
 {
   BAT dbat, ibat;
   uint32_t msr;
+  uint32_t hid0;
 
   /* Clear MMU and segment registers */
   clear_mmu_regs();
 
   /* Clear caches */
-  PPC_CLEAR_SPECIAL_PURPOSE_REGISTER_BITS( HID0, HID0_ILOCK | HID0_DLOCK | HID0_ICE | HID0_DCE);
-  PPC_SET_SPECIAL_PURPOSE_REGISTER_BITS( HID0, HID0_ICFI | HID0_DCI);
-  PPC_CLEAR_SPECIAL_PURPOSE_REGISTER_BITS( HID0, HID0_ICFI | HID0_DCI);
+  hid0 = PPC_SPECIAL_PURPOSE_REGISTER(HID0);
+  if ((hid0 & (HID0_ICE | HID0_DCE)) == 0) {
+    hid0 &= ~(HID0_ILOCK | HID0_DLOCK | HID0_ICE | HID0_DCE);
+    PPC_SET_SPECIAL_PURPOSE_REGISTER(HID0, hid0);
+    hid0 |= HID0_ICFI | HID0_DCI;
+    PPC_SET_SPECIAL_PURPOSE_REGISTER(HID0, hid0);
+    hid0 &= ~(HID0_ICFI | HID0_DCI);
+    PPC_SET_SPECIAL_PURPOSE_REGISTER(HID0, hid0);
+  }
 
   /*
    * Set up IBAT registers in MMU
@@ -233,11 +240,19 @@ void cpu_init( void)
       (uint32_t) bsp_rom_start,
       (uint32_t) bsp_rom_size,
     #endif /* HAS_UBOOT */
-    true,
-    false,
-    false,
-    false,
-    BPP_RX
+    #ifdef MPC83XX_HAS_NAND_LP_FLASH_ON_CS0
+      false,
+      true,
+      false,
+      true,
+      BPP_RW
+    #else
+      true,
+      false,
+      false,
+      false,
+      BPP_RX
+    #endif
   );
   SET_DBAT( 1, dbat.batu, dbat.batl);
 

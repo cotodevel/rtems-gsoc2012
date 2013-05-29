@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Actual request being processed
+ * @ingroup POSIXAPI
+ */
+
 /*
  * Copyright 2010-2011, Alin Rus <alin.codejunkie@gmail.com> 
  * 

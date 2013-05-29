@@ -1,6 +1,8 @@
 /**
  *  @file  rtems/score/timestamp.h
  *
+ *  @brief Helpers for Manipulating Timestamps
+ *
  *  This include file contains helpers for manipulating timestamps.
  */
 
@@ -17,7 +19,7 @@
 #define _RTEMS_SCORE_TIMESTAMP_H
 
 /**
- *  @defgroup SuperCore Timestamp
+ *  @defgroup SuperCoreTimeStamp Score Timestamp
  *
  *  @ingroup Score
  *
@@ -37,6 +39,8 @@
  *  handler is critical.
  */
 /**@{*/
+
+#include <sys/time.h>
 
 #include <rtems/score/cpu.h>
 #include <rtems/score/timespec.h>
@@ -71,9 +75,9 @@ extern "C" {
 #endif
 
 /**
- *  @brief Set Timestamp to Seconds Nanosecond
+ *  @brief Set timestamp to specified seconds and nanoseconds.
  *
- *  This method sets the timestamp to the specified seconds and nanoseconds
+ *  This method sets the timestamp to the specified @a _seconds and @a _nanoseconds
  *  value.
  *
  *  @param[in] _time points to the timestamp instance to validate.
@@ -89,7 +93,7 @@ extern "C" {
 #endif
 
 /**
- *  @brief Zero Timestamp
+ *  @brief Sets the timestamp to zero.
  *
  *  This method sets the timestamp to zero.
  *  value.
@@ -105,13 +109,13 @@ extern "C" {
 #endif
 
 /**
- *  @brief Is Timestamp Valid
+ *  @brief Determines the validity of a timestamp.
  *
  *  This method determines the validity of a timestamp.
  *
  *  @param[in] _time points to the timestamp instance to validate.
  *
- *  @return This method returns true if @a time is valid and
+ *  @retval This method returns true if @a time is valid and
  *          false otherwise.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
@@ -123,14 +127,14 @@ extern "C" {
 #endif
 
 /**
- *  @brief Timestamp Less Than Operator
+ *  @brief Less than operator for timestamps.
  *
  *  This method is the less than operator for timestamps.
  *
  *  @param[in] _lhs points to the left hand side timestamp
  *  @param[in] _rhs points to the right hand side timestamp
  *
- *  @return This method returns true if @a _lhs is less than the @a _rhs and
+ *  @retval This method returns true if @a _lhs is less than the @a _rhs and
  *          false otherwise.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
@@ -142,28 +146,28 @@ extern "C" {
 #endif
 
 /**
- *  @brief Timestamp Greater Than Operator
+ *  @brief Greater than operator for timestamps.
  *
  *  This method is the greater than operator for timestamps.
  *
  *  @param[in] _lhs points to the left hand side timestamp
  *  @param[in] _rhs points to the right hand side timestamp
  *
- *  @return This method returns true if @a _lhs is greater than the @a _rhs and
+ *  @retval This method returns true if @a _lhs is greater than the @a _rhs and
  *          false otherwise.
  */
 #define _Timestamp_Greater_than( _lhs, _rhs ) \
   _Timestamp_Less_than( _rhs, _lhs )
 
 /**
- *  @brief Timestamp equal to Operator
+ *  @brief Equal to than operator for timestamps.
  *
  *  This method is the is equal to than operator for timestamps.
  *
  *  @param[in] _lhs points to the left hand side timestamp
  *  @param[in] _rhs points to the right hand side timestamp
  *
- *  @return This method returns true if @a _lhs is equal to  @a _rhs and
+ *  @retval This method returns true if @a _lhs is equal to  @a _rhs and
  *          false otherwise.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
@@ -175,7 +179,7 @@ extern "C" {
 #endif
 
 /**
- *  @brief Add to a Timestamp
+ *  @brief Adds two timestamps.
  *
  *  This routine adds two timestamps.  The second argument is added
  *  to the first.
@@ -183,7 +187,7 @@ extern "C" {
  *  @param[in] _time points to the base time to be added to
  *  @param[in] _add points to the timestamp to add to the first argument
  *
- *  @return This method returns the number of seconds @a time increased by.
+ *  @retval This method returns the number of seconds @a time increased by.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
   #define _Timestamp_Add_to( _time, _add ) \
@@ -194,14 +198,14 @@ extern "C" {
 #endif
 
 /**
- *  @brief Convert Timestamp to Number of Ticks
+ *  @brief Convert timestamp to number of clock ticks.
  *
  *  This routine convert the @a time timestamp to the corresponding number
  *  of clock ticks.
  *
  *  @param[in] _time points to the time to be converted
  *
- *  @return This method returns the number of ticks computed.
+ *  @retval This method returns the number of ticks computed.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
   #define _Timestamp_To_ticks( _time ) \
@@ -212,7 +216,7 @@ extern "C" {
 #endif
 
 /**
- *  @brief Convert Ticks to Timestamp
+ *  @brief Converts the @a _ticks value to timestamp format.
  *
  *  This routine converts the @a _ticks value to the corresponding
  *  timestamp format @a _time.
@@ -229,7 +233,7 @@ extern "C" {
 #endif
 
 /**
- *  @brief Subtract Two Timestamp
+ *  @brief Subtracts two timestamps.
  *
  *  This routine subtracts two timestamps.  @a result is set to
  *  @a end - @a start.
@@ -239,7 +243,7 @@ extern "C" {
  *  @param[in] _result points to the difference between
  *             starting and ending time.
  *
- *  @return This method fills in @a _result.
+ *  @retval This method fills in @a _result.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
   #define _Timestamp_Subtract( _start, _end, _result ) \
@@ -250,7 +254,7 @@ extern "C" {
 #endif
 
 /**
- *  @brief Divide Timestamp By Integer
+ *  @brief Divides a timestamp by an integer value.
  *
  *  This routine divides a timestamp by an integer value.  The expected
  *  use is to assist in benchmark calculations where you typically
@@ -260,7 +264,7 @@ extern "C" {
  *  @param[in] _iterations is the number of iterations
  *  @param[in] _result points to the average time.
  *
- *  @return This method fills in @a result.
+ *  @retval This method fills in @a result.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
   #define _Timestamp_Divide_by_integer( _time, _iterations, _result ) \
@@ -271,7 +275,7 @@ extern "C" {
 #endif
 
 /**
- *  @brief Divide Timestamp
+ *  @brief Divides a timestamp by another timestamp.
  *
  *  This routine divides a timestamp by another timestamp.  The
  *  intended use is for calculating percentages to three decimal points.
@@ -281,7 +285,7 @@ extern "C" {
  *  @param[in] _ival_percentage points to the integer portion of the average
  *  @param[in] _fval_percentage points to the thousandths of percentage
  *
- *  @return This method fills in @a result.
+ *  @retval This method fills in @a result.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
   #define _Timestamp_Divide( _lhs, _rhs, _ival_percentage, _fval_percentage ) \
@@ -292,13 +296,13 @@ extern "C" {
 #endif
 
 /**
- *  @brief Get Seconds Portion of Timestamp
+ *  @brief Get seconds portion of timestamp.
  *
  *  This method returns the seconds portion of the specified timestamp
  *
  *  @param[in] _time points to the timestamp
  *
- *  @return The seconds portion of @a _time.
+ *  @retval The seconds portion of @a _time.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
   #define _Timestamp_Get_seconds( _time ) \
@@ -309,13 +313,13 @@ extern "C" {
 #endif
 
 /**
- *  @brief Get Nanoseconds Portion of Timestamp
+ *  @brief Get nanoseconds portion of timestamp.
  *
  *  This method returns the nanoseconds portion of the specified timestamp
  *
  *  @param[in] _time points to the timestamp
  *
- *  @return The nanoseconds portion of @a _time.
+ *  @retval The nanoseconds portion of @a _time.
  */
 #if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
   #define _Timestamp_Get_nanoseconds( _time ) \
@@ -326,9 +330,9 @@ extern "C" {
 #endif
 
 /**
- *  @brief Convert Timestamp to struct timespec
+ *  @brief Convert timestamp to struct timespec.
  *
- *  This method returns the seconds portion of the specified timestamp
+ *  This method returns the seconds portion of the specified @a _timestamp.
  *
  *  @param[in] _timestamp points to the timestamp
  *  @param[in] _timespec points to the timespec
@@ -340,6 +344,23 @@ extern "C" {
 #else
   #define _Timestamp_To_timespec( _timestamp, _timespec  ) \
 	  _Timestamp64_To_timespec( _timestamp, _timespec  )
+#endif
+
+/**
+ *  @brief Convert timestamp to struct timeval.
+ *
+ *  @param[in] _timestamp points to the timestamp
+ *  @param[in] _timeval points to the timeval
+ */
+#if CPU_TIMESTAMP_USE_STRUCT_TIMESPEC == TRUE
+  #define _Timestamp_To_timeval( _timestamp, _timeval  ) \
+    do { \
+      (_timeval)->tv_sec = (_timestamp)->tv_sec; \
+      (_timeval)->tv_usec = (_timestamp)->tv_nsec / 1000; \
+    } while (0)
+#else
+  #define _Timestamp_To_timeval( _timestamp, _timeval  ) \
+	  _Timestamp64_To_timeval( _timestamp, _timeval  )
 #endif
 
 #ifdef __cplusplus

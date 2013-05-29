@@ -1,7 +1,9 @@
 /**
  *  @file  rtems/score/states.h
  *
- *  This include file contains thread execution state information.
+ *  @brief Thread Execution State Information
+ *
+ *  This include file defines thread execution state information.
  */
 
 /*
@@ -17,7 +19,7 @@
 #define _RTEMS_SCORE_STATES_H
 
 /**
- *  @defgroup ScoreStates Thread States Handler
+ *  @defgroup ScoreStates SuperCore Thread States
  *
  *  @ingroup Score
  *
@@ -81,6 +83,8 @@ typedef uint32_t   States_Control;
 #define STATES_WAITING_FOR_BARRIER             0x10000
 /** This macro corresponds to a task waiting for a RWLock. */
 #define STATES_WAITING_FOR_RWLOCK              0x20000
+/** This macro corresponds to a task waiting for a system event. */
+#define STATES_WAITING_FOR_SYSTEM_EVENT        0x40000
 
 /** This macro corresponds to a task which is in an interruptible
  *  blocking state.
@@ -110,6 +114,7 @@ typedef uint32_t   States_Control;
                                  STATES_WAITING_FOR_TIME        | \
                                  STATES_WAITING_FOR_PERIOD      | \
                                  STATES_WAITING_FOR_EVENT       | \
+                                 STATES_WAITING_FOR_SYSTEM_EVENT | \
                                  STATES_WAITING_ON_THREAD_QUEUE | \
                                  STATES_INTERRUPTIBLE_BY_SIGNAL )
 

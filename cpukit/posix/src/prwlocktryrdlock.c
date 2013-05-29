@@ -1,6 +1,11 @@
-/*
- *  POSIX RWLock Manager -- Attempt to Obtain a Read Lock on a RWLock Instance
+/**
+ * @file
  *
+ * @brief Attempt to Obtain a Read Lock on a RWLock Instance
+ * @ingroup POSIXAPI
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).
  *

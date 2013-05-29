@@ -25,6 +25,7 @@
 #include <rtems/blkdev.h>
 #include <rtems/ide_part_table.h>
 #include <rtems/ramdisk.h>
+#include <rtems/libcsupport.h>
 
 #define ASSERT_SC(sc) rtems_test_assert((sc) == RTEMS_SUCCESSFUL)
 
@@ -105,12 +106,15 @@ static void test_bdpart(void)
   rtems_bdpart_partition created_partitions [PARTITION_COUNT];
   rtems_bdpart_format actual_format;
   rtems_bdpart_partition actual_partitions [PARTITION_COUNT];
+  rtems_resource_snapshot before;
   size_t actual_count = PARTITION_COUNT;
   size_t i = 0;
 
   memset(&created_partitions [0], 0, sizeof(created_partitions));
   memset(&actual_format, 0, sizeof(actual_format));
   memset(&actual_partitions [0], 0, sizeof(actual_partitions));
+
+  rtems_resource_snapshot_take(&before);
 
   for (i = 0; i < PARTITION_COUNT; ++i) {
     rtems_bdpart_to_partition_type(
@@ -168,6 +172,8 @@ static void test_bdpart(void)
   ASSERT_SC(sc);
   test_logical_disks(&bdpart_rdax [0], false);
 
+  rtems_test_assert(rtems_resource_snapshot_check(&before));
+
   sc = rtems_bdpart_register_from_disk(rda);
   ASSERT_SC(sc);
   test_logical_disks(&bdpart_rdax [0], true);
@@ -180,6 +186,8 @@ static void test_bdpart(void)
   ASSERT_SC(sc);
   test_logical_disks(&bdpart_rdax [0], false);
 
+  rtems_test_assert(rtems_resource_snapshot_check(&before));
+
   rtems_bdpart_dump(&actual_partitions [0], actual_count);
 }
 
@@ -188,7 +196,10 @@ static void test_ide_part_table(void)
   rtems_status_code sc = RTEMS_SUCCESSFUL;
 
   test_logical_disks(&ide_part_table_rdax [0], false);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   sc = rtems_ide_part_table_initialize(rda);
+#pragma GCC diagnostic pop
   ASSERT_SC(sc);
   test_logical_disks(&ide_part_table_rdax [0], true);
 }
@@ -216,13 +227,13 @@ size_t rtems_ramdisk_configuration_size = 1;
 #define CONFIGURE_APPLICATION_EXTRA_DRIVERS RAMDISK_DRIVER_TABLE_ENTRY
 #define CONFIGURE_APPLICATION_NEEDS_LIBBLOCK
 
-#define CONFIGURE_LIBIO_MAXIMUM_FILE_DESCRIPTORS 4
+#define CONFIGURE_LIBIO_MAXIMUM_FILE_DESCRIPTORS 13
 
 #define CONFIGURE_USE_IMFS_AS_BASE_FILESYSTEM
 
 #define CONFIGURE_MAXIMUM_TASKS 2
 
-#define CONFIGURE_EXTRA_TASK_STACKS (8 * 1024)
+#define CONFIGURE_INIT_TASK_STACK_SIZE (32 * 1024)
 
 #define CONFIGURE_RTEMS_INIT_TASKS_TABLE
 

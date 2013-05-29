@@ -14,6 +14,7 @@ include_libcpu_HEADERS = shared/include/powerpc-utility.h
 include_bspdir = $(includedir)/bsp
 
 include_bsp_HEADERS =
+include_bsp_HEADERS += new-exceptions/bspsupport/vectors.h
 
 EXTRA_DIST =
 
@@ -25,8 +26,6 @@ new_exceptions_rtems_cpu_rel_LDFLAGS = $(RTEMS_RELLDFLAGS)
 
 
 if !mpc5xx
-include_bsp_HEADERS += new-exceptions/bspsupport/vectors.h
-
 noinst_PROGRAMS += new-exceptions/exc_bspsupport.rel
 new_exceptions_exc_bspsupport_rel_SOURCES = \
     new-exceptions/bspsupport/ppc-code-copy.c \
@@ -36,6 +35,7 @@ new_exceptions_exc_bspsupport_rel_SOURCES = \
     new-exceptions/bspsupport/ppc_exc_hdl.c \
     new-exceptions/bspsupport/ppc_exc_initialize.c \
     new-exceptions/bspsupport/ppc_exc_global_handler.c \
+    new-exceptions/bspsupport/ppc_exc_print.c \
     new-exceptions/bspsupport/ppc_exc_categories.c \
     new-exceptions/bspsupport/ppc_exc_address.c \
     new-exceptions/bspsupport/ppc_exc_alignment.c \
@@ -187,7 +187,8 @@ mpc5xx_timer_rel_LDFLAGS = $(RTEMS_RELLDFLAGS)
 include_libcpu_HEADERS += mpc5xx/vectors/vectors.h
 
 noinst_PROGRAMS += mpc5xx/vectors.rel
-mpc5xx_vectors_rel_SOURCES = mpc5xx/vectors/vectors_init.c mpc5xx/vectors/vectors.S
+mpc5xx_vectors_rel_SOURCES = mpc5xx/vectors/vectors_init.c mpc5xx/vectors/vectors.S \
+    new-exceptions/bspsupport/ppc_exc_print.c
 mpc5xx_vectors_rel_CPPFLAGS = $(AM_CPPFLAGS)
 mpc5xx_vectors_rel_LDFLAGS = $(RTEMS_RELLDFLAGS)
 endif

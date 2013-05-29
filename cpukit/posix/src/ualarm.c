@@ -1,6 +1,11 @@
-/*
- *  3.4.1 Schedule Alarm, P1003.1b-1993, p. 79
+/**
+ * @file
  *
+ * @brief Schedule Alarm
+ * @ingroup POSIXAPI
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2008.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -18,7 +23,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/posix/time.h>
 
 /*

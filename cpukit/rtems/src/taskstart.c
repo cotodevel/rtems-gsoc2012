@@ -1,7 +1,11 @@
+/**
+ * @file
+ *
+ * @brief  RTEMS Start Task
+ * @ingroup ClassicTasks Tasks
+ */
+
 /*
- *  RTEMS Task Manager
- *
- *
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -25,7 +29,6 @@
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
 #include <rtems/score/tod.h>
-#include <rtems/score/userext.h>
 #include <rtems/score/wkspace.h>
 #include <rtems/score/apiext.h>
 #include <rtems/score/sysstate.h>

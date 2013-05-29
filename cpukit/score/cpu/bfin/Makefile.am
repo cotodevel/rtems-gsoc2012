@@ -13,9 +13,11 @@ include_rtems_score_HEADERS = rtems/score/cpu.h
 include_rtems_score_HEADERS += rtems/score/bfin.h
 include_rtems_score_HEADERS += rtems/score/cpu_asm.h
 include_rtems_score_HEADERS += rtems/score/types.h
+include_rtems_score_HEADERS += rtems/score/cpuatomic.h
 
 noinst_LIBRARIES = libscorecpu.a
 libscorecpu_a_SOURCES = cpu.c cpu_asm.S
+libscorecpu_a_SOURCES += bfin-exception-frame-print.c
 libscorecpu_a_CPPFLAGS = $(AM_CPPFLAGS)
 
 include $(srcdir)/preinstall.am

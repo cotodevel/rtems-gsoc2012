@@ -1,9 +1,8 @@
 /**
  * @file
  *
- * @ingroup rtems-rfs
- *
- * RTEMS File Systems Directory Hash function.
+ * @brief RTEMS File Systems Directory Hash function
+ * @ingroup rtems_rfs
  */
 
 #if HAVE_CONFIG_H

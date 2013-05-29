@@ -26,6 +26,28 @@
 extern "C" {
 #endif
 
+/**
+ *  @defgroup MallocSupport Malloc Support
+ *
+ *  @ingroup libcsupport
+ *
+ *  @brief RTEMS extensions to the Malloc Family
+ */
+
+/**
+ *  @brief C program heap control.
+ *
+ *  This is the pointer to the heap control structure used to manage the C
+ *  program heap.
+ */
+extern Heap_Control *RTEMS_Malloc_Heap;
+
+void RTEMS_Malloc_Initialize(
+  const Heap_Area *areas,
+  size_t area_count,
+  Heap_Initialization_or_extend_handler extend
+);
+
 /*
  *  Malloc Statistics Structure
  */
@@ -54,16 +76,32 @@ extern rtems_malloc_statistics_functions_t
   rtems_malloc_statistics_helpers_table;
 extern rtems_malloc_statistics_functions_t *rtems_malloc_statistics_helpers;
 
-/*
- *  Malloc Heap Extension (sbrk) plugin
- */
-typedef struct {
-  void *(*initialize)(void *, size_t);
-  void *(*extend)(size_t);
-} rtems_malloc_sbrk_functions_t;
+extern ptrdiff_t RTEMS_Malloc_Sbrk_amount;
 
-extern rtems_malloc_sbrk_functions_t rtems_malloc_sbrk_helpers_table;
-extern rtems_malloc_sbrk_functions_t *rtems_malloc_sbrk_helpers;
+static inline void rtems_heap_set_sbrk_amount( ptrdiff_t sbrk_amount )
+{
+  RTEMS_Malloc_Sbrk_amount = sbrk_amount;
+}
+
+typedef void *(*rtems_heap_extend_handler)(
+  Heap_Control *heap,
+  size_t alloc_size
+);
+
+/**
+ *  @brief RTEMS Extend Heap via Sbrk
+ */
+void *rtems_heap_extend_via_sbrk(
+  Heap_Control *heap,
+  size_t alloc_size
+);
+
+void *rtems_heap_null_extend(
+  Heap_Control *heap,
+  size_t alloc_size
+);
+
+extern const rtems_heap_extend_handler rtems_malloc_extend_handler;
 
 /*
  * Malloc Plugin to Dirty Memory at Allocation Time
@@ -72,7 +110,7 @@ typedef void (*rtems_malloc_dirtier_t)(void *, size_t);
 extern rtems_malloc_dirtier_t rtems_malloc_dirty_helper;
 
 /**
- *  @brief Dirty memory function
+ *  @brief Dirty Memory Function
  *
  *  This method fills the specified area with a non-zero pattern
  *  to aid in debugging programs which do not initialize their
@@ -119,7 +157,7 @@ void malloc_report_statistics_with_plugin(
 );
 
 /**
- *  @brief RTEMS variation on Aligned Memory Allocation
+ *  @brief RTEMS Variation on Aligned Memory Allocation
  *
  *  This method is a help memalign implementation which does all
  *  error checking done by posix_memalign() EXCEPT it does NOT
@@ -146,7 +184,7 @@ int rtems_memalign(
  * memory area will begin at an address aligned by this value.
  *
  * If the boundary parameter @a boundary is not equal to zero, the allocated
- * memory area will fulfill a boundary constraint.  The boundary value
+ * memory area will comply with a boundary constraint.  The boundary value
  * specifies the set of addresses which are aligned by the boundary value.  The
  * interior of the allocated memory area will not contain an element of this
  * set.  The begin or end address of the area may be a member of the set.
@@ -170,7 +208,7 @@ void *rtems_heap_allocate_aligned_with_boundary(
  * starting at @a area_begin of size @a area_size bytes.
  *
  * There are no alignment requirements.  The memory area must be big enough to
- * contain some maintainance blocks.  It must not overlap parts of the current
+ * contain some maintenance blocks.  It must not overlap parts of the current
  * heap areas.  Disconnected subordinate heap areas will lead to used blocks
  * which cover the gaps.  Extending with an inappropriate memory area will
  * corrupt the heap.
@@ -186,7 +224,7 @@ rtems_status_code rtems_heap_extend(
 /**
  * @brief Greedy allocate that empties the heap.
  *
- * Afterward the heap has at most @a block_count allocateable blocks of sizes
+ * Afterward the heap has at most @a block_count allocatable blocks of sizes
  * specified by @a block_sizes.  The @a block_sizes must point to an array with
  * @a block_count members.  All other blocks are used.
  *

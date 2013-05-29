@@ -1,7 +1,11 @@
+/**
+ *  @file
+ *
+ *  @brief RTEMS Malloc Get Status Information
+ *  @ingroup libcsupport
+ */
+
 /*
- *  RTEMS Malloc Get Status Information
- *
- *
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -14,16 +18,8 @@
 #include "config.h"
 #endif
 
-#define __RTEMS_VIOLATE_KERNEL_VISIBILITY__
-#include <rtems.h>
-#include <rtems/libcsupport.h>
+#include <rtems/malloc.h>
 #include <rtems/score/protectedheap.h>
-
-extern Heap_Control  *RTEMS_Malloc_Heap;
-
-/*
- *  Find amount of free heap remaining
- */
 
 int malloc_info(
   Heap_Information_block *the_info

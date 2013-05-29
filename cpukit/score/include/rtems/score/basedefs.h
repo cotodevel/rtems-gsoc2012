@@ -3,7 +3,7 @@
  *
  * @ingroup Score
  *
- * @brief Basic definitions.
+ * @brief Basic Definitions
  */
 
 /*
@@ -19,6 +19,13 @@
 
 #ifndef _RTEMS_BASEDEFS_H
 #define _RTEMS_BASEDEFS_H
+
+/**
+ *  @defgroup ScoreBaseDefs Basic Definitions
+ *
+ *  @ingroup Score
+ */
+/**@{*/
 
 #include <rtems/score/cpuopts.h>
 
@@ -163,8 +170,18 @@
   #define RTEMS_COMPILER_DEPRECATED_ATTRIBUTE
 #endif
 
-#define RTEMS_STATIC_ASSERT(cond, msg) \
-  typedef int rtems_static_assert_ ## msg [(cond) ? 1 : -1]
+#if __cplusplus >= 201103L
+  #define RTEMS_STATIC_ASSERT(cond, msg) \
+    static_assert(cond, # msg)
+#elif __STDC_VERSION__ >= 201112L
+  #define RTEMS_STATIC_ASSERT(cond, msg) \
+    _Static_assert(cond, # msg)
+#else
+  #define RTEMS_STATIC_ASSERT(cond, msg) \
+    typedef int rtems_static_assert_ ## msg [(cond) ? 1 : -1]
+#endif
+
+#define RTEMS_ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
 #ifndef ASM
   #ifdef RTEMS_DEPRECATED_TYPES
@@ -178,5 +195,7 @@
    */
   typedef void * proc_ptr;
 #endif
+
+/**@}*/
 
 #endif /* _RTEMS_BASEDEFS_H */

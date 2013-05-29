@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Mutex Initialization Scheduling Attributes
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).

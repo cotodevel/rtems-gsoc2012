@@ -1,7 +1,11 @@
+/**
+ *  @file
+ *
+ *  @brief RTEMS Delete Task
+ *  @ingroup ClassicTasks
+ */
+
 /*
- *  RTEMS Task Manager
- *
- *
  *  COPYRIGHT (c) 1989-2008.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -25,28 +29,10 @@
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
 #include <rtems/score/tod.h>
-#include <rtems/score/userext.h>
 #include <rtems/score/wkspace.h>
 #include <rtems/score/apiext.h>
 #include <rtems/score/sysstate.h>
 #include <rtems/score/apimutex.h>
-
-/*
- *  rtems_task_delete
- *
- *  This directive allows a thread to delete itself or the thread
- *  identified in the id field.  The executive halts execution
- *  of the thread and frees the thread control block.
- *
- *  Input parameters:
- *    id - thread id
- *
- *  Output parameters:
- *    nothing           - if id is the requesting thread (always succeeds)
- *    RTEMS_SUCCESSFUL - if successful and id is
- *                           not the requesting thread
- *    error code        - if unsuccessful
- */
 
 rtems_status_code rtems_task_delete(
   rtems_id id

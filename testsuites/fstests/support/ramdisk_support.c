@@ -11,6 +11,9 @@
 #include "config.h"
 #endif
 
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include <rtems/ramdisk.h>
 #include <rtems/blkdev.h>
 #include <rtems/libio.h>
@@ -35,7 +38,6 @@ init_ramdisk (void)
   rc = ramdisk_register (RAMDISK_BLOCK_SIZE, RAMDISK_BLOCK_COUNT,
                          false, RAMDISK_PATH, &dev);
   rtems_test_assert (rc == 0);
-
 }
 
 void

@@ -1,6 +1,12 @@
-/*
- *  Input/Output Manager - Initialize Device Driver Subsystem
+/**
+ * @file
  *
+ * @brief Initialization of Device Drivers
+ *
+ * @ingroup ClassicIO
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2008.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -22,15 +28,6 @@
 
 #include <string.h>
 
-/*
- *  _IO_Manager_initialization
- *
- *  The IO manager has been extended to support runtime driver
- *  registration. The driver table is now allocated in the
- *  workspace.
- *
- */
-
 void _IO_Manager_initialization(void)
 {
   uint32_t                    index;
@@ -38,9 +35,9 @@ void _IO_Manager_initialization(void)
   uint32_t                    drivers_in_table;
   uint32_t                    number_of_drivers;
 
-  driver_table      = Configuration.Device_driver_table;
-  drivers_in_table  = Configuration.number_of_device_drivers;
-  number_of_drivers = Configuration.maximum_drivers;
+  driver_table      = rtems_configuration_get_device_driver_table();
+  drivers_in_table  = rtems_configuration_get_number_of_device_drivers();
+  number_of_drivers = rtems_configuration_get_maximum_drivers();
 
   /*
    *  If the user claims there are less drivers than are actually in
@@ -79,16 +76,6 @@ void _IO_Manager_initialization(void)
   for ( index = 0 ; index < drivers_in_table ; index++ )
     _IO_Driver_address_table[index] = driver_table[index];
 }
-
-/*
- *  _IO_Initialize_all_drivers
- *
- *  This routine initializes all device drivers
- *
- *  Input Paramters:   NONE
- *
- *  Output Parameters: NONE
- */
 
 void _IO_Initialize_all_drivers( void )
 {

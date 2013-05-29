@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Find the control structure of the tree containing the given node
+ * @ingroup ScoreRBTree
+ */
+
 /*
  *  Copyright (c) 2010 Gedare Bloom.
  *
@@ -15,28 +22,9 @@
 #include <rtems/score/rbtree.h>
 #include <rtems/score/isr.h>
 
-/*
- *  _RBTree_Find
- *
- *  This kernel routine returns a pointer to the rbtree node containing the
- *  given key within the given tree, if it exists, or NULL otherwise.
- *
- *  Input parameters:
- *    the_rbtree - pointer to rbtree control
- *    search_node - node with the key to search for
- *
- *  Output parameters:
- *    return_node - pointer to control header of rbtree
- *    NULL   - if there is no control header available (the node is not part
- *    of a tree)
- *
- *  INTERRUPT LATENCY:
- *    only case
- */
-
 RBTree_Node *_RBTree_Find(
-  RBTree_Control *the_rbtree,
-  RBTree_Node *search_node
+  const RBTree_Control *the_rbtree,
+  const RBTree_Node *search_node
 )
 {
   ISR_Level          level;
@@ -47,4 +35,28 @@ RBTree_Node *_RBTree_Find(
       return_node = _RBTree_Find_unprotected( the_rbtree, search_node );
   _ISR_Enable( level );
   return return_node;
+}
+
+RBTree_Node *_RBTree_Find_unprotected(
+  const RBTree_Control *the_rbtree,
+  const RBTree_Node *the_node
+)
+{
+  RBTree_Node* iter_node = the_rbtree->root;
+  RBTree_Node* found = NULL;
+  int compare_result;
+  while (iter_node) {
+    compare_result = the_rbtree->compare_function(the_node, iter_node);
+    if ( _RBTree_Is_equal( compare_result ) ) {
+      found = iter_node;
+      if ( the_rbtree->is_unique )
+        break;
+    }
+
+    RBTree_Direction dir =
+      (RBTree_Direction) _RBTree_Is_greater( compare_result );
+    iter_node = iter_node->child[dir];
+  } /* while(iter_node) */
+
+  return found;
 }

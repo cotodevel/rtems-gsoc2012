@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * @brief ARMV7M Start and Stop Multitasking
+ */
+
 /*
  * Copyright (c) 2011 Sebastian Huber.  All rights reserved.
  *
@@ -16,11 +22,9 @@
   #include "config.h"
 #endif
 
-#include <rtems/score/cpu.h>
+#include <rtems/score/armv7m.h>
 
 #ifdef ARM_MULTILIB_ARCH_V7M
-
-#include <rtems/score/armv7m.h>
 
 void __attribute__((naked)) _ARMV7M_Start_multitasking(
   Context_Control *bsp,

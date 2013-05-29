@@ -1,3 +1,8 @@
+/**
+ * @file
+ *
+ * @brief NIOS II Utility
+ */
 /*
  * Copyright (c) 2011 embedded brains GmbH.  All rights reserved.
  *
@@ -407,12 +412,12 @@ bool _Nios2_MPU_Get_region_descriptor(
 );
 
 /**
- * @brief Seaches the region table part for a disabled region.
+ * @brief Searches the region table part for a disabled region.
  *
  * The table will be searched between indices @a begin and @a end.  The @a end
  * index is not part of the search range.  If @a end is negative, then the
  * region count will be used.  Thus a @a begin of 0 and a @a end of -1 will
- * specifiy the complete table.
+ * specify the complete table.
  *
  * @retval -1 No disabled region is available.
  * @retval other Index of disabled region.

@@ -1,6 +1,10 @@
-/*
- *  Intel i386 Dependent Source
+/**
+ *  @file
  *
+ *  @brief Intel i386 Dependent Source
+ */
+
+/*
  *  COPYRIGHT (c) 1989-1999.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -21,13 +25,6 @@
 
 #include <rtems/bspIo.h>
 #include <rtems/score/thread.h>
-
-/*  _CPU_Initialize
- *
- *  This routine performs processor dependent initialization.
- *
- *  INPUT PARAMETERS: NONE
- */
 
 void _CPU_Initialize(void)
 {
@@ -91,10 +88,6 @@ void _CPU_Initialize(void)
 #endif
 }
 
-/*
- *  _CPU_ISR_Get_level
- */
-
 uint32_t   _CPU_ISR_Get_level( void )
 {
   uint32_t   level;
@@ -117,7 +110,7 @@ struct Frame_ {
 	uintptr_t		pc;
 };
 
-static void _defaultExcHandler (CPU_Exception_frame *ctx)
+void _CPU_Exception_frame_print (const CPU_Exception_frame *ctx)
 {
   unsigned int faultAddr = 0;
   printk("----------------------------------------------------------\n");
@@ -148,7 +141,6 @@ static void _defaultExcHandler (CPU_Exception_frame *ctx)
      * because the eip points to the faulty instruction so...
      */
     printk("Exception while executing ISR!!!. System locked\n");
-    _CPU_Fatal_halt(faultAddr);
   }
   else {
   	struct Frame_ *fp = (struct Frame_*)ctx->ebp;
@@ -171,8 +163,15 @@ static void _defaultExcHandler (CPU_Exception_frame *ctx)
     printk(" ************ FAULTY THREAD WILL BE SUSPENDED **************\n");
     rtems_task_suspend(_Thread_Executing->Object.id);
 #endif
-    bsp_reset();
   }
+}
+
+static void _defaultExcHandler (CPU_Exception_frame *ctx)
+{
+  rtems_fatal(
+    RTEMS_FATAL_SOURCE_EXCEPTION,
+    (rtems_fatal_code) ctx
+  );
 }
 
 cpuExcHandlerType _currentExcHandler = _defaultExcHandler;

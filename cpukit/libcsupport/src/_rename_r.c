@@ -1,6 +1,11 @@
-/*
- *  _rename_r() - POSIX 1003.1b - 5.3.4 - Rename a file
+/**
+ *  @file
  *
+ *  @brief Rename a File
+ *  @ingroup libcsupport
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -22,6 +27,9 @@
 
 #include <rtems/libio_.h>
 
+/**
+ *  POSIX 1003.1b - 5.3.4 - Rename a file
+ */
 int _rename_r(
   struct _reent *ptr __attribute__((unused)),
   const char    *old,
@@ -52,7 +60,7 @@ int _rename_r(
   const rtems_filesystem_location_info_t *new_currentloc =
     rtems_filesystem_eval_path_start( &new_ctx, new, new_eval_flags );
 
-  rv = rtems_filesystem_location_exists_in_same_fs_instance_as(
+  rv = rtems_filesystem_location_exists_in_same_instance_as(
     old_currentloc,
     new_currentloc
   );

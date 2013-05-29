@@ -1,7 +1,13 @@
-/** @file rtems/stackchk.h
+/**
+ * @file rtems/stackchk.h
  *
- *  This include file contains information necessary to utilize
- *  and install the stack checker mechanism.
+ * @defgroup libmisc_stackchk Stack Checker Mechanism
+ *
+ * @ingroup libmisc
+ * @brief Stack Checker Information
+ *
+ * This include file contains information necessary to utilize
+ * and install the stack checker mechanism.
  */
 
 /*
@@ -21,42 +27,48 @@
 #include <rtems/score/percpu.h> /* Thread_Control */
 #include <rtems/bspIo.h>
 
+/**
+ *  @defgroup libmisc_stackchk Stack Checker Mechanism
+ *
+ *  @ingroup libmisc
+ */
+/**@{*/
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- *  @brief Has Current Task Blown Its Stack
+ * @brief Checks if current task is blown its stack.
  *
- *  This method is used to determine if the current stack pointer
- *  of the currently executing task is within bounds.
+ * This method is used to determine if the current stack pointer
+ * of the currently executing task is within bounds.
  *
- *  @return This method returns true if the currently executing task
- *  has blown its stack.
+ * @retval This method returns true if the currently executing task
+ * has blown its stack.
  *
  */
 bool rtems_stack_checker_is_blown( void );
 
 /**
- *  @brief Print Stack Usage Report
+ * @brief Print the stack usage report using printk.
  *
- *  This method prints a stack usage report for the curently executing
- *  task.
+ * This method prints a stack usage report for the curently executing
+ * task.
  *
- *  @note It uses printk to print the report.
+ * @note It uses printk to print the report.
  */
 void rtems_stack_checker_report_usage( void );
 
 /**
- *  @brief Print Stack Usage Report
+ * @brief Print the stack usage report using caller's routine.
  *
- *  This method prints a stack usage report for the curently executing
- *  task.
+ * This method prints a stack usage report for the curently executing
+ * task.
  *
- *  @param[in] context is the context to pass to the print handler
- *  @param[in] print is the print handler
+ * @param[in] context is the context to pass to the print handler
+ * @param[in] print is the print handler
  *
- *  @note It uses the caller's routine to print the report.
+ * @note It uses the caller's routine to print the report.
  */
 void rtems_stack_checker_report_usage_with_plugin(
   void                  *context,
@@ -70,7 +82,7 @@ void rtems_stack_checker_report_usage_with_plugin(
  *************************************************************/
 
 /**
- *  @brief Stack Checker Task Create Extension
+ * @brief Stack Checker Task Create Extension
  *
  * This method is the task create extension for the stack checker.
  *
@@ -86,7 +98,7 @@ bool rtems_stack_checker_create_extension(
 );
 
 /**
- *  @brief Stack Checker Task Begin Extension
+ * @brief Stack Checker Task Begin Extension
  *
  * This method is the task begin extension for the stack checker.
  *
@@ -99,7 +111,7 @@ void rtems_stack_checker_begin_extension(
 );
 
 /**
- *  @brief Stack Checker Task Context Switch Extension
+ * @brief Stack Checker Task Context Switch Extension
  *
  * This method is the task context switch extension for the stack checker.
  *
@@ -135,6 +147,6 @@ void rtems_stack_checker_switch_extension(
 #ifdef __cplusplus
 }
 #endif
-
+/**@}*/
 #endif
 /* end of include file */

@@ -1,9 +1,7 @@
 /**
  * @file
  *
- * @ingroup ScoreHeap
- *
- * @brief Heap Handler API.
+ * @brief Heap Handler API
  */
 
 /*
@@ -26,9 +24,8 @@
 
 /**
  * @addtogroup ScoreHeap
- *
- * @{
  */
+/**@{**/
 
 RTEMS_INLINE_ROUTINE Heap_Block *_Heap_Free_list_head( Heap_Control *heap )
 {
@@ -87,26 +84,25 @@ RTEMS_INLINE_ROUTINE void _Heap_Free_list_insert_after(
   next->prev = new_block;
 }
 
+RTEMS_INLINE_ROUTINE void _Heap_Free_list_insert_before(
+  Heap_Block *block_next,
+  Heap_Block *new_block
+)
+{
+  Heap_Block *prev = block_next->prev;
+
+  new_block->next = block_next;
+  new_block->prev = prev;
+  prev->next = new_block;
+  block_next->prev = new_block;
+}
+
 RTEMS_INLINE_ROUTINE bool _Heap_Is_aligned(
   uintptr_t value,
   uintptr_t alignment
 )
 {
   return (value % alignment) == 0;
-}
-
-RTEMS_INLINE_ROUTINE uintptr_t _Heap_Align_up(
-  uintptr_t value,
-  uintptr_t alignment
-)
-{
-  uintptr_t remainder = value % alignment;
-
-  if ( remainder != 0 ) {
-    return value - remainder + alignment;
-  } else {
-    return value;
-  }
 }
 
 RTEMS_INLINE_ROUTINE uintptr_t _Heap_Align_down(
@@ -202,7 +198,8 @@ RTEMS_INLINE_ROUTINE bool _Heap_Is_block_in_heap(
  *
  * The next block of the last block will be the first block.  Since the first
  * block indicates that the previous block is used, this ensures that the last
- * block appears as used for the _Heap_Is_used() and _Heap_Is_free() functions.
+ * block appears as used for the _Heap_Is_used() and _Heap_Is_free()
+ * functions.
  *
  * This feature will be used to terminate the scattered heap area list.  See
  * also _Heap_Extend().

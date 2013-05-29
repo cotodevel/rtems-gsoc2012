@@ -1,6 +1,11 @@
-/*
- *  3.3.2 Send a Signal to a Process, P1003.1b-1993, p. 68
+/**
+ * @file
  *
+ * @brief Send a Signal to a Process
+ * @ingroup POSIXAPI
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -18,7 +23,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 
 int kill(
   pid_t pid,

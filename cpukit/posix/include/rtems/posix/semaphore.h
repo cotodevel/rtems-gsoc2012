@@ -1,5 +1,7 @@
 /**
- * @file rtems/posix/semaphore.h
+ * @file
+ *
+ * @brief Private Support Information for POSIX Semaphores
  *
  * This include file contains all the private support information for
  * POSIX Semaphores.
@@ -16,6 +18,15 @@
 
 #ifndef _RTEMS_POSIX_SEMAPHORE_H
 #define _RTEMS_POSIX_SEMAPHORE_H
+
+/**
+ * @defgroup POSIXSemaphorePrivate POSIX Semaphore Private Support
+ *
+ * @ingroup POSIXAPI
+ *
+ * This defines the internal implementation support for POSIX semaphores.
+ */
+/**@{*/
 
 #ifdef __cplusplus
 extern "C" {
@@ -134,27 +145,25 @@ int _POSIX_Semaphore_Create_support(
   POSIX_Semaphore_Control  **the_sem
 );
 
-/*
- *  _POSIX_Semaphore_Delete
+/**
+ * @brief POSIX delete a semaphore. 
  *
- *  DESCRIPTION:
+ * DESCRIPTION:
  *
- *  This routine supports the sem_close and sem_unlink routines.
+ * This routine supports the sem_close and sem_unlink routines.
  */
-
 void _POSIX_Semaphore_Delete(
   POSIX_Semaphore_Control *the_semaphore
 );
 
-/*
- *  _POSIX_Semaphore_Wait_support
+/**
+ * @brief POSIX semaphore wait support.
  *
- *  DESCRIPTION:
+ * DESCRIPTION:
  *
- *  This routine supports the sem_wait, sem_trywait, and sem_timedwait
- *  services.
+ * This routine supports the sem_wait, sem_trywait, and sem_timedwait
+ * services.
  */
-
 int _POSIX_Semaphore_Wait_support(
   sem_t               *sem,
   bool                 blocking,
@@ -179,6 +188,8 @@ int _POSIX_Semaphore_Translate_core_semaphore_return_code(
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif
 /*  end of include file */

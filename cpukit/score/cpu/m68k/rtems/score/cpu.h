@@ -1,11 +1,13 @@
 /**
- * @file rtems/score/cpu.h
+ * @file 
+ * 
+ * @brief Motorola M68K CPU Dependent Source
+ * 
+ * This include file contains information pertaining to the Motorola
+ * m68xxx processor family.
  */
 
 /*
- *  This include file contains information pertaining to the Motorola
- *  m68xxx processor family.
- *
  *  COPYRIGHT (c) 1989-2011.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -251,9 +253,9 @@ typedef struct {
       memset( *(_fp_area), 0, sizeof( Context_Control_fp ) )
   #else
     /*
-     *  FP context save area for the M68881/M68882 and 68060 numeric coprocessors.
+     *  FP context save area for the M68881/M68882 and 68060 numeric
+     *  coprocessors.
      */
-
     typedef struct {
       /*
        * M68K_FP_STATE_SIZE bytes for FSAVE/FRESTORE
@@ -379,6 +381,8 @@ SCORE_EXTERN _CPU_ISR_handler_entry _CPU_ISR_jump_table[256];
  *  Maximum priority of a thread. Note based from 0 which is the idle task.
  */
 #define CPU_PRIORITY_MAXIMUM             M68K_CPU_PRIORITY_MAXIMUM
+
+#define CPU_SIZEOF_POINTER 4
 
 /*
  *  m68k is pretty tolerant of alignment.  Just put things on 4 byte boundaries.
@@ -705,6 +709,27 @@ void _CPU_Context_save_fp(
 
 void _CPU_Context_restore_fp(
   Context_Control_fp **fp_context_ptr
+);
+
+static inline void _CPU_Context_volatile_clobber( uintptr_t pattern )
+{
+  /* TODO */
+}
+
+static inline void _CPU_Context_validate( uintptr_t pattern )
+{
+  while (1) {
+    /* TODO */
+  }
+}
+
+/**
+ *  This method prints the CPU exception frame.
+ *
+ *  @param[in] frame points to the frame to be printed
+ */
+void _CPU_Exception_frame_print(
+  const CPU_Exception_frame *frame
 );
 
 #if (M68K_HAS_FPSP_PACKAGE == 1)

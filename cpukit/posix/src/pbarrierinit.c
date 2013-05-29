@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Call to Function Enables Reinitializing of the Barrier
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  POSIX Barrier Manager -- Initialize a Barrier Instance
  *

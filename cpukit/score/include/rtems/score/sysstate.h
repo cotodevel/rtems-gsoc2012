@@ -3,7 +3,7 @@
  *
  * @ingroup ScoreSysState
  *
- * @brief System State Handler API.
+ * @brief System State Handler API
  */
 
 /*
@@ -30,9 +30,8 @@ extern "C" {
  * @ingroup Score
  *
  * @brief Management of the internal system state of RTEMS.
- *
- * @{
  */
+/**@{**/
 
 /**
  * @brief System states.
@@ -78,7 +77,7 @@ typedef enum {
 SCORE_EXTERN bool _System_state_Is_multiprocessing;
 #endif
 
-SCORE_EXTERN System_state_Codes _System_state_Current;
+extern System_state_Codes _System_state_Current;
 
 /*
  *  Make it possible for the application to get the system state information.

@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * @brief Operations on IMFS Device Nodes 
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2012.
  *  On-Line Applications Research Corporation (OAR).
@@ -12,10 +18,27 @@
 
 #include <rtems/libio.h>
 
+/**
+ *  @defgroup IMFSDevices IMFS Device IO Handler
+ * 
+ *  @ingroup IMFS
+ *
+ *  This contains the interface to device drivers using the RTEMS Classic API.
+ */
+/**@{*/
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/**
+ * @brief IMFS device node handlers.
+ *
+ * IMFS Device Node Handlers
+ *
+ * This file contains the set of handlers used to map operations on
+ * IMFS device nodes onto calls to the RTEMS Classic API IO Manager.
+ */
 int rtems_deviceio_errno( rtems_status_code status );
 
 int rtems_deviceio_open(
@@ -59,6 +82,9 @@ int rtems_deviceio_control(
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif
+/* __cplusplus */
+
+/**@}*/
 
 #endif /* _RTEMS_DEVICEIO_H */

@@ -1,11 +1,13 @@
 /**
- * @file rtems/score/cpu.h
+ * @file
+ *
+ * @brief Intel AVR CPU Department Source
+ *
+ * This include file contains information pertaining to the AVR
+ * processor.
  */
 
 /*
- *  This include file contains information pertaining to the AVR
- *  processor.
- *
  *  COPYRIGHT (c) 1989-2006.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -526,6 +528,8 @@ SCORE_EXTERN Context_Control_fp  _CPU_Null_fp_context;
  *  Maximum priority of a thread. Note based from 0 which is the idle task.
  */
 #define CPU_PRIORITY_MAXIMUM             15
+
+#define CPU_SIZEOF_POINTER 2
 
 /*
  *  CPU's worst alignment requirement for data types on a byte boundary.  This
@@ -1109,6 +1113,23 @@ void _CPU_Context_save_fp(
 void _CPU_Context_restore_fp(
   Context_Control_fp **fp_context_ptr
 );
+
+static inline void _CPU_Context_volatile_clobber( uintptr_t pattern )
+{
+  /* TODO */
+}
+
+static inline void _CPU_Context_validate( uintptr_t pattern )
+{
+  while (1) {
+    /* TODO */
+  }
+}
+
+/* FIXME */
+typedef CPU_Interrupt_frame CPU_Exception_frame;
+
+void _CPU_Exception_frame_print( const CPU_Exception_frame *frame );
 
 /*  The following routine swaps the endian format of an unsigned int.
  *  It must be static because it is referenced indirectly.

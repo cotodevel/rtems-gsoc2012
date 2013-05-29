@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Send a Signal to a Process
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  kill() support routine
  *
@@ -19,7 +26,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/seterr.h>
 #include <rtems/score/isr.h>
 
@@ -113,6 +120,8 @@ int killinfo(
   }
 
   _Thread_Disable_dispatch();
+
+  _POSIX_signals_Add_post_switch_extension();
 
   /*
    *  Is the currently executing thread interested?  If so then it will

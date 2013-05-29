@@ -1,3 +1,10 @@
+/**
+ *  @file
+ *
+ *  @brief Malloc Deferred Support
+ *  @ingroup libcsupport
+ */
+
 /*
  *  Process free requests deferred because they were from ISR
  *  or other critical section.
@@ -20,7 +27,7 @@
 
 #include "malloc_p.h"
 
-rtems_chain_control RTEMS_Malloc_GC_list;
+RTEMS_CHAIN_DEFINE_EMPTY(RTEMS_Malloc_GC_list);
 
 bool malloc_is_system_state_OK(void)
 {
@@ -31,11 +38,6 @@ bool malloc_is_system_state_OK(void)
     return false;
 
   return true;
-}
-
-void malloc_deferred_frees_initialize(void)
-{
-  rtems_chain_initialize_empty(&RTEMS_Malloc_GC_list);
 }
 
 void malloc_deferred_frees_process(void)

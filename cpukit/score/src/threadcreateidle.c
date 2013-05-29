@@ -1,7 +1,11 @@
+/**
+ *  @file
+ *
+ *  @brief Create Idle Thread
+ *  @ingroup ScoreThread
+ */
+
 /*
- *  Thread Handler
- *
- *
  *  COPYRIGHT (c) 1989-2011.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -25,7 +29,6 @@
 #include <rtems/score/sysstate.h>
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
-#include <rtems/score/userext.h>
 #include <rtems/score/wkspace.h>
 #include <rtems/config.h>
 #if defined(RTEMS_SMP)
@@ -60,7 +63,7 @@ static inline void _Thread_Create_idle_helper(
     &_Thread_Internal_information,
     idle,
     NULL,        /* allocate the stack */
-    _Stack_Ensure_minimum( Configuration.idle_task_stack_size ),
+    _Stack_Ensure_minimum( rtems_configuration_get_idle_task_stack_size() ),
     CPU_IDLE_TASK_IS_FP,
     PRIORITY_MAXIMUM,
     true,        /* preemptable */
@@ -83,7 +86,7 @@ static inline void _Thread_Create_idle_helper(
   _Thread_Start(
     idle,
     THREAD_START_NUMERIC,
-    Configuration.idle_task,
+    rtems_configuration_get_idle_task(),
     NULL,
     0
   );

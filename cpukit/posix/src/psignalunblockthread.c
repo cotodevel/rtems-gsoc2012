@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief POSIX Signals Thread Unlock
+ * @ingroup POSIX_SIGNALS
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).
@@ -22,17 +29,11 @@
 #include <rtems/score/wkspace.h>
 #include <rtems/seterr.h>
 #include <rtems/posix/threadsup.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/posix/pthread.h>
 #include <rtems/posix/time.h>
 #include <stdio.h>
 
-
-/*
- *  _POSIX_signals_Unblock_thread
- */
-
-/* XXX this routine could probably be cleaned up */
 bool _POSIX_signals_Unblock_thread(
   Thread_Control  *the_thread,
   int              signo,

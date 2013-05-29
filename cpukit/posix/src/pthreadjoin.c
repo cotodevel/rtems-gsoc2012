@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Suspends Execution of Calling Thread until Target Thread Terminates 
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  16.1.3 Wait for Thread Termination, P1003.1c/Draft 10, p. 147
  *

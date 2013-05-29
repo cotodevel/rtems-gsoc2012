@@ -1,7 +1,12 @@
-/*  apiext.c
+/**
+ * @file
  *
- *  XXX
+ * @brief Holding for API Extension Functions
  *
+ * @ingroup ScoreAPIExtension
+ */
+
+/*
  *  COPYRIGHT (c) 1989-1999.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -17,18 +22,11 @@
 #include <rtems/system.h>
 #include <rtems/score/apiext.h>
 
-/*
- *  _API_extensions_Initialization
- */
-
 void _API_extensions_Initialization( void )
 {
  _Chain_Initialize_empty( &_API_extensions_List );
+ _Chain_Initialize_empty( &_API_extensions_Post_switch_list );
 }
-
-/*
- *  _API_extensions_Add
- */
 
 void _API_extensions_Add(
   API_extensions_Control *the_extension
@@ -37,10 +35,17 @@ void _API_extensions_Add(
   _Chain_Append( &_API_extensions_List, &the_extension->Node );
 }
 
+void _API_extensions_Add_post_switch(
+  API_extensions_Post_switch_control *post_switch
+)
+{
+  _Chain_Append_if_is_off_chain_unprotected(
+    &_API_extensions_Post_switch_list,
+    &post_switch->Node
+  );
+}
+
 #if defined(FUNCTIONALITY_NOT_CURRENTLY_USED_BY_ANY_API)
-  /*
-   *  _API_extensions_Run_predriver
-   */
 
   void _API_extensions_Run_predriver( void )
   {
@@ -58,10 +63,6 @@ void _API_extensions_Add(
     }
   }
 #endif
-
-/*
- *  _API_extensions_Run_postdriver
- */
 
 void _API_extensions_Run_postdriver( void )
 {
@@ -83,24 +84,3 @@ void _API_extensions_Run_postdriver( void )
       (*the_extension->postdriver_hook)();
   }
 }
-
-/*
- *  _API_extensions_Run_postswitch
- */
-
-void _API_extensions_Run_postswitch( void )
-{
-  Chain_Node             *the_node;
-  API_extensions_Control *the_extension;
-
-  for ( the_node = _Chain_First( &_API_extensions_List );
-        !_Chain_Is_tail( &_API_extensions_List, the_node ) ;
-        the_node = the_node->next ) {
-
-    the_extension = (API_extensions_Control *) the_node;
-
-    (*the_extension->postswitch_hook)( _Thread_Executing );
-  }
-}
-
-/* end of file */

@@ -1,6 +1,11 @@
 ACLOCAL_AMFLAGS = -I ../aclocal
 
 SUBDIRS = POSIX
+SUBDIRS += exit02
+SUBDIRS += exit01
+SUBDIRS += md501
+SUBDIRS += sparsedisk01
+SUBDIRS += block16
 SUBDIRS += block15
 SUBDIRS += block14
 SUBDIRS += block13
@@ -21,7 +26,9 @@ SUBDIRS += bspcmdline01 cpuuse devfs01 devfs02 devfs03 devfs04 \
     mouse01
 
 if NETTESTS
+if HAS_POSIX
 SUBDIRS += mghttpd01
+endif
 SUBDIRS += ftp01
 SUBDIRS += syscall01
 endif

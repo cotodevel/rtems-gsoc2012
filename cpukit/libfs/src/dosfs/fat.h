@@ -1,8 +1,15 @@
-/*
- *  fat.h
+/**
+ * @file
  *
- *  Constants/data structures/prototypes for low-level operations on a volume
- *  with FAT filesystem
+ * @brief Constants/Data Structures/Prototypes on a Volume with FAT Filesystem
+ *
+ * @ingroup libfs_dosfs
+ *
+ * Constants/Data Structures/Prototypes for Low-Level
+ * Operations on a Volume with FAT Filesystem
+ */
+
+/*
  *
  *  Copyright (C) 2001 OKTET Ltd., St.-Petersburg, Russia
  *  Author: Eugeny S. Mints <Eugeny.Mints@oktet.ru>
@@ -23,6 +30,12 @@
 #include <errno.h>
 #include <rtems/bdbuf.h>
 
+/**
+ *  @defgroup libfs_dosfs FAT FileSystem
+ *
+ *  @ingroup libfs
+ */
+/**@{*/
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -271,6 +284,7 @@ extern "C" {
 #define FAT_TOTAL_FSINFO_SIZE               512
 
 #define MS_BYTES_PER_CLUSTER_LIMIT           0x8000     /* 32K */
+#define MS_BYTES_PER_CLUSTER_LIMIT_FAT12     0x1000     /*  4K */
 
 #define FAT_BR_EXT_FLAGS_MIRROR              0x0080
 
@@ -297,6 +311,9 @@ typedef struct fat_vol_s
     uint8_t            spc_log2;       /* log2 of spc */
     uint16_t           bpc;            /* bytes per cluster */
     uint8_t            bpc_log2;       /* log2 of bytes per cluster */
+    uint8_t            sectors_per_block;    /* sectors per bdbuf block */
+    uint16_t           bytes_per_block;      /* number of bytes for the bduf block device handling */
+    uint8_t            bytes_per_block_log2; /* log2 of bytes_per_block */
     uint8_t            fats;           /* number of FATs */
     uint8_t            type;           /* FAT type */
     uint32_t           mask;
@@ -313,7 +330,11 @@ typedef struct fat_vol_s
     uint32_t           rdir_cl;        /* first cluster of the root directory */
     uint16_t           info_sec;       /* FSInfo Sector Structure location */
     uint32_t           free_cls;       /* last known free clusters count */
+    uint32_t           free_cls_in_fs_info; /* last known free clusters count
+                                               in FS info sector */
     uint32_t           next_cl;        /* next free cluster number */
+    uint32_t           next_cl_in_fs_info; /* next free cluster number in FS
+                                              info sector */
     uint8_t            mirror;         /* mirroring enabla/disable */
     uint32_t           afat_loc;       /* active FAT location */
     uint8_t            afat;           /* the number of active FAT */
@@ -431,6 +452,39 @@ fat_cluster_num_to_sector512_num(
             fs_info->vol.sec_mul);
 }
 
+static inline uint32_t
+ fat_block_num_to_cluster_num (const fat_fs_info_t *fs_info,
+                               const uint32_t block_number)
+{
+  return block_number >> (fs_info->vol.bpc_log2 - fs_info->vol.bytes_per_block_log2);
+}
+
+static inline uint32_t
+ fat_block_num_to_sector_num (const fat_fs_info_t *fs_info,
+                              const uint32_t block_number)
+{
+  return block_number << (fs_info->vol.bytes_per_block_log2 - fs_info->vol.sec_log2);
+}
+
+static inline uint32_t
+ fat_sector_num_to_block_num (const fat_fs_info_t *fs_info,
+                              const uint32_t sector_number)
+{
+  return sector_number >> (fs_info->vol.bytes_per_block_log2 - fs_info->vol.sec_log2);
+}
+
+static inline uint32_t
+ fat_sector_offset_to_block_offset (const fat_fs_info_t *fs_info,
+                                    const uint32_t sector,
+                                    const uint32_t sector_offset)
+{
+  return sector_offset +
+           ((sector -
+              fat_block_num_to_sector_num (fs_info,
+                  fat_sector_num_to_block_num (fs_info, sector)))
+            << fs_info->vol.sec_log2);
+}
+
 static inline void
 fat_buf_mark_modified(fat_fs_info_t *fs_info)
 {
@@ -438,8 +492,10 @@ fat_buf_mark_modified(fat_fs_info_t *fs_info)
 }
 
 int
-fat_buf_access(fat_fs_info_t *fs_info, uint32_t   blk, int op_type,
-               rtems_bdbuf_buffer **buf);
+fat_buf_access(fat_fs_info_t  *fs_info,
+               uint32_t        sec_num,
+               int             op_type,
+               uint8_t       **sec_buf);
 
 int
 fat_buf_release(fat_fs_info_t *fs_info);
@@ -452,30 +508,27 @@ _fat_block_read(fat_fs_info_t                        *fs_info,
                 void                                 *buff);
 
 ssize_t
-_fat_block_write(fat_fs_info_t                        *fs_info,
+fat_cluster_write(fat_fs_info_t                    *fs_info,
+                    uint32_t                          start_cln,
+                    uint32_t                          offset,
+                    uint32_t                          count,
+                    const void                       *buff,
+                    bool                              overwrite_cluster);
+
+ssize_t
+fat_sector_write(fat_fs_info_t                        *fs_info,
                  uint32_t                              start,
                  uint32_t                              offset,
                  uint32_t                              count,
                  const void                           *buff);
 
-int
-_fat_block_zero(fat_fs_info_t                         *fs_info,
-                 uint32_t                              start,
-                 uint32_t                              offset,
-                 uint32_t                              count);
-
-int
-_fat_block_release(fat_fs_info_t *fs_info);
-
 ssize_t
-fat_cluster_read(fat_fs_info_t                        *fs_info,
-                  uint32_t                             cln,
-                  void                                *buff);
+fat_cluster_set(fat_fs_info_t                        *fs_info,
+                  uint32_t                              start,
+                  uint32_t                              offset,
+                  uint32_t                              count,
+                  uint8_t                               pattern);
 
-ssize_t
-fat_cluster_write(fat_fs_info_t                        *fs_info,
-                   uint32_t                             cln,
-                   const void                          *buff);
 
 int
 fat_init_volume_info(fat_fs_info_t *fs_info, const char *device);
@@ -500,14 +553,10 @@ fat_free_unique_ino(fat_fs_info_t                        *fs_info,
                     uint32_t                              ino);
 
 int
-fat_fat32_update_fsinfo_sector(
-  fat_fs_info_t                        *fs_info,
-  uint32_t                              free_count,
-  uint32_t                              next_free
-  );
+fat_sync(fat_fs_info_t *fs_info);
 
 #ifdef __cplusplus
 }
 #endif
-
+/**@}*/
 #endif /* __DOSFS_FAT_H__ */

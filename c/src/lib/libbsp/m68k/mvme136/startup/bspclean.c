@@ -9,9 +9,8 @@
  *  http://www.rtems.com/license/LICENSE.
  */
 
-#include <rtems.h>
 #include <bsp.h>
-#include <rtems/clockdrv.h>
+#include <bsp/bootcard.h>
 #include <rtems/zilog/z8036.h>
 
 extern void start( void  );
@@ -31,8 +30,10 @@ void bsp_return_to_monitor_trap(void)
 
 #define TIMER   0xfffb0000
 
-void bsp_cleanup(
-  uint32_t status
+void bsp_fatal_extension(
+  rtems_fatal_source source,
+  bool is_internal,
+  rtems_fatal_code error
 )
 {
    Z8x36_WRITE( TIMER, MASTER_INTR,    0x62 );   /* redo timer */

@@ -8,7 +8,7 @@
 @c %**end of header
 
 @c
-@c  COPYRIGHT (c) 1989-2011.
+@c  COPYRIGHT (c) 1989-2013.
 @c  On-Line Applications Research Corporation (OAR).
 @c  All rights reserved.
 
@@ -78,29 +78,7 @@
 
 @contents
 
-@include preface.texi
-@include process.texi
-@include signal.texi
-@include procenv.texi
-@include files.texi
-@include io.texi
-@include device.texi
-@include cspecific.texi
-@include systemdb.texi
-@include semaphores.texi
-@include mutex.texi
-@include cond.texi
-@include memorymgmt.texi
-@include sched.texi
-@include clock.texi
-@include timer.texi
-@include message.texi
-@include thread.texi
-@include key.texi
-@include cancel.texi
-@include libc.texi
-@include libm.texi
-@include status.texi
+@ifnottex
 @node Top, Preface, (dir), (dir)
 @top RTEMS POSIX API User's Guide
 
@@ -131,7 +109,31 @@
 * Command and Variable Index::
 * Concept Index::
 @end menu
+@end ifnottex
 
+@include preface.texi
+@include process.texi
+@include signal.texi
+@include procenv.texi
+@include files.texi
+@include io.texi
+@include device.texi
+@include cspecific.texi
+@include systemdb.texi
+@include semaphores.texi
+@include mutex.texi
+@include cond.texi
+@include memorymgmt.texi
+@include sched.texi
+@include clock.texi
+@include timer.texi
+@include message.texi
+@include thread.texi
+@include key.texi
+@include cancel.texi
+@include libc.texi
+@include libm.texi
+@include status.texi
 @node Command and Variable Index, Concept Index, , Top
 @unnumbered Command and Variable Index
 

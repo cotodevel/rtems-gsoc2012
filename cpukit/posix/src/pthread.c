@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Private Support Information for POSIX Threads
+ * @ingroup POSIX_PTHREADS Private Threads
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2010.
  *  On-Line Applications Research Corporation (OAR).
@@ -20,12 +27,12 @@
 #include <rtems/score/apiext.h>
 #include <rtems/score/stack.h>
 #include <rtems/score/thread.h>
-#include <rtems/score/userext.h>
+#include <rtems/score/userextimpl.h>
 #include <rtems/score/wkspace.h>
 #include <rtems/posix/cancel.h>
 #include <rtems/posix/pthread.h>
 #include <rtems/posix/priority.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/posix/config.h>
 #include <rtems/posix/key.h>
 #include <rtems/posix/time.h>
@@ -305,12 +312,10 @@ static void _POSIX_Threads_Initialize_user_threads( void )
  *  API Extension control structures
  */
 API_extensions_Control _POSIX_Threads_API_extensions = {
-  { NULL, NULL },
   #if defined(FUNCTIONALITY_NOT_CURRENTLY_USED_BY_ANY_API)
-    NULL,                                   /* predriver */
+    .predriver_hook = NULL,
   #endif
-  _POSIX_Threads_Initialize_user_threads,   /* postdriver */
-  _POSIX_signals_Post_switch_extension,     /* post switch */
+  .postdriver_hook = _POSIX_Threads_Initialize_user_threads
 };
 
 User_extensions_Control _POSIX_Threads_User_extensions = {

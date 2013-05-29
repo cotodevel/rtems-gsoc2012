@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * @brief RTEMS Default File System Get Statistics
+ */
+
 /*
  *  COPYRIGHT (c) 2010.
  *  On-Line Applications Research Corporation (OAR).
@@ -19,5 +25,5 @@ int rtems_filesystem_default_statvfs(
   struct statvfs *buf
 )
 {
-  rtems_set_errno_and_return_minus_one( ENOTSUP );
+  rtems_set_errno_and_return_minus_one( ENOSYS );
 }

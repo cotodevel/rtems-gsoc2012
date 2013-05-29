@@ -1,6 +1,8 @@
 /**
  *  @file  rtems/score/threadq.h
  *
+ *  Constants and Structures Associated with the Manipulation of Objects
+ *
  *  This include file contains all the constants and structures associated
  *  with the manipulation of objects.
  */
@@ -51,9 +53,8 @@ typedef void ( *Thread_queue_Flush_callout )(
              );
 
 /**
- *
- * The following type defines the callout used for timeout processing
- * methods.
+ *  The following type defines the callout used for timeout processing
+ *  methods.
  */
 typedef void ( *Thread_queue_Timeout_callout )(
                  Objects_Id,
@@ -61,7 +62,7 @@ typedef void ( *Thread_queue_Timeout_callout )(
              );
 
 /**
- * @brief  Thread queue Dequeue
+ *  @brief Gets a pointer to a thread waiting on the_thread_queue.
  *
  *  This function returns a pointer to a thread waiting on
  *  the_thread_queue.  The selection of this thread is based on
@@ -73,7 +74,7 @@ Thread_Control *_Thread_queue_Dequeue(
 );
 
 /**
- * @brief  Thread queue Enqueue Wrapper
+ *  @brief Enqueues the currently executing thread on the_thread_queue.
  *
  *  This routine enqueues the currently executing thread on
  *  the_thread_queue with an optional timeout.
@@ -84,12 +85,17 @@ Thread_Control *_Thread_queue_Dequeue(
     _timeout, \
     _Thread_queue_Timeout )
 
-
 /**
- * @brief  Thread queue Enqueue
+ *  @brief Blocks a thread and places it on a thread.
  *
- *  This routine enqueues the currently executing thread on
- *  the_thread_queue with an optional timeout.
+ *  This routine blocks a thread, places it on a thread, and optionally
+ *  starts a timeout timer.
+ *
+ *  @param[in] the_thread_queue pointer to threadq
+ *  @param[in] timeout interval to wait
+ *
+ *  - INTERRUPT LATENCY:
+ *    + single case
  */
 void _Thread_queue_Enqueue_with_handler(
   Thread_queue_Control*        the_thread_queue,
@@ -98,13 +104,16 @@ void _Thread_queue_Enqueue_with_handler(
 );
 
 /**
- *  @brief Thread queue Requeue
+ *  @brief Invoked when a thread changes priority and is blocked.
  *
  *  This routine is invoked when a thread changes priority and is
  *  blocked on a thread queue.  If the queue is priority ordered,
  *  the_thread is removed from the_thread_queue and reinserted using
  *  its new priority.  This method has no impact on the state of the_thread
  *  or of any timeouts associated with this blocking.
+ *
+ *  @param[in] the_thread_queue pointer to a threadq header
+ *  @param[in] the_thread pointer to a thread control block
  */
 void _Thread_queue_Requeue(
   Thread_queue_Control *the_thread_queue,
@@ -112,10 +121,13 @@ void _Thread_queue_Requeue(
 );
 
 /**
- * @brief  Thread queue Extract
+ *  @brief Extracts thread from thread queue.
  *
- *  This routine removes the_thread from the_thread_queue
+ *  This routine removes @a the_thread from @a the_thread_queue
  *  and cancels any timeouts associated with this blocking.
+ *
+ *  @param[in] the_thread_queue is the pointer to the ThreadQ header
+ *  @param[in] the_thread is the pointer to a thread control block that is to be removed
  */
 void _Thread_queue_Extract(
   Thread_queue_Control *the_thread_queue,
@@ -123,7 +135,7 @@ void _Thread_queue_Extract(
 );
 
 /**
- * @brief  Thread queue Extract with proxy
+ *  @brief Extracts the_thread from the_thread_queue.
  *
  *  This routine extracts the_thread from the_thread_queue
  *  and ensures that if there is a proxy for this task on
@@ -134,21 +146,31 @@ bool _Thread_queue_Extract_with_proxy(
 );
 
 /**
- * @brief  Thread queue First
+ *  @brief Gets a pointer to the "first" thread on the_thread_queue.
  *
  *  This function returns a pointer to the "first" thread
  *  on the_thread_queue.  The "first" thread is selected
  *  based on the discipline of the_thread_queue.
+ *
+ *  @param[in] the_thread_queue pointer to thread queue
+ *
+ *  @retval first thread or NULL
  */
 Thread_Control *_Thread_queue_First(
   Thread_queue_Control *the_thread_queue
 );
 
 /**
- * @brief  Thread queue Flush
+ *  @brief Unblocks all threads blocked on the_thread_queue.
  *
  *  This routine unblocks all threads blocked on the_thread_queue
  *  and cancels any associated timeouts.
+ *
+ *  @param[in] the_thread_queue is the pointer to a threadq header
+ *  @param[in] remote_extract_callout points to a method to invoke to 
+ *             invoke when a remote thread is unblocked
+ *  @param[in] status is the status which will be returned to
+ *             all unblocked threads
  */
 void _Thread_queue_Flush(
   Thread_queue_Control       *the_thread_queue,
@@ -157,11 +179,16 @@ void _Thread_queue_Flush(
 );
 
 /**
- * @brief  Thread queue Initialize
+ *  @brief Initialize the_thread_queue.
  *
  *  This routine initializes the_thread_queue based on the
  *  discipline indicated in attribute_set.  The state set on
  *  threads which block on the_thread_queue is state.
+ *
+ *  @param[in] the_thread_queue is the pointer to a threadq header
+ *  @param[in] the_discipline is the queueing discipline
+ *  @param[in] state is the state of waiting threads
+ *  @param[in] timeout_status is the return on a timeout
  */
 void _Thread_queue_Initialize(
   Thread_queue_Control         *the_thread_queue,
@@ -171,22 +198,41 @@ void _Thread_queue_Initialize(
 );
 
 /**
- * @brief  Thread queue Dequeue priority
+ *  @brief Removes a thread from the specified PRIORITY based
+ *  threadq, unblocks it, and cancels its timeout timer.
  *
- *  This function returns a pointer to the highest priority
- *  thread waiting on the_thread_queue.  If no threads are waiting
- *  on the_thread_queue, then NULL is returned.
+ *  This routine removes a thread from the specified PRIORITY based
+ *  threadq, unblocks it, and cancels its timeout timer.
+ *
+ *  - INTERRUPT LATENCY:
+ *    + single case
+ *
+ * @param[in] the_thread_queue is a pointer to a thread queue
+ *
+ * @retval thread dequeued
+ * @retval NULL if no thread are waiting on the_thread_queue
  */
 Thread_Control *_Thread_queue_Dequeue_priority(
   Thread_queue_Control *the_thread_queue
 );
 
 /**
- * @brief  Thread queue Enqueue priority
+ *  @brief Enqueues the currently executing thread on the_thread_queue.
  *
  *  This routine enqueues the currently executing thread on
  *  the_thread_queue with an optional timeout using the
  *  priority discipline.
+ *
+ *  @param[in] the_thread_queue is the pointer to threadq
+ *  @param[in] the_thread is the thread to insert
+ *  @param[in] level_p is a pointer to an interrupt level to be returned
+ *
+ *  @retval This methods returns an indication of the blocking state as
+ *          well as filling in *@ level_p with the previous interrupt level.
+ *
+ *  - INTERRUPT LATENCY:
+ *    + forward less than
+ *    + forward equal
  */
 Thread_blocking_operation_States _Thread_queue_Enqueue_priority (
   Thread_queue_Control *the_thread_queue,
@@ -195,10 +241,16 @@ Thread_blocking_operation_States _Thread_queue_Enqueue_priority (
 );
 
 /**
- * @brief  Thread queue Extract priority Helper
+ *  @brief Removes the_thread and cancels related timeouts.
  *
  *  This routine removes the_thread from the_thread_queue
  *  and cancels any timeouts associated with this blocking.
+ *  @param[in] the_thread_queue pointer to a threadq header
+ *  @param[in] the_thread pointer to a thread control block
+ *  @param[in] requeuing true if requeuing and should not alter
+ *         timeout or state
+ *  - INTERRUPT LATENCY:
+ *    + EXTRACT_PRIORITY
  */
 void _Thread_queue_Extract_priority_helper(
   Thread_queue_Control *the_thread_queue,
@@ -207,43 +259,59 @@ void _Thread_queue_Extract_priority_helper(
 );
 
 /**
- * @brief Thread queue Extract priority
+ *  @brief Wraps the underlying call and hides the requeuing argument.
  *
  * This macro wraps the underlying call and hides the requeuing argument.
  */
 
 #define _Thread_queue_Extract_priority( _the_thread_queue, _the_thread ) \
   _Thread_queue_Extract_priority_helper( _the_thread_queue, _the_thread, false )
-
-
 /**
- * @brief  Thread queue First priority
+ *  @brief Get highest priority thread on the_thread_queue.
  *
  *  This function returns a pointer to the "first" thread
- *  on the_thread_queue.  The "first" thread is the highest
- *  priority thread waiting on the_thread_queue.
+ *  on @a the_thread_queue.  The "first" thread is the highest
+ *  priority thread waiting on @a the_thread_queue.
+ *
+ *  @param[in] the_thread_queue is the pointer to the thread queue
+ *  @retval first thread or NULL
  */
 Thread_Control *_Thread_queue_First_priority(
   Thread_queue_Control *the_thread_queue
 );
 
 /**
- * @brief  Thread queue Dequeue FIFO
+ *  @brief Gets a pointer to the thread which has been waiting the longest.
  *
  *  This function returns a pointer to the thread which has
  *  been waiting the longest on  the_thread_queue.  If no
  *  threads are waiting on the_thread_queue, then NULL is returned.
+ *
+ *  @param[in] the_thread_queue is the pointer to threadq
+ *
+ *  @retval thread dequeued or NULL
+ *
+ *  - INTERRUPT LATENCY:
+ *    + check sync
+ *    + FIFO
  */
 Thread_Control *_Thread_queue_Dequeue_fifo(
   Thread_queue_Control *the_thread_queue
 );
 
 /**
- * @brief  Thread queue Enqueue FIFO
+ *  @brief Enqueues the currently executing thread on the_thread_queue.
  *
  *  This routine enqueues the currently executing thread on
  *  the_thread_queue with an optional timeout using the
  *  FIFO discipline.
+ *
+ *    @param[in] the_thread_queue pointer to threadq
+ *    @param[in] the_thread pointer to the thread to block
+ *    @param[in] level_p interrupt level in case the operation blocks actually
+ *
+ *  - INTERRUPT LATENCY:
+ *    + single case
  */
 Thread_blocking_operation_States _Thread_queue_Enqueue_fifo (
   Thread_queue_Control *the_thread_queue,
@@ -252,7 +320,7 @@ Thread_blocking_operation_States _Thread_queue_Enqueue_fifo (
 );
 
 /**
- * @brief  Thread queue Extract FIFO
+ *  @brief Removes the_thread from the_thread_queue and cancels any timeouts.
  *
  *  This routine removes the_thread from the_thread_queue
  *  and cancels any timeouts associated with this blocking.
@@ -263,24 +331,30 @@ void _Thread_queue_Extract_fifo(
 );
 
 /**
- * @brief  Thread queue First FIFO
+ *  @brief Gets a pointer to the "first" thread on the_thread_queue.
  *
  *  This function returns a pointer to the "first" thread
  *  on the_thread_queue.  The first thread is the thread
  *  which has been waiting longest on the_thread_queue.
+ *
+ *  @param[in] the_thread_queue is the pointer to threadq
+ *
+ *  @retval first thread or NULL
  */
 Thread_Control *_Thread_queue_First_fifo(
   Thread_queue_Control *the_thread_queue
 );
 
 /**
- * @brief  Thread queue timeout
+ *  @brief Thread queue timeout.
  *
  *  This routine is invoked when a task's request has not
  *  been satisfied after the timeout interval specified to
  *  enqueue.  The task represented by ID will be unblocked and
  *  its status code will be set in it's control block to indicate
  *  that a timeout has occurred.
+ *
+ *  @param[in] id thread id
  */
 void _Thread_queue_Timeout (
   Objects_Id  id,
@@ -288,7 +362,7 @@ void _Thread_queue_Timeout (
 );
 
 /**
- * @brief Process Thread Queue Timeout
+ *  @brief Process thread queue timeout.
  *
  * This is a shared helper routine which makes it easier to have multiple
  * object class specific timeout routines.

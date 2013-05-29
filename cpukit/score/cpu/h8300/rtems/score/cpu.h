@@ -1,11 +1,13 @@
 /**
- * @file rtems/score/cpu.h
+ * @file
+ *
+ * @brief Hitachi H8300 CPU Department Source
+ *
+ * This include file contains information pertaining to the H8300
+ *  processor.
  */
 
 /*
- *  This include file contains information pertaining to the H8300
- *  processor.
- *
  *  COPYRIGHT (c) 1989-2006.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -496,6 +498,12 @@ SCORE_EXTERN Context_Control_fp  _CPU_Null_fp_context;
  */
 
 #define CPU_STACK_MINIMUM_SIZE          (1536)
+
+#if defined(__H8300H__) || defined(__H8300S__) || defined(__H8300SX__)
+  #define CPU_SIZEOF_POINTER 4
+#else
+  #define CPU_SIZEOF_POINTER 2
+#endif
 
 /*
  *  CPU's worst alignment requirement for data types on a byte boundary.  This
@@ -1088,6 +1096,23 @@ void _CPU_Context_save_fp(
 void _CPU_Context_restore_fp(
   Context_Control_fp **fp_context_ptr
 );
+
+static inline void _CPU_Context_volatile_clobber( uintptr_t pattern )
+{
+  /* TODO */
+}
+
+static inline void _CPU_Context_validate( uintptr_t pattern )
+{
+  while (1) {
+    /* TODO */
+  }
+}
+
+/* FIXME */
+typedef CPU_Interrupt_frame CPU_Exception_frame;
+
+void _CPU_Exception_frame_print( const CPU_Exception_frame *frame );
 
 /*  The following routine swaps the endian format of an unsigned int.
  *  It must be static because it is referenced indirectly.

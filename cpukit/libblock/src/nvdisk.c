@@ -1,6 +1,11 @@
-/*
- * nvdisk.c -- Non-volatile disk block device implementation
+/**
+ * @file
  *
+ * @brief Non-Volatile Disk Block Device Implementation
+ * @ingroup libblock
+ */
+
+/*
  * Copyright (C) 2007 Chris Johns
  *
  * The license and distribution terms for this file may be
@@ -597,10 +602,9 @@ rtems_nvdisk_read (rtems_nvdisk* nvd, rtems_blkdev_request* req)
     }
   }
 
-  req->status = ret ? RTEMS_IO_ERROR : RTEMS_SUCCESSFUL;
-  req->req_done (req->done_arg, req->status);
+  rtems_blkdev_request_done (req, ret ? RTEMS_IO_ERROR : RTEMS_SUCCESSFUL);
 
-  return ret;
+  return 0;
 }
 
 /**
@@ -637,8 +641,7 @@ rtems_nvdisk_write (rtems_nvdisk* nvd, rtems_blkdev_request* req)
     }
   }
 
-  req->status = ret ? RTEMS_IO_ERROR : RTEMS_SUCCESSFUL;
-  req->req_done (req->done_arg, req->status);
+  rtems_blkdev_request_done (req, ret ? RTEMS_IO_ERROR : RTEMS_SUCCESSFUL);
 
   return 0;
 }

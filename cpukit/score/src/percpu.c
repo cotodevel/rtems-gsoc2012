@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Allocate and Initialize Per CPU Structures
+ * @ingroup PerCPU
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2011.
  *  On-Line Applications Research Corporation (OAR).
@@ -37,9 +44,9 @@
     /*
      *  Initialize per cpu pointer table
      */
-    size = Configuration.interrupt_stack_size;
+    size = rtems_configuration_get_interrupt_stack_size();
     _Per_CPU_Information_p[0] = &_Per_CPU_Information[0];
-    for (cpu=1 ; cpu < rtems_configuration_smp_maximum_processors; cpu++ ) {
+    for (cpu=1 ; cpu < rtems_configuration_get_maximum_processors(); cpu++ ) {
 
       Per_CPU_Control *p = &_Per_CPU_Information[cpu];
 

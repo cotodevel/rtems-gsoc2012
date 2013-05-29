@@ -24,11 +24,11 @@
 #include <bsp/linker-symbols.h>
 #include <libcpu/powerpc-utility.h>
 
-#if MPC55XX_CHIP_TYPE / 10 != 551
+#if MPC55XX_CHIP_FAMILY != 551
   #define HAS_SPE
 #endif
 
-#if MPC55XX_CHIP_TYPE / 10 == 564
+#if MPC55XX_CHIP_FAMILY == 564
   #define INIT_REGISTERS_FOR_LSM
 #endif
 
@@ -79,6 +79,10 @@ mpc55xx_bootflag_1:
 #endif
 
 _start:
+
+#ifdef MPC55XX_ENABLE_START_PROLOGUE
+	bl	mpc55xx_start_prologue
+#endif
 
 #ifdef MPC55XX_NEEDS_LOW_LEVEL_INIT
 
@@ -170,14 +174,26 @@ _start:
 	ori	r3, r3, 0x4000
 	mtspr	HID0, r3
 
-	/* Enable branch prediction */
-	LWI	r3, FSL_EIS_BUCSR_BBFI | FSL_EIS_BUCSR_BPEN
+	/*
+	 * Enable branch prediction.
+	 *
+	 * Errata e4396: e200z7: Erroneous Address Fetch
+	 *
+	 * The propose workaround does not work.
+	 */
+#if MPC55XX_CHIP_FAMILY != 567
+	LWI	r3, FSL_EIS_BUCSR_BBFI | FSL_EIS_BUCSR_BALLOC_ALL | FSL_EIS_BUCSR_BPRED_NOT_TAKEN | FSL_EIS_BUCSR_BPEN
 	mtspr	FSL_EIS_BUCSR, r3
+#endif
+
+#endif /* MPC55XX_NEEDS_LOW_LEVEL_INIT */
 
 	/* MMU early initialization */
 	LA	r3, mpc55xx_start_config_mmu_early
 	LW	r4, mpc55xx_start_config_mmu_early_count
 	bl	mpc55xx_start_mmu_apply_config
+
+#ifdef MPC55XX_NEEDS_LOW_LEVEL_INIT
 
 	/* Initialize intermediate stack (ECC) */
 
@@ -217,7 +233,10 @@ zero_intermediate_stack_loop:
 	li	r0, 0
 	stw	r0, 0(r1)
 
-	/* Load sections */
+	/*
+	 * Load sections.  This must be performed after the stack switch
+	 * because it may overwrite the initial stack.
+	 */
 	LA	r3, bsp_section_fast_text_begin
 	LA	r4, bsp_section_fast_text_load_begin
 	LA	r5, bsp_section_fast_text_size

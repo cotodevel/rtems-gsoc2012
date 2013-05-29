@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Helper Routine for POSIX TIMERS 
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  Helper routine for POSIX timers
  *

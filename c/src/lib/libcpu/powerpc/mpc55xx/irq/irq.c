@@ -7,15 +7,17 @@
  */
 
 /*
- * Copyright (c) 2008
- * Embedded Brains GmbH
- * Obere Lagerstr. 30
- * D-82178 Puchheim
- * Germany
- * rtems@embedded-brains.de
+ * Copyright (c) 2008-2012 embedded brains GmbH.  All rights reserved.
  *
- * The license and distribution terms for this file may be found in the file
- * LICENSE in this distribution or at http://www.rtems.com/license/LICENSE.
+ *  embedded brains GmbH
+ *  Obere Lagerstr. 30
+ *  82178 Puchheim
+ *  Germany
+ *  <rtems@embedded-brains.de>
+ *
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #include <mpc55xx/regs.h>
@@ -111,10 +113,7 @@ rtems_status_code mpc55xx_interrupt_handler_install(
 	}
 }
 
-/**
- * @brief External exception handler.
- */
-static int mpc55xx_external_exception_handler( BSP_Exception_frame *frame, unsigned exception_number)
+static void mpc55xx_interrupt_dispatch(void)
 {
 	/* Acknowlege interrupt request */
 	rtems_vector_number vector = INTC.IACKR.B.INTVEC;
@@ -130,18 +129,46 @@ static int mpc55xx_external_exception_handler( BSP_Exception_frame *frame, unsig
 
 	/* End of interrupt */
 	INTC.EOIR.R = 1;
+}
+
+#ifndef PPC_EXC_CONFIG_USE_FIXED_HANDLER
+
+/**
+ * @brief External exception handler.
+ */
+static int mpc55xx_external_exception_handler( BSP_Exception_frame *frame, unsigned exception_number)
+{
+	mpc55xx_interrupt_dispatch();
 
 	return 0;
 }
 
-rtems_status_code bsp_interrupt_facility_initialize()
+#else /* PPC_EXC_CONFIG_USE_FIXED_HANDLER */
+
+void bsp_interrupt_dispatch(void)
 {
+	mpc55xx_interrupt_dispatch();
+}
+
+#endif /* PPC_EXC_CONFIG_USE_FIXED_HANDLER */
+
+rtems_status_code bsp_interrupt_facility_initialize(void)
+{
+	rtems_vector_number vector;
+
+#ifndef PPC_EXC_CONFIG_USE_FIXED_HANDLER
 	/* Install exception handler */
 	if (ppc_exc_set_handler( ASM_EXT_VECTOR, mpc55xx_external_exception_handler)) {
 		return RTEMS_IO_ERROR;
 	}
+#endif
 
 	/* Initialize interrupt controller */
+
+	/* Disable all interrupts */
+	for (vector = MPC55XX_IRQ_MIN; vector <= MPC55XX_IRQ_MAX; ++vector) {
+		INTC.PSR [vector].B.PRI = MPC55XX_INTC_DISABLED_PRIORITY;
+	}
 
 	/* Software vector mode */
 	INTC.MCR.B.VTES = 0;

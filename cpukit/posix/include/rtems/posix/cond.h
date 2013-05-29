@@ -1,5 +1,7 @@
 /**
- * @file rtems/posix/cond.h
+ * @file
+ * 
+ * @brief POSIX Condition Variables Private Support
  *
  * This include file contains all the private support information for
  * POSIX condition variables.
@@ -17,6 +19,13 @@
 #ifndef _RTEMS_POSIX_COND_H
 #define _RTEMS_POSIX_COND_H
 
+/**
+ * @defgroup POSIX_COND_VARS POSIX Condition Variables
+ *
+ * @ingroup POSIXAPI
+ * 
+ */
+/**@{**/
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,6 +65,8 @@ POSIX_EXTERN Objects_Information  _POSIX_Condition_variables_Information;
 extern const pthread_condattr_t _POSIX_Condition_variables_Default_attributes;
 
 /*
+ * @brief Initialization Necessary for this Manager
+ *
  *  _POSIX_Condition_variables_Manager_initialization
  *
  *  DESCRIPTION:
@@ -124,29 +135,27 @@ RTEMS_INLINE_ROUTINE bool _POSIX_Condition_variables_Is_null (
   POSIX_Condition_variables_Control *the_condition_variable
 );
 
-/*
- *  _POSIX_Condition_variables_Signal_support
+/**
+ * @brief Implements wake up version of the "signal" operation.
+ * 
+ * DESCRIPTION:
  *
- *  DESCRIPTION:
- *
- *  A support routine which implements guts of the broadcast and single task
- *  wake up version of the "signal" operation.
+ * A support routine which implements guts of the broadcast and single task
+ * wake up version of the "signal" operation.
  */
-
 int _POSIX_Condition_variables_Signal_support(
   pthread_cond_t            *cond,
   bool                       is_broadcast
 );
 
-/*
- *  _POSIX_Condition_variables_Wait_support
+/**
+ * @brief POSIX condition variables wait support.
  *
- *  DESCRIPTION:
+ * DESCRIPTION:
  *
- *  A support routine which implements guts of the blocking, non-blocking, and
- *  timed wait version of condition variable wait routines.
+ * A support routine which implements guts of the blocking, non-blocking, and
+ * timed wait version of condition variable wait routines.
  */
-
 int _POSIX_Condition_variables_Wait_support(
   pthread_cond_t            *cond,
   pthread_mutex_t           *mutex,
@@ -170,6 +179,8 @@ POSIX_Condition_variables_Control *_POSIX_Condition_variables_Get (
 );
 
 #include <rtems/posix/cond.inl>
+
+/** @} */
 
 #ifdef __cplusplus
 }

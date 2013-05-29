@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * @brief Suspends Execution of Calling Thread until Signals in set Deleivered
+ */
+
 /*
  *  3.3.8 Synchronously Accept a Signal, P1003.1b-1993, p. 76
  *
@@ -15,12 +21,8 @@
 #include "config.h"
 #endif
 
+#include <stddef.h>
 #include <signal.h>
-#include <errno.h>
-
-#include <rtems/system.h>
-#include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
 
 int sigwaitinfo(
   const sigset_t  *set,

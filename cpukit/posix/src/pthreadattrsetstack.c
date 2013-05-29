@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Function Sets Thread Creation Stack Attributes in the attr object
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  16.1.1 Thread Creation Attributes
  *

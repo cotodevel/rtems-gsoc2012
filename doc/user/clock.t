@@ -22,6 +22,8 @@ the clock manager are:
 @item @code{@value{DIRPREFIX}clock_get_ticks_per_second} - Get ticks per second
 @item @code{@value{DIRPREFIX}clock_get_ticks_since_boot} - Get ticks since boot
 @item @code{@value{DIRPREFIX}clock_get_uptime} - Get time since boot
+@item @code{@value{DIRPREFIX}clock_get_uptime_timeval} - Get time since boot in timeval format
+@item @code{@value{DIRPREFIX}clock_get_uptime_seconds} - Get seconds since boot
 @item @code{@value{DIRPREFIX}clock_set_nanoseconds_extension} - Install the nanoseconds since last tick handler
 @item @code{@value{DIRPREFIX}clock_tick} - Announce a clock tick
 @end itemize
@@ -665,6 +667,70 @@ call.
 
 This directive may be called from an ISR.
 
+@c
+@c
+@c
+@page
+@subsection CLOCK_GET_UPTIME_TIMEVAL - Get the time since boot in timeval format
+
+@cindex clock get uptime
+@cindex uptime
+
+@subheading CALLING SEQUENCE:
+
+@ifset is-C
+@findex rtems_clock_get_uptime_timeval
+@example
+void rtems_clock_get_uptime_timeval(
+  struct timeval *uptime
+);
+@end example
+@end ifset
+
+@subheading DIRECTIVE STATUS CODES:
+
+NONE
+
+@subheading DESCRIPTION:
+
+This directive returns the seconds and microseconds since the
+system was booted.  If the BSP supports nanosecond clock
+accuracy, the time reported will probably be different on every
+call.
+
+@subheading NOTES:
+
+This directive may be called from an ISR.
+
+@c
+@c
+@c
+@page
+@subsection CLOCK_GET_UPTIME_SECONDS - Get the seconds since boot
+
+@cindex clock get uptime
+@cindex uptime
+
+@subheading CALLING SEQUENCE:
+
+@ifset is-C
+@findex rtems_clock_get_uptime_seconds
+@example
+time_t rtems_clock_get_uptime_seconds(void);
+@end example
+@end ifset
+
+@subheading DIRECTIVE STATUS CODES:
+
+The system uptime in seconds.
+
+@subheading DESCRIPTION:
+
+This directive returns the seconds since the system was booted.
+
+@subheading NOTES:
+
+This directive may be called from an ISR.
 
 @c
 @c

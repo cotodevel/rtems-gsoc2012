@@ -23,11 +23,6 @@
 #include <rtems/chain.h>
 
 /*
- * Basic management data
- */
-extern Heap_Control  *RTEMS_Malloc_Heap;
-
-/*
  *  Malloc Statistics Structure
  */
 extern rtems_malloc_statistics_t rtems_malloc_statistics;
@@ -38,6 +33,5 @@ extern rtems_malloc_statistics_t rtems_malloc_statistics;
  *  Process deferred free operations
  */
 bool malloc_is_system_state_OK(void);
-void malloc_deferred_frees_initialize(void);
 void malloc_deferred_frees_process(void);
 void malloc_deferred_free(void *);

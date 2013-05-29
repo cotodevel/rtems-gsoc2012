@@ -1,6 +1,11 @@
-/*
- *  3.3.6 Examine Pending Signals, P1003.1b-1993, p. 75
+/**
+ * @file
  *
+ * @brief Examine Pending Signals
+ * @ingroup POSIXAPI
+ */
+
+/*
  *  COPYRIGHT (c) 1989-1999.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -18,7 +23,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/seterr.h>
 
 int sigpending(

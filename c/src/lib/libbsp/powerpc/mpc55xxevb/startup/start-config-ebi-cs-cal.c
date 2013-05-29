@@ -7,7 +7,7 @@
  */
 
 /*
- * Copyright (c) 2008-2011 embedded brains GmbH.  All rights reserved.
+ * Copyright (c) 2008-2012 embedded brains GmbH.  All rights reserved.
  *
  *  embedded brains GmbH
  *  Obere Lagerstr. 30
@@ -21,13 +21,10 @@
  */
 
 #include <bsp/mpc55xx-config.h>
-#include <bsp/start.h>
-#include <bsp.h>
 
 #ifdef MPC55XX_HAS_EBI
 
-BSP_START_TEXT_SECTION const struct EBI_CAL_CS_tag
-  mpc55xx_start_config_ebi_cal_cs [] = {
+const struct EBI_CAL_CS_tag mpc55xx_start_config_ebi_cal_cs [] = {
 #if defined(MPC55XX_BOARD_MPC5674FEVB)
   /* External SRAM */
   {
@@ -75,7 +72,8 @@ BSP_START_TEXT_SECTION const struct EBI_CAL_CS_tag
       }
     }
   }
-#elif defined(MPC55XX_BOARD_MPC5674F_ECU508)
+#elif defined(MPC55XX_BOARD_MPC5674F_ECU508) \
+  && defined(MPC55XX_NEEDS_LOW_LEVEL_INIT)
   /* D_CS0 for external SRAM */
   {
     .BR = {
@@ -171,11 +169,89 @@ BSP_START_TEXT_SECTION const struct EBI_CAL_CS_tag
       }
     }
   }
+#elif defined(MPC55XX_BOARD_MPC5674F_RSM6)
+  /* D_CS0 for MRAM */
+  {
+    .BR = {
+      .B = {
+        .BA = 0x20000000 >> 15,
+        .PS = 0,
+        .AD_MUX = 1,
+        .BL = 0,
+        .WEBS = 1,
+        .TBDIP = 0,
+        .SETA = 0,
+        .BI = 1,
+        .V = 1
+      }
+    },
+    .OR = {
+      .B = {
+        .AM = 0xffc00000 >> 15,
+        .SCY = 4,
+        .BSCY = 0
+      }
+    }
+  },
+
+  /* D_CS1 for FPGA */
+  {
+    .BR = {
+      .B = {
+        .BA = 0x21000000 >> 15,
+        .PS = 0,
+        .AD_MUX = 1,
+        .BL = 0,
+        .WEBS = 0,
+        .TBDIP = 0,
+        .SETA = 0,
+        .BI = 1,
+        .V = 1
+      }
+    },
+    .OR = {
+      .B = {
+        .AM = 0xff800000 >> 15,
+        .SCY = 0,
+        .BSCY = 0
+      }
+    }
+  },
+
+  /* D_CS2 unused */
+  {
+    .BR = { .R = 0x20000002 },
+    .OR = { .R = 0xe0000000 }
+  },
+
+  /* D_CS3 for Ethernet Controller */
+  {
+    .BR = {
+      .B = {
+        .BA = 0x23000000 >> 15,
+        .PS = 1,
+        .AD_MUX = 1,
+        .BL = 0,
+        .WEBS = 1,
+        .TBDIP = 0,
+        .SETA = 0,
+        .BI = 1,
+        .V = 1
+    }
+  },
+    .OR = {
+      .B = {
+        .AM = 0xfff80000 >> 15,
+        .SCY = 8,
+        .BSCY = 0
+      }
+    }
+  }
 #endif
 };
 
-BSP_START_TEXT_SECTION const size_t mpc55xx_start_config_ebi_cal_cs_count [] = {
-  sizeof(mpc55xx_start_config_ebi_cal_cs) / sizeof(mpc55xx_start_config_ebi_cal_cs [0])
+const size_t mpc55xx_start_config_ebi_cal_cs_count [] = {
+  RTEMS_ARRAY_SIZE(mpc55xx_start_config_ebi_cal_cs)
 };
 
 #endif /* MPC55XX_HAS_EBI */

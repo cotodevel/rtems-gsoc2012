@@ -1,36 +1,47 @@
 /**
  * @file rtems/stringto.h
  *
+ * @defgroup libmisc_conv_help Conversion Helpers
+ *
+ * @ingroup libmisc
+ * @brief Convert String to Pointer (with validation)
+ *
  * This file defines the interface to a set of string conversion helpers.
  */
 
 /*
- *  COPYRIGHT (c) 2009-2011.
- *  On-Line Applications Research Corporation (OAR).
+ * COPYRIGHT (c) 2009-2011.
+ * On-Line Applications Research Corporation (OAR).
  *
- *  The license and distribution terms for this file may be
- *  found in the file LICENSE in this distribution or at
- *  http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef _RTEMS_STRINGTO_H
 #define _RTEMS_STRINGTO_H
+/**
+ *  @defgroup libmisc_conv_help Conversion Helpers
+ *
+ *  @ingroup libmisc
+ */
+/**@{*/
 
 #include <rtems.h>
 
 /**
- *  @brief Convert String to Pointer (with validation)
+ * @brief Convert String to Pointer (with validation).
  *
- *  This method converts a string to a pointer (void *) with
- *  basic numeric validation.
+ * This method converts a string to a pointer (void *) with
+ * basic numeric validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_pointer(
   const char     *s,
@@ -39,19 +50,19 @@ rtems_status_code rtems_string_to_pointer(
 );
 
 /**
- *  @brief Convert String to Unsigned Character (with validation)
+ * @brief Convert String to Unsigned Character (with validation).
  *
- *  This method converts a string to an unsigned character with
- *  range validation.
+ * This method converts a string to an unsigned character with
+ * range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
- *  @param[in] base is the expected base of the number
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
+ * @param[in] base is the expected base of the number
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_unsigned_char(
   const char     *s,
@@ -61,18 +72,18 @@ rtems_status_code rtems_string_to_unsigned_char(
 );
 
 /**
- *  @brief Convert String to Int (with validation)
+ * @brief Convert String to Int (with validation).
  *
- *  This method converts a string to an int with range validation.
+ * This method converts a string to an int with range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
- *  @param[in] base is the expected base of the number
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
+ * @param[in] base is the expected base of the number
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_int(
   const char  *s,
@@ -82,18 +93,18 @@ rtems_status_code rtems_string_to_int(
 );
 
 /**
- *  @brief Convert String to Unsigned Int (with validation)
+ * @brief Convert String to Unsigned Int (with validation).
  *
- *  This method converts a string to an unsigned int with range validation.
+ * This method converts a string to an unsigned int with range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
- *  @param[in] base is the expected base of the number
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
+ * @param[in] base is the expected base of the number
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_unsigned_int(
   const char    *s,
@@ -103,19 +114,19 @@ rtems_status_code rtems_string_to_unsigned_int(
 );
 
 /**
- *  @brief Convert String to Long (with validation)
+ * @brief Convert String to Long (with validation).
  *
- *  This method converts a string to a long with
- *  range validation.
+ * This method converts a string to a long with
+ * range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
- *  @param[in] base is the expected base of the number
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
+ * @param[in] base is the expected base of the number
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_long(
   const char  *s,
@@ -125,19 +136,19 @@ rtems_status_code rtems_string_to_long(
 );
 
 /**
- *  @brief Convert String to Unsigned Long (with validation)
+ * @brief Convert String to Unsigned Long (with validation).
  *
- *  This method converts a string to an unsigned long with
- *  range validation.
+ * This method converts a string to an unsigned long with
+ * range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
- *  @param[in] base is the expected base of the number
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
+ * @param[in] base is the expected base of the number
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_unsigned_long(
   const char     *s,
@@ -147,19 +158,19 @@ rtems_status_code rtems_string_to_unsigned_long(
 );
 
 /**
- *  @brief Convert String to Long Long (with validation)
+ * @brief Convert String to Long Long (with validation).
  *
- *  This method converts a string to a long long with
- *  range validation.
+ * This method converts a string to a long long with
+ * range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
- *  @param[in] base is the expected base of the number
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
+ * @param[in] base is the expected base of the number
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_long_long(
   const char  *s,
@@ -169,19 +180,19 @@ rtems_status_code rtems_string_to_long_long(
 );
 
 /**
- *  @brief Convert String to Unsigned Long Long (with validation)
+ * @brief Convert String to Unsigned Long Long (with validation).
  *
- *  This method converts a string to an unsigned character with
- *  range validation.
+ * This method converts a string to an unsigned character with
+ * range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
- *  @param[in] base is the expected base of the number
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
+ * @param[in] base is the expected base of the number
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_unsigned_long_long(
   const char           *s,
@@ -191,17 +202,17 @@ rtems_status_code rtems_string_to_unsigned_long_long(
 );
 
 /**
- *  @brief Convert String to Float (with validation)
+ * @brief Convert String to Float (with validation).
  *
- *  This method converts a string to a float with range validation.
+ * This method converts a string to a float with range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_float(
   const char   *s,
@@ -210,17 +221,17 @@ rtems_status_code rtems_string_to_float(
 );
 
 /**
- *  @brief Convert String to Double (with validation)
+ * @brief Convert String to Double (with validation).
  *
- *  This method converts a string to a double with range validation.
+ * This method converts a string to a double with range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_double(
   const char   *s,
@@ -229,17 +240,17 @@ rtems_status_code rtems_string_to_double(
 );
 
 /**
- *  @brief Convert String to long double (with validation)
+ * @brief Convert String to long double (with validation).
  *
- *  This method converts a string to a long double with range validation.
+ * This method converts a string to a long double with range validation.
  *
- *  @param[in] s is the string to convert
- *  @param[in] n points to the variable to place the converted output in
- *  @param[in] endptr is used to keep track of the position in the string
+ * @param[in] s is the string to convert
+ * @param[in] n points to the variable to place the converted output in
+ * @param[in] endptr is used to keep track of the position in the string
  *
- *  @return This method returns RTEMS_SUCCESSFUL on successful conversion
- *          and *n is filled in.  Otherwise, the status indicates the
- *          source of the error.
+ * @retval This method returns RTEMS_SUCCESSFUL on successful conversion
+ *         and *n is filled in. Otherwise, the status indicates the
+ *         source of the error.
  */
 rtems_status_code rtems_string_to_long_double(
   const char   *s,
@@ -248,3 +259,4 @@ rtems_status_code rtems_string_to_long_double(
 );
 
 #endif
+/**@}*/

@@ -1,6 +1,11 @@
-/*
- *  link() - POSIX 1003.1b - 5.3.4 - Create a new link
+/**
+ *  @file
  *
+ *  @brief Create a new link
+ *  @ingroup libcsupport
+ */
+
+/*
  *  COPYRIGHT (c) 1989-1999.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -17,6 +22,9 @@
 
 #include <rtems/libio_.h>
 
+/**
+ *  link() - POSIX 1003.1b - 5.3.4 - Create a new link
+ */
 int link( const char *path1, const char *path2 )
 {
   int rv = 0;
@@ -31,7 +39,7 @@ int link( const char *path1, const char *path2 )
   const rtems_filesystem_location_info_t *currentloc_2 =
     rtems_filesystem_eval_path_start( &ctx_2, path2, eval_flags_2 );
 
-  rv = rtems_filesystem_location_exists_in_same_fs_instance_as(
+  rv = rtems_filesystem_location_exists_in_same_instance_as(
     currentloc_1,
     currentloc_2
   );
@@ -50,16 +58,13 @@ int link( const char *path1, const char *path2 )
   return rv;
 }
 
-/*
- *  _link_r
- *
- *  This is the Newlib dependent reentrant version of link().
- */
-
 #if defined(RTEMS_NEWLIB)
 
 #include <reent.h>
 
+/**
+ *  This is the Newlib dependent reentrant version of link().
+ */
 int _link_r(
   struct _reent *ptr __attribute__((unused)),
   const char    *path1,

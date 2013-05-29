@@ -1,6 +1,11 @@
-/*
- *  Init routine for MSDOS
+/**
+ * @file
  *
+ * @brief Init Routine for MSDOS
+ * @ingroup libfs
+ */
+
+/*
  *  Copyright (C) 2001 OKTET Ltd., St.-Petersburg, Russia
  *  Author: Eugeny S. Mints <Eugeny.Mints@oktet.ru>
  *
@@ -48,7 +53,7 @@ const rtems_filesystem_operations_table  msdos_ops = {
   .symlink_h      =  rtems_filesystem_default_symlink,
   .readlink_h     =  rtems_filesystem_default_readlink,
   .rename_h       =  msdos_rename,
-  .statvfs_h      =  rtems_filesystem_default_statvfs
+  .statvfs_h      =  msdos_statvfs
 };
 
 void msdos_lock(const rtems_filesystem_mount_table_entry_t *mt_entry)

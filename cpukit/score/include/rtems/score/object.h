@@ -1,6 +1,8 @@
 /**
  * @file  rtems/score/object.h
  *
+ * @brief Constants and Structures Associated with the Object Handler
+ *
  * This include file contains all the constants and structures associated
  * with the Object Handler.  This Handler provides mechanisms which
  * can be used to initialize and manipulate all objects which have ids.
@@ -40,6 +42,7 @@ extern "C" {
  *
  * @brief Provides services for all APIs.
  */
+/**@{*/
 
 /**
  * @defgroup ScoreCPU CPU Architecture Support
@@ -48,6 +51,14 @@ extern "C" {
  *
  * @brief Provides CPU architecture dependent services.
  */
+/**@{*/
+
+/**
+ *  @defgroup ScoreObject Object Handler
+ *
+ *  @ingroup Score
+ */
+/**@{*/
 
 /**
  *  The following type defines the control block used to manage
@@ -129,8 +140,6 @@ typedef uint16_t   Objects_Maximum;
  *  the object Id.
  */
 #define OBJECTS_INDEX_START_BIT  0U
-
-
 /**
  *  This is the bit position of the starting bit of the node portion of
  *  the object Id.
@@ -441,7 +450,12 @@ void _Objects_Extend_information(
 );
 
 /**
+ *  @brief Shrink an object class information record
+ *
  *  This function shrink an object class information record.
+ *  The object's name and object space are released. The local_table
+ *  etc block does not shrink. The InActive list needs to be scanned
+ *  to find the objects are remove them.
  *
  *  @param[in] information points to an object class information block.
  */
@@ -450,6 +464,8 @@ void _Objects_Shrink_information(
 );
 
 /**
+ *  @brief Initialize object Information
+ *
  *  This function initializes an object class information record.
  *  SUPPORTS_GLOBAL is true if the object class supports global
  *  objects, and false otherwise.  Maximum indicates the number
@@ -484,19 +500,23 @@ void _Objects_Initialize_information (
 );
 
 /**
+ *  @brief Object API Maximum Class
+ *
  *  This function returns the highest numeric value of a valid
  *  API for the specified @a api.
  *
  *  @param[in] api is the API of interest
  *
- *  @return A positive integer on success and 0 otherwise.
+ *  @retval A positive integer on success and 0 otherwise.
  */
 unsigned int _Objects_API_maximum_class(
   uint32_t api
 );
 
 /**
- *  This function allocates a object control block from
+ *  @brief Allocate an object.
+ *
+ *  This function allocates an object control block from
  *  the inactive chain of free object control blocks.
  *
  *  @param[in] information points to an object class information block.
@@ -506,8 +526,9 @@ Objects_Control *_Objects_Allocate(
 );
 
 /**
+ *  @brief Free an object.
  *
- *  This function frees a object control block to the
+ *  This function frees an object control block to the
  *  inactive chain of free object control blocks.
  *
  *  @param[in] information points to an object class information block.
@@ -565,6 +586,8 @@ typedef enum {
 #define OBJECTS_NAME_ERRORS_LAST  OBJECTS_INVALID_NODE
 
 /**
+ *  @brief Converts an object name to an Id.
+ *
  *  This method converts an object name to an Id.  It performs a look up
  *  using the object information block for this object class.
  *
@@ -573,7 +596,7 @@ typedef enum {
  *  @param[in] node is the set of nodes to search.
  *  @param[in] id will contain the Id if the search is successful.
  *
- *  @return This method returns one of the values from the
+ *  @retval This method returns one of the values from the
  *          @ref Objects_Name_or_id_lookup_errors enumeration to indicate
  *          successful or failure.  On success @a id will contain the Id of
  *          the requested object.
@@ -587,6 +610,8 @@ Objects_Name_or_id_lookup_errors _Objects_Name_to_id_u32(
 
 #if defined(RTEMS_SCORE_OBJECT_ENABLE_STRING_NAMES)
 /**
+ *  @brief Converts an object name to an Id.
+ *
  *  This method converts an object name to an Id.  It performs a look up
  *  using the object information block for this object class.
  *
@@ -594,7 +619,7 @@ Objects_Name_or_id_lookup_errors _Objects_Name_to_id_u32(
  *  @param[in] name is the name of the object to find.
  *  @param[in] id will contain the Id if the search is successful.
  *
- *  @return This method returns one of the values from the
+ *  @retval This method returns one of the values from the
  *          @ref Objects_Name_or_id_lookup_errors enumeration to indicate
  *          successful or failure.  On success @a id will contain the Id of
  *          the requested object.
@@ -607,6 +632,8 @@ Objects_Name_or_id_lookup_errors _Objects_Name_to_id_string(
 #endif
 
 /**
+ *  @brief Implements the common portion of the object Id to name directives.
+ *
  *  This function implements the common portion of the object Id
  *  to name directives.  This function returns the name
  *  associated with object id.
@@ -614,7 +641,7 @@ Objects_Name_or_id_lookup_errors _Objects_Name_to_id_string(
  *  @param[in] id is the Id of the object whose name we are locating.
  *  @param[in] name will contain the name of the object, if found.
  *
- *  @return This method returns one of the values from the
+ *  @retval This method returns one of the values from the
  *          @ref Objects_Name_or_id_lookup_errors enumeration to indicate
  *          successful or failure.  On success @a name will contain the name of
  *          the requested object.
@@ -627,6 +654,8 @@ Objects_Name_or_id_lookup_errors _Objects_Id_to_name (
 );
 
 /**
+ *  @brief Maps object ids to object control blocks.
+ *
  *  This function maps object ids to object control blocks.
  *  If id corresponds to a local object, then it returns
  *  the_object control pointer which maps to id and location
@@ -640,7 +669,7 @@ Objects_Name_or_id_lookup_errors _Objects_Id_to_name (
  *  @param[in] id is the Id of the object whose name we are locating.
  *  @param[in] location will contain an indication of success or failure.
  *
- *  @return This method returns one of the values from the
+ *  @retval This method returns one of the values from the
  *          @ref Objects_Name_or_id_lookup_errors enumeration to indicate
  *          successful or failure.  On success @a id will contain the Id of
  *          the requested object.
@@ -657,6 +686,8 @@ Objects_Control *_Objects_Get (
 );
 
 /**
+ *  @brief Maps object ids to object control blocks.
+ *
  *  This function maps object ids to object control blocks.
  *  If id corresponds to a local object, then it returns
  *  the_object control pointer which maps to id and location
@@ -671,7 +702,7 @@ Objects_Control *_Objects_Get (
  *  @param[in] location will contain an indication of success or failure.
  *  @param[in] level is the interrupt level being turned.
  *
- *  @return This method returns one of the values from the
+ *  @retval This method returns one of the values from the
  *          @ref Objects_Name_or_id_lookup_errors enumeration to indicate
  *          successful or failure.  On success @a name will contain the name of
  *          the requested object.
@@ -689,6 +720,8 @@ Objects_Control *_Objects_Get_isr_disable(
 );
 
 /**
+ *  @brief  Maps object ids to object control blocks.
+ *
  *  This function maps object ids to object control blocks.
  *  If id corresponds to a local object, then it returns
  *  the_object control pointer which maps to id and location
@@ -702,7 +735,7 @@ Objects_Control *_Objects_Get_isr_disable(
  *  @param[in] id is the Id of the object whose name we are locating.
  *  @param[in] location will contain an indication of success or failure.
  *
- *  @return This method returns one of the values from the
+ *  @retval This method returns one of the values from the
  *          @ref Objects_Name_or_id_lookup_errors enumeration to indicate
  *          successful or failure.  On success @a id will contain the Id of
  *          the requested object.
@@ -726,7 +759,7 @@ Objects_Control *_Objects_Get_no_protection(
  *  @param[in] location_p will contain an indication of success or failure.
  *  @param[in] next_id_p is the Id of the next object we will look at.
  *
- *  @return This method returns the pointer to the object located or
+ *  @retval This method returns the pointer to the object located or
  *          NULL on error.
  */
 Objects_Control *_Objects_Get_next(
@@ -737,6 +770,8 @@ Objects_Control *_Objects_Get_next(
 );
 
 /**
+ *  @brief Get object information.
+ *
  *  This function return the information structure given
  *  an the API and Class.  This can be done independent of
  *  the existence of any objects created by the API.
@@ -744,7 +779,7 @@ Objects_Control *_Objects_Get_next(
  *  @param[in] the_api indicates the API for the information we want
  *  @param[in] the_class indicates the Class for the information we want
  *
- *  @return This method returns a pointer to the Object Information Table
+ *  @retval This method returns a pointer to the Object Information Table
  *          for the class of objects which corresponds to this object ID.
  */
 Objects_Information *_Objects_Get_information(
@@ -753,12 +788,14 @@ Objects_Information *_Objects_Get_information(
 );
 
 /**
+ *  @brief Get information of an object from an ID.
+ *
  *  This function return the information structure given
- *  an id of an object.
+ *  an @a id of an object.
  *
- *  @param[in] id is an object ID
+ *  @param[in] id is the object ID to get the information from
  *
- *  @return This method returns a pointer to the Object Information Table
+ *  @retval This method returns a pointer to the Object Information Table
  *          for the class of objects which corresponds to this object ID.
  */
 Objects_Information *_Objects_Get_information_id(
@@ -766,6 +803,8 @@ Objects_Information *_Objects_Get_information_id(
 );
 
 /**
+ *  @brief Gets object name in the form of a C string.
+ *
  *  This method objects the name of an object and returns its name
  *  in the form of a C string.  It attempts to be careful about
  *  overflowing the user's string and about returning unprintable characters.
@@ -774,7 +813,7 @@ Objects_Information *_Objects_Get_information_id(
  *  @param[in] length indicates the length of the caller's buffer
  *  @param[in] name points a string which will be filled in.
  *
- *  @return This method returns @a name or NULL on error. @a *name will
+ *  @retval This method returns @a name or NULL on error. @a *name will
  *          contain the name if successful.
  */
 char *_Objects_Get_name_as_string(
@@ -784,6 +823,8 @@ char *_Objects_Get_name_as_string(
 );
 
 /**
+ *  @brief Set objects name.
+ *
  *  This method sets the object name to either a copy of a string
  *  or up to the first four characters of the string based upon
  *  whether this object class uses strings for names.
@@ -792,7 +833,7 @@ char *_Objects_Get_name_as_string(
  *  @param[in] the_object is the object to operate upon
  *  @param[in] name is a pointer to the name to use
  *
- *  @return If successful, true is returned.  Otherwise false is returned.
+ *  @retval If successful, true is returned.  Otherwise false is returned.
  */
 bool _Objects_Set_name(
   Objects_Information *information,
@@ -801,10 +842,12 @@ bool _Objects_Set_name(
 );
 
 /**
- *  This function removes the_object from the namespace.
+ *  @brief Removes object from namespace.
  *
- *  @param[in] information points to an Object Information Table
- *  @param[in] the_object is a pointer to an object
+ *  This function removes @a the_object from the namespace.
+ *
+ *  @param[in] information points to an Object Information Table.
+ *  @param[in] the_object is a pointer to an object.
  */
 void _Objects_Namespace_remove(
   Objects_Information  *information,
@@ -812,6 +855,8 @@ void _Objects_Namespace_remove(
 );
 
 /**
+ *  @brief Close object.
+ *
  *  This function removes the_object control pointer and object name
  *  in the Local Pointer and Local Name Tables.
  *
@@ -821,6 +866,17 @@ void _Objects_Namespace_remove(
 void _Objects_Close(
   Objects_Information  *information,
   Objects_Control      *the_object
+);
+
+/**
+ * @brief Returns the count of active objects.
+ *
+ * @param[in] information The object information table.
+ *
+ * @retval The count of active objects.
+ */
+Objects_Maximum _Objects_Active_count(
+  const Objects_Information *information
 );
 
 /*
@@ -836,5 +892,8 @@ void _Objects_Close(
 }
 #endif
 
+/**@}*/
+/**@}*/
+/**@}*/
 #endif
 /* end of include file */

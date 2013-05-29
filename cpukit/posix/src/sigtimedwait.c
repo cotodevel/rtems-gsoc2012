@@ -1,6 +1,11 @@
-/*
- *  3.3.8 Synchronously Accept a Signal, P1003.1b-1993, p. 76
+/**
+ *  @file
  *
+ *  @brief Wait for Queued Signals
+ *  @ingroup POSIXAPI
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2008.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -19,7 +24,7 @@
 
 #include <rtems/system.h>
 #include <rtems/posix/pthread.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/seterr.h>
 #include <rtems/posix/time.h>
 #include <rtems/score/isr.h>
@@ -58,6 +63,9 @@ found_it:
   return signo;
 }
 
+/**
+ *  3.3.8 Synchronously Accept a Signal, P1003.1b-1993, p. 76
+ */
 int sigtimedwait(
   const sigset_t         *set,
   siginfo_t              *info,

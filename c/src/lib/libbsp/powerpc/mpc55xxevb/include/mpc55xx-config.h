@@ -7,7 +7,7 @@
  */
 
 /*
- * Copyright (c) 2008-2011 embedded brains GmbH.  All rights reserved.
+ * Copyright (c) 2008-2012 embedded brains GmbH.  All rights reserved.
  *
  *  embedded brains GmbH
  *  Obere Lagerstr. 30
@@ -31,6 +31,7 @@
 
 #include <mpc55xx/regs.h>
 #include <mpc55xx/regs-mmu.h>
+#include <mpc55xx/siu.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,17 +44,23 @@ typedef struct {
   union SIU_PCR_tag pcr;
 } mpc55xx_siu_pcr_config;
 
-extern const mpc55xx_siu_pcr_config mpc55xx_start_config_siu_pcr [];
+extern BSP_START_DATA_SECTION const mpc55xx_siu_pcr_config
+  mpc55xx_start_config_siu_pcr [];
 
-extern const size_t mpc55xx_start_config_siu_pcr_count [];
+extern BSP_START_DATA_SECTION const size_t
+  mpc55xx_start_config_siu_pcr_count [];
 
-extern const struct MMU_tag mpc55xx_start_config_mmu_early [];
+extern BSP_START_DATA_SECTION const struct
+  MMU_tag mpc55xx_start_config_mmu_early [];
 
-extern const size_t mpc55xx_start_config_mmu_early_count [];
+extern BSP_START_DATA_SECTION const size_t
+  mpc55xx_start_config_mmu_early_count [];
 
-extern const struct MMU_tag mpc55xx_start_config_mmu [];
+extern BSP_START_DATA_SECTION const struct
+  MMU_tag mpc55xx_start_config_mmu [];
 
-extern const size_t mpc55xx_start_config_mmu_count [];
+extern BSP_START_DATA_SECTION const size_t
+  mpc55xx_start_config_mmu_count [];
 
 #ifdef MPC55XX_HAS_FMPLL
   typedef struct {
@@ -83,17 +90,48 @@ extern const size_t mpc55xx_start_config_mmu_count [];
   } mpc55xx_clock_config;
 #endif
 
-extern const mpc55xx_clock_config mpc55xx_start_config_clock [];
+extern BSP_START_DATA_SECTION const mpc55xx_clock_config
+  mpc55xx_start_config_clock [];
 
 #ifdef MPC55XX_HAS_EBI
-  extern const struct EBI_CS_tag mpc55xx_start_config_ebi_cs [];
+  typedef struct {
+    union EBI_MCR_tag ebi_mcr;
+    uint32_t siu_eccr_ebdf;
+  } mpc55xx_ebi_config;
 
-  extern const size_t mpc55xx_start_config_ebi_cs_count [];
+  extern BSP_START_DATA_SECTION const mpc55xx_ebi_config
+    mpc55xx_start_config_ebi [];
 
-  extern const struct EBI_CAL_CS_tag mpc55xx_start_config_ebi_cal_cs [];
+  extern BSP_START_DATA_SECTION const size_t
+    mpc55xx_start_config_ebi_count [];
 
-  extern const size_t mpc55xx_start_config_ebi_cal_cs_count [];
+  extern BSP_START_DATA_SECTION const struct EBI_CS_tag
+    mpc55xx_start_config_ebi_cs [];
+
+  extern BSP_START_DATA_SECTION const size_t
+    mpc55xx_start_config_ebi_cs_count [];
+
+  extern BSP_START_DATA_SECTION const struct EBI_CAL_CS_tag
+    mpc55xx_start_config_ebi_cal_cs [];
+
+  extern BSP_START_DATA_SECTION const size_t
+    mpc55xx_start_config_ebi_cal_cs_count [];
 #endif
+
+/**
+ * @brief Start prologue.
+ *
+ * In case the BSP enabled the MPC55XX_ENABLE_START_PROLOGUE option, then this
+ * function will be called directly after the Boot Assist Module (BAM) jumped
+ * to the start entry defined by the reset configuration.
+ *
+ * This function executes in the context initialized by the BAM.  There exists
+ * no valid stack pointer and the internal RAM has an invalid ECC state.
+ *
+ * The default implementation does nothing.  The application may provide its
+ * own implementation.
+ */
+void mpc55xx_start_prologue(void);
 
 void mpc55xx_start_early(void);
 

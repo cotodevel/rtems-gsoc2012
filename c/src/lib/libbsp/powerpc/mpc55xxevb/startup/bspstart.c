@@ -7,10 +7,10 @@
  */
 
 /*
- * Copyright (c) 2008-2011 embedded brains GmbH.  All rights reserved.
+ * Copyright (c) 2008-2013 embedded brains GmbH.  All rights reserved.
  *
  *  embedded brains GmbH
- *  Obere Lagerstr. 30
+ *  Dornierstr. 4
  *  82178 Puchheim
  *  Germany
  *  <rtems@embedded-brains.de>
@@ -41,8 +41,6 @@
 #include <bsp/start.h>
 #include <bsp/mpc55xx-config.h>
 
-extern Heap_Control *RTEMS_Malloc_Heap;
-
 /* Symbols defined in linker command file */
 LINKER_SYMBOL(mpc55xx_exc_vector_base);
 
@@ -50,30 +48,21 @@ unsigned int bsp_clock_speed = 0;
 
 uint32_t bsp_clicks_per_usec = 0;
 
-void BSP_panic( char *s)
+void _BSP_Fatal_error(unsigned n)
 {
 	rtems_interrupt_level level;
 
+	(void) level;
 	rtems_interrupt_disable( level);
 
-	printk( "%s PANIC %s\n", _RTEMS_version, s);
-
-	while (1) {
-		/* Do nothing */
+	while (true) {
+		mpc55xx_wait_for_interrupt();
 	}
 }
 
-void _BSP_Fatal_error( unsigned n)
+void mpc55xx_fatal(mpc55xx_fatal_code code)
 {
-	rtems_interrupt_level level;
-
-	rtems_interrupt_disable( level);
-
-	printk( "%s PANIC ERROR %u\n", _RTEMS_version, n);
-
-	while (1) {
-		/* Do nothing */
-	}
+  rtems_fatal(RTEMS_FATAL_SOURCE_BSP_SPECIFIC, code);
 }
 
 static void null_pointer_protection(void)
@@ -92,11 +81,7 @@ static void null_pointer_protection(void)
 
 void bsp_start(void)
 {
-	rtems_status_code sc = RTEMS_SUCCESSFUL;
-	ppc_cpu_id_t myCpu;
-	ppc_cpu_revision_t myCpuRevision;
-
-        null_pointer_protection();
+	null_pointer_protection();
 
 	/*
 	 * make sure BSS/SBSS is cleared
@@ -108,8 +93,8 @@ void bsp_start(void)
 	 * function store the result in global variables so that it can be used
 	 * latter...
 	 */
-	myCpu = get_ppc_cpu_type();
-	myCpuRevision = get_ppc_cpu_revision();
+	get_ppc_cpu_type();
+	get_ppc_cpu_revision();
 
 	/*
 	 * determine clock speed
@@ -121,37 +106,20 @@ void bsp_start(void)
 
 	/* Initialize exceptions */
 	ppc_exc_vector_base = (uint32_t) mpc55xx_exc_vector_base;
-	sc = ppc_exc_initialize(
+	ppc_exc_initialize(
 		PPC_INTERRUPT_DISABLE_MASK_DEFAULT,
                 (uintptr_t) bsp_section_work_begin,
-                Configuration.interrupt_stack_size
+                rtems_configuration_get_interrupt_stack_size()
 	);
-	if (sc != RTEMS_SUCCESSFUL) {
-		BSP_panic( "Cannot initialize exceptions");
-	}
-	ppc_exc_set_handler(ASM_ALIGN_VECTOR, ppc_exc_alignment_handler);
+	#ifndef PPC_EXC_CONFIG_USE_FIXED_HANDLER
+		ppc_exc_set_handler(ASM_ALIGN_VECTOR, ppc_exc_alignment_handler);
+	#endif
 
 	/* Initialize interrupts */
-	sc = bsp_interrupt_initialize();
-	if (sc != RTEMS_SUCCESSFUL) {
-		BSP_panic( "Cannot initialize interrupts");
-	}
+	bsp_interrupt_initialize();
 
 	mpc55xx_edma_init();
 	#ifdef MPC55XX_EMIOS_PRESCALER
 		mpc55xx_emios_initialize(MPC55XX_EMIOS_PRESCALER);
-	#endif
-}
-
-void bsp_pretasking_hook(void)
-{
-	#if MPC55XX_CHIP_TYPE / 10 == 564
-		_Heap_Extend(
-			RTEMS_Malloc_Heap,
-			bsp_section_rwextra_end,
-			(uintptr_t) bsp_ram_end
-				- (uintptr_t) bsp_section_rwextra_end,
-			NULL
-		);
 	#endif
 }

@@ -1,6 +1,8 @@
 /**
  *  @file  rtems/score/interr.h
  *
+ *  @brief Constants and Prototypes Related to the Internal Error Handler
+ *
  *  This include file contains constants and prototypes related
  *  to the Internal Error Handler.
  */
@@ -37,13 +39,84 @@ extern "C" {
 #endif
 
 /**
- *  This type lists the possible sources from which an error
+ *  @brief This type lists the possible sources from which an error
  *  can be reported.
  */
 typedef enum {
   INTERNAL_ERROR_CORE,
   INTERNAL_ERROR_RTEMS_API,
-  INTERNAL_ERROR_POSIX_API
+  INTERNAL_ERROR_POSIX_API,
+
+  /**
+   * @brief Fatal source for the block device cache.
+   *
+   * @see rtems_bdbuf_fatal_code.
+   */
+  RTEMS_FATAL_SOURCE_BDBUF,
+
+  /**
+   * @brief Fatal source for application specific errors.
+   *
+   * The fatal code is application specific.
+   */
+  RTEMS_FATAL_SOURCE_APPLICATION,
+
+  /**
+   * @brief Fatal source of exit().
+   *
+   * The fatal code is the exit() status code.
+   */
+  RTEMS_FATAL_SOURCE_EXIT,
+
+  /**
+   * @brief Fatal source for generic BSP errors.
+   *
+   * The fatal codes are defined in <bsp/bootcard.h>.  Examples are interrupt
+   * and exception initialization.
+   *
+   * @see bsp_generic_fatal_code.
+   */
+  RTEMS_FATAL_SOURCE_BSP_GENERIC,
+
+  /**
+   * @brief Fatal source for BSP specific errors.
+   *
+   * The fatal code is BSP specific.
+   */
+  RTEMS_FATAL_SOURCE_BSP_SPECIFIC,
+
+  /**
+   * @brief Fatal source of assert().
+   *
+   * The fatal code is the pointer value of the assert context.
+   *
+   * @see rtems_assert_context.
+   */
+  RTEMS_FATAL_SOURCE_ASSERT,
+
+  /**
+   * @brief Fatal source of the stack checker.
+   *
+   * The fatal code is the object name of the executing task.
+   */
+  RTEMS_FATAL_SOURCE_STACK_CHECKER,
+
+  /**
+   * @brief Fatal source of the exceptions.
+   *
+   * The fatal code is the pointer value of the exception frame pointer.
+   *
+   * @see rtems_exception_frame and rtems_exception_frame_print().
+   */
+  RTEMS_FATAL_SOURCE_EXCEPTION,
+
+  /**
+   * @brief The last available fatal source.
+   *
+   * This enum value ensures that the enum type needs at least 32-bits for
+   * architectures with short enums.
+   */
+  RTEMS_FATAL_SOURCE_LAST = 0xffffffff
 } Internal_errors_Source;
 
 /**
@@ -72,7 +145,9 @@ typedef enum {
   INTERNAL_ERROR_UNLIMITED_AND_MAXIMUM_IS_0,
   INTERNAL_ERROR_SHUTDOWN_WHEN_NOT_UP,
   INTERNAL_ERROR_GXX_KEY_ADD_FAILED,
-  INTERNAL_ERROR_GXX_MUTEX_INIT_FAILED
+  INTERNAL_ERROR_GXX_MUTEX_INIT_FAILED,
+  INTERNAL_ERROR_NO_MEMORY_FOR_HEAP,
+  INTERNAL_ERROR_CPU_ISR_INSTALL_VECTOR
 } Internal_errors_Core_list;
 
 typedef uint32_t Internal_errors_t;
@@ -92,13 +167,43 @@ typedef struct {
 /**
  *  When a fatal error occurs, the error information is stored here.
  */
-SCORE_EXTERN Internal_errors_Information _Internal_errors_What_happened;
+extern Internal_errors_Information _Internal_errors_What_happened;
 
 /**
- * @brief  Internal error Occurred
+ * @brief Initiates system termination.
  *
- *  This routine is invoked when the application or the executive itself
- *  determines that a fatal error has occurred.
+ * This routine is invoked when the application or the executive itself
+ * determines that a fatal error has occurred or a final system state is
+ * reached (for example after exit()).
+ *
+ * The first action of this function is to call the fatal handler of the user
+ * extensions.  For the initial extensions the following conditions are
+ * required
+ * - a valid stack pointer and enough stack space,
+ * - a valid code memory, and
+ * - valid read-only data.
+ *
+ * For the initial extensions the read-write data (including BSS segment) is
+ * not required.
+ *
+ * Non-initial extensions require in addition valid read-write data.  The BSP
+ * may install an initial extension that performs a system reset.  In this case
+ * the non-initial extensions will be not called.
+ *
+ * Once all fatal handler executed the error information will be stored to
+ * _Internal_errors_What_happened and the system state is set to
+ * SYSTEM_STATE_FAILED.
+ *
+ * The final step is to call the CPU specific _CPU_Fatal_halt().
+ *
+ * @param[in] the_source The fatal source indicating the subsystem the fatal
+ * condition originated in.
+ * @param[in] is_internal Indicates if the fatal condition was generated
+ * internally to the executive.
+ * @param[in] the_error The fatal error code.  This value must be interpreted
+ * with respect to the source.
+ *
+ * @see rtems_fatal_error_occurred() and rtems_fatal().
  */
 void _Internal_error_Occurred(
   Internal_errors_Source  the_source,

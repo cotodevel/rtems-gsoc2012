@@ -51,17 +51,9 @@ SECTIONS {
 		. = ALIGN (bsp_section_xbarrier_align);
 	} > REGION_TEXT
 
-	.fast_text : {
-		bsp_section_fast_text_begin = .;
-		*(.bsp_fast_text)
-		bsp_section_fast_text_end = .;
-	} > REGION_FAST_TEXT AT > REGION_FAST_TEXT_LOAD
-	bsp_section_fast_text_size = bsp_section_fast_text_end - bsp_section_fast_text_begin;
-	bsp_section_fast_text_load_begin = LOADADDR (.fast_text);
-	bsp_section_fast_text_load_end = bsp_section_fast_text_load_begin + bsp_section_fast_text_size;
-
 	.text : {
 		bsp_section_text_begin = .;
+		*(SORT(.bsp_text*))
 		*(.text.unlikely .text.*_unlikely)
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
@@ -78,6 +70,15 @@ SECTIONS {
 	bsp_section_text_size = bsp_section_text_end - bsp_section_text_begin;
 	bsp_section_text_load_begin = LOADADDR (.text);
 	bsp_section_text_load_end = bsp_section_text_load_begin + bsp_section_text_size;
+
+	.fast_text : {
+		bsp_section_fast_text_begin = .;
+		*(.bsp_fast_text)
+		bsp_section_fast_text_end = .;
+	} > REGION_FAST_TEXT AT > REGION_FAST_TEXT_LOAD
+	bsp_section_fast_text_size = bsp_section_fast_text_end - bsp_section_fast_text_begin;
+	bsp_section_fast_text_load_begin = LOADADDR (.fast_text);
+	bsp_section_fast_text_load_end = bsp_section_fast_text_load_begin + bsp_section_fast_text_size;
 
 	.robarrier : {
 		. = ALIGN (bsp_section_robarrier_align);
@@ -339,6 +340,13 @@ SECTIONS {
 	bsp_section_nocache_load_begin = LOADADDR (.nocache);
 	bsp_section_nocache_load_end = bsp_section_nocache_load_begin + bsp_section_nocache_size;
 
+	.nvram (NOLOAD) : {
+		bsp_section_nvram_begin = .;
+		*(SORT(.bsp_nvram*))
+		bsp_section_nvram_end = .;
+	} > REGION_NVRAM
+	bsp_section_nvram_size = bsp_section_nvram_end - bsp_section_nvram_begin;
+
 	/* FIXME */
 	RamBase = ORIGIN (REGION_WORK);
 	RamSize = LENGTH (REGION_WORK);
@@ -381,6 +389,8 @@ SECTIONS {
 	/* DWARF 3 */
 	.debug_pubtypes 0 : { *(.debug_pubtypes .zdebug_pubtypes) }
 	.debug_ranges   0 : { *(.debug_ranges .zdebug_ranges) }
+	/* DWARF extension */
+	.debug_macro    0 : { *(.debug_macro) }
 	.gnu.attributes 0 : { KEEP (*(.gnu.attributes)) }
 	.PPC.EMB.apuinfo 0 : { *(.PPC.EMB.apuinfo) }
 	/DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }

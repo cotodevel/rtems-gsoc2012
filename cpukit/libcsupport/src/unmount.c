@@ -1,11 +1,11 @@
+/**
+ *  @file
+ *
+ *  @brief Unmount a File System
+ *  @ingroup libcsupport
+ */
+
 /*
- *  unmount() - Unmount a File System
- *
- *  This routine is not defined in the POSIX 1003.1b standard but
- *  in some form is supported on most UNIX and POSIX systems.  This
- *  routine is necessary to mount instantiations of a file system
- *  into the file system name space.
- *
  *  COPYRIGHT (c) 1989-2010.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -34,6 +34,12 @@ static bool contains_root_or_current_directory(
   return mt_entry == root->mt_entry || mt_entry == current->mt_entry;
 }
 
+/**
+ *  This routine is not defined in the POSIX 1003.1b standard but
+ *  in some form is supported on most UNIX and POSIX systems.  This
+ *  routine is necessary to mount instantiations of a file system
+ *  into the file system name space.
+ */
 int unmount( const char *path )
 {
   int rv = 0;
@@ -43,7 +49,7 @@ int unmount( const char *path )
     rtems_filesystem_eval_path_start( &ctx, path, eval_flags );
   rtems_filesystem_mount_table_entry_t *mt_entry = currentloc->mt_entry;
 
-  if ( rtems_filesystem_location_is_root( currentloc ) ) {
+  if ( rtems_filesystem_location_is_instance_root( currentloc ) ) {
     if ( !contains_root_or_current_directory( mt_entry ) ) {
       const rtems_filesystem_operations_table *mt_point_ops =
         mt_entry->mt_point_node->location.mt_entry->ops;
@@ -70,12 +76,9 @@ int unmount( const char *path )
   rtems_filesystem_eval_path_cleanup( &ctx );
 
   if ( rv == 0 ) {
-    rtems_event_set out;
-    rtems_status_code sc = rtems_event_receive(
-      RTEMS_FILESYSTEM_UNMOUNT_EVENT,
-      RTEMS_EVENT_ALL | RTEMS_WAIT,
-      RTEMS_NO_TIMEOUT,
-      &out
+    rtems_status_code sc = rtems_event_transient_receive(
+      RTEMS_WAIT,
+      RTEMS_NO_TIMEOUT
     );
 
     if ( sc != RTEMS_SUCCESSFUL ) {

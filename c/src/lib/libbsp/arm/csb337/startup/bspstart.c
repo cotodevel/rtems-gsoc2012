@@ -24,7 +24,6 @@
 
 /* Function prototypes */
 extern void rtems_exception_init_mngt(void);
-void bsp_libc_init( void *, uint32_t, int );
 static void fix_mac_addr(void);
 void bsp_usart_init(void);
 
@@ -63,9 +62,7 @@ void bsp_start_default( void )
   /*
    * Init rtems interrupt management
    */
-  if (bsp_interrupt_initialize() != RTEMS_SUCCESSFUL) {
-    _CPU_Fatal_halt(0xe);
-  }
+  bsp_interrupt_initialize();
 
 } /* bsp_start */
 

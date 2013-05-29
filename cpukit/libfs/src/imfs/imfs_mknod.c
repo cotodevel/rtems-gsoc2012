@@ -1,8 +1,11 @@
+/**
+ * @file
+ *
+ * @brief Create a IMFS Node
+ * @ingroup IMFS
+ */
+
 /*
- *  IMFS_mknod
- *
- *  Routine to create a node in the IMFS file system.
- *
  *  COPYRIGHT (c) 1989-2010.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -29,8 +32,6 @@ static void get_type_and_info_by_mode_and_dev(
 {
   if ( S_ISDIR( mode ) ) {
     *type = IMFS_DIRECTORY;
-  } else if ( S_ISREG( mode ) ) {
-    *type = IMFS_MEMORY_FILE;
   } else if ( S_ISBLK( mode ) || S_ISCHR( mode ) ) {
     *type = IMFS_DEVICE;
     rtems_filesystem_split_dev_t(
@@ -41,7 +42,8 @@ static void get_type_and_info_by_mode_and_dev(
   } else if (S_ISFIFO( mode )) {
     *type = IMFS_FIFO;
   } else {
-    IMFS_assert( 0 );
+    IMFS_assert( S_ISREG( mode ) );
+    *type = IMFS_MEMORY_FILE;
   }
 }
 

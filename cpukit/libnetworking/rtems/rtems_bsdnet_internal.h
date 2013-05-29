@@ -61,7 +61,11 @@ void *memset(void *s, int c, size_t n);
 #define panic	rtems_panic
 #define suser(a,b)	0
 
-void	microtime (struct timeval *tv);
+static inline void microtime(struct timeval *tv)
+{
+  rtems_clock_get_uptime_timeval(tv);
+}
+
 #define hz rtems_bsdnet_ticks_per_second
 #define tick rtems_bsdnet_microseconds_per_tick
 
@@ -132,10 +136,16 @@ void rtems_bsdnet_free (void *addr, int type);
 
 void rtems_bsdnet_semaphore_obtain (void);
 void rtems_bsdnet_semaphore_release (void);
+void rtems_bsdnet_semaphore_obtain_recursive (uint32_t nest_count);
+uint32_t rtems_bsdnet_semaphore_release_recursive (void);
 void rtems_bsdnet_schednetisr (int n);
 int rtems_bsdnet_parse_driver_name (const struct rtems_bsdnet_ifconfig *config, char **namep);
 
-unsigned long rtems_bsdnet_seconds_since_boot (void);
+static inline unsigned long rtems_bsdnet_seconds_since_boot(void)
+{
+  return (unsigned long) rtems_clock_get_uptime_seconds() + 1UL;
+}
+
 unsigned long rtems_bsdnet_random (void);
 
 rtems_id rtems_bsdnet_newproc (
@@ -151,6 +161,14 @@ rtems_status_code rtems_bsdnet_event_receive (
   rtems_interval   ticks,
   rtems_event_set *event_out
 );
+
+static inline rtems_status_code rtems_bsdnet_event_send (
+  rtems_id        task_id,
+  rtems_event_set event_in
+)
+{
+  return rtems_event_system_send (task_id, event_in);
+}
 
 /*
  * Network configuration
@@ -182,8 +200,8 @@ int ioctl (int, ioctl_command_t, ...);
  * tries to use these events or if the `sleep'
  * events are equal to any of the NETISR * events.
  */
-#define SBWAIT_EVENT   RTEMS_EVENT_24
-#define SOSLEEP_EVENT  RTEMS_EVENT_25
+#define SBWAIT_EVENT   RTEMS_EVENT_SYSTEM_NETWORK_SBWAIT
+#define SOSLEEP_EVENT  RTEMS_EVENT_SYSTEM_NETWORK_SOSLEEP
 #define NETISR_IP_EVENT        (1L << NETISR_IP)
 #define NETISR_ARP_EVENT       (1L << NETISR_ARP)
 #define NETISR_EVENTS  (NETISR_IP_EVENT|NETISR_ARP_EVENT)

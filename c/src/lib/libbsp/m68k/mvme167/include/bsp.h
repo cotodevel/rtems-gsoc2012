@@ -1,11 +1,14 @@
-/*  bsp.h
+/**
+ *  @file
  *
  *  Following defines must reflect the setup of the particular MVME167.
  *  All page references are to the MVME166/MVME167/MVME187 Single Board
  *  Computer Programmer's Reference Guide (MVME187PG/D2) with the April
  *  1993 supplements/addenda (MVME187PG/D2A1).
- *
- *  COPYRIGHT (c) 1989-2009.
+ */
+
+/*
+ *  COPYRIGHT (c) 1989-2012.
  *  On-Line Applications Research Corporation (OAR).
  *
  *  The license and distribution terms for this file may be
@@ -24,6 +27,7 @@ extern "C" {
 #endif
 
 #include <bspopts.h>
+#include <bsp/default-initial-extension.h>
 
 #include <rtems.h>
 #include <rtems/clockdrv.h>
@@ -308,7 +312,7 @@ rtems_isr_entry set_vector(
 #define EXTERN extern
 #endif
 
-extern rtems_isr_entry M68Kvec[];   /* vector table address */
+extern void *M68Kvec[];   /* vector table address */
 
 #ifdef __cplusplus
 }

@@ -30,13 +30,24 @@
 #include <rtems/confdefs.h>
 /* end of configuration */
 
-char Malloc_Heap[ 128 ] CPU_STRUCTURE_ALIGNMENT;
-int sbrk_count;
-Heap_Control Heap_Holder;
-Heap_Control TempHeap;
+#ifndef CONFIGURE_MALLOC_BSP_SUPPORTS_SBRK
+void *rtems_heap_null_extend(
+  Heap_Control *heap,
+  size_t alloc_size
+)
+{
+  return rtems_heap_extend_via_sbrk( heap, alloc_size );
+}
+#endif
 
-/* Heap variables we need to peek and poke at */
-extern size_t  RTEMS_Malloc_Sbrk_amount;
+char Malloc_Heap[ 256 ] CPU_STRUCTURE_ALIGNMENT;
+
+/*
+ * Use volatile to prevent compiler optimizations due to the malloc() builtin.
+ */
+volatile int sbrk_count;
+
+Heap_Control TempHeap;
 
 size_t offset;
 
@@ -46,68 +57,112 @@ void * sbrk(ptrdiff_t incr)
 
   printf( "sbrk(%td)\n", incr );
   if ( sbrk_count == -1 ) {
-    p = (void *) (NULL - 2);
-  } else if ( offset + incr < sizeof(Malloc_Heap) ) {
-     p = &Malloc_Heap[ offset ];
-     offset += incr;
-  } else {
-    if ( sbrk_count == 0 )
-      p = (void *) rtems_task_create;
-    sbrk_count++;
+    p = (void *) -2;
+    sbrk_count = 0;
+  } else if ( offset + incr <= sizeof(Malloc_Heap) ) {
+    p = &Malloc_Heap[ offset ];
+    offset += incr;
   }
 
-  sbrk_count++;
+  ++sbrk_count;
+
   return p;
 }
-
-void *p1, *p2, *p3, *p4;
 
 rtems_task Init(
   rtems_task_argument argument
 )
 {
-  Heap_Control *TempHeap;
-
-  sbrk_count = 0;
-  offset     = 0;
+  Heap_Control *real_heap;
+  Heap_Area area;
+  void *p;
 
   puts( "\n\n*** TEST MALLOC 04 ***" );
 
   /* Safe information on real heap */
-  TempHeap = malloc_get_heap_pointer();
-  Heap_Holder = *TempHeap;
-  rtems_malloc_sbrk_helpers = &rtems_malloc_sbrk_helpers_table;
+  real_heap = malloc_get_heap_pointer();
+  malloc_set_heap_pointer( &TempHeap );
 
-  puts( "Initialize heap with some memory" );
-  offset     = 64;
+  rtems_heap_set_sbrk_amount( 0 );
+
+  puts( "No sbrk() amount" );
+
   sbrk_count = 0;
-  RTEMS_Malloc_Initialize( Malloc_Heap, 64, 64 );
-  p1 = malloc(64);
-  p2 = malloc(64);
-  p3 = malloc(48);
-  p4 = malloc(48);
-  
-  puts( "Initialize heap with some memory - return address out of heap" );
-  RTEMS_Malloc_Initialize( &Malloc_Heap[1], 64, 64 );
   offset     = 64;
-  sbrk_count = -1;
-  p1 = malloc( 127 );
-  rtems_test_assert( p1 == (void *) NULL );
+  area.begin = &Malloc_Heap [0];
+  area.size  = offset;
+  RTEMS_Malloc_Initialize( &area, 1, NULL );
+
+  errno = 0;
+  p = malloc(64);
+  rtems_test_assert( p == NULL );
   rtems_test_assert( errno == ENOMEM );
-  
+  rtems_test_assert( sbrk_count == 0 );
 
-  RTEMS_Malloc_Initialize( Malloc_Heap, 64, 64 );
-  puts( "Initialize heap with some unaligned memory" );
-  offset     = 65;
+  rtems_heap_set_sbrk_amount( 64 );
+
+  puts( "Misaligned extend" );
+
   sbrk_count = 0;
-  RTEMS_Malloc_Initialize( &Malloc_Heap[1], 64, 64 );
-  p1 = malloc(64);
-  p2 = malloc(64);
-  p3 = malloc(48);
+  offset     = 64;
+  area.begin = &Malloc_Heap [0];
+  area.size  = offset;
+  RTEMS_Malloc_Initialize( &area, 1, NULL );
+
+  p = malloc(1);
+  rtems_test_assert( p != NULL );
+  rtems_test_assert( sbrk_count == 0 );
+
+  p = malloc(65);
+  rtems_test_assert( p != NULL );
+  rtems_test_assert( sbrk_count == 1 );
+
+  puts( "Not enough sbrk() space" );
+
+  sbrk_count = 0;
+  offset     = 64;
+  area.begin = &Malloc_Heap [0];
+  area.size  = offset;
+  RTEMS_Malloc_Initialize( &area, 1, NULL );
+
+  errno = 0;
+  p = malloc( sizeof( Malloc_Heap ) );
+  rtems_test_assert( p == NULL );
+  rtems_test_assert( errno == ENOMEM );
+  rtems_test_assert( sbrk_count == 1 );
+
+  puts( "Valid heap extend" );
+
+  sbrk_count = 0;
+  offset     = 64;
+  area.begin = &Malloc_Heap [0];
+  area.size  = offset;
+  RTEMS_Malloc_Initialize( &area, 1, NULL );
+
+  p = malloc(32);
+  rtems_test_assert( p != NULL );
+  rtems_test_assert( sbrk_count == 0 );
+
+  p = malloc(32);
+  rtems_test_assert( p != NULL );
+  rtems_test_assert( sbrk_count == 1 );
+
+  puts( "Invalid heap extend" );
+
+  sbrk_count = -1;
+  offset     = 64;
+  area.begin = &Malloc_Heap [0];
+  area.size  = offset;
+  RTEMS_Malloc_Initialize( &area, 1, NULL );
+
+  errno = 0;
+  p = malloc( 64 );
+  rtems_test_assert( p == NULL );
+  rtems_test_assert( errno == ENOMEM );
+  rtems_test_assert( sbrk_count == 2 );
 
   /* Restore information on real heap */
-  malloc_set_heap_pointer( TempHeap );
-  rtems_malloc_sbrk_helpers = NULL;
+  malloc_set_heap_pointer( real_heap );
 
   puts( "*** END OF TEST MALLOC 04 ***" );
 

@@ -1,9 +1,12 @@
-/*  bspclean.c
+/** 
+ *  @file
  *
  *  These routines return control to 167Bug after a normal exit from the
  *  application.
- *
- *  COPYRIGHT (c) 1989-2010.
+ */
+
+/*
+ *  COPYRIGHT (c) 1989-2012.
  *  On-Line Applications Research Corporation (OAR).
  *
  *  The license and distribution terms for this file may be
@@ -14,24 +17,18 @@
  *  Copyright (c) 1998, National Research Council of Canada
  */
 
-#include <rtems.h>
 #include <bsp.h>
+#include <bsp/bootcard.h>
 #include <page_table.h>
 
 extern void start( void );
 extern void page_table_teardown( void );
 
-/*
- *  bsp_return_to_monitor_trap
+/**
+ *  @brief bsp_return_to_monitor_trap
  *
  *  Switch the VBR back to ROM and make a .RETURN syscall to return control to
  *  167 Bug. If 167Bug ever returns, restart the application.
- *
- *  Input parameters: NONE
- *
- *  Output parameters: NONE
- *
- *  Return values: NONE
  */
 static void bsp_return_to_monitor_trap( void )
 {
@@ -50,8 +47,6 @@ static void bsp_return_to_monitor_trap( void )
 }
 
 /*
- *  bsp_cleanup
- *
  *  This code was copied from other MC680x0 MVME BSPs.
  *  Our guess is that someone was concerned about the CPU no longer being in
  *  supervisor mode when they got here. This function forces the CPU back to
@@ -63,17 +58,11 @@ static void bsp_return_to_monitor_trap( void )
  *  problems if 167Bug is invoked before we get to switch the VBR back to
  *  167Bug because trap 13 is documented as being reserved for the internal
  *  use of the debugger.
- *
- *  Prototyped in rtems/c/src/lib/libbsp/m68k/mvme167/include/bsp.h
- *
- *  Input parameters: NONE
- *
- *  Output parameters: NONE
- *
- *  Return values: DOES NOT RETURN
  */
-void bsp_cleanup(
-  uint32_t status
+void bsp_fatal_extension(
+  rtems_fatal_source source,
+  bool is_internal,
+  rtems_fatal_code error
 )
 {
    M68Kvec[ 45 ] = bsp_return_to_monitor_trap;

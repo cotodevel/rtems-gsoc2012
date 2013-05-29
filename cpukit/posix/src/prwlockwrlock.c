@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Obtain a Write Lock on a RWlock Instance
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  POSIX RWLock Manager -- Obtain a Write Lock on a RWLock Instance
  *

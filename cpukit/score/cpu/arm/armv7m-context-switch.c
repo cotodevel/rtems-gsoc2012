@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * @brief ARM7M CPU Context Switch
+ */
+
 /*
  * Copyright (c) 2011 Sebastian Huber.  All rights reserved.
  *
@@ -16,11 +22,10 @@
   #include "config.h"
 #endif
 
+#include <rtems/score/armv7m.h>
 #include <rtems/score/percpu.h>
 
 #ifdef ARM_MULTILIB_ARCH_V7M
-
-#include <rtems/score/armv7m.h>
 
 void __attribute__((naked)) _CPU_Context_switch(
   Context_Control *executing,

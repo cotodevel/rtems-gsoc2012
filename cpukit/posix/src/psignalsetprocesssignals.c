@@ -1,3 +1,10 @@
+/**
+ *  @file
+ *
+ *  @brief POSIX Signals Set Process Signals
+ *  @ingroup POSIX_SIGNALS
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).
@@ -22,14 +29,10 @@
 #include <rtems/score/wkspace.h>
 #include <rtems/seterr.h>
 #include <rtems/posix/threadsup.h>
-#include <rtems/posix/psignal.h>
+#include <rtems/posix/psignalimpl.h>
 #include <rtems/posix/pthread.h>
 #include <rtems/posix/time.h>
 #include <stdio.h>
-
-/*
- *  _POSIX_signals_Set_process_signals
- */
 
 void _POSIX_signals_Set_process_signals(
   sigset_t   mask

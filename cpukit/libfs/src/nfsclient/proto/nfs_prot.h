@@ -8,7 +8,12 @@
 
 #include <rpc/rpc.h>
 
-
+/**
+ *  @defgroup libfs_nfsclient_nfs_prot NFS Prot
+ *
+ *  @ingroup libfs
+ */
+/**@{*/
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,6 +53,7 @@ enum nfsstat {
 	NFSERR_DQUOT = 69,
 	NFSERR_STALE = 70,
 	NFSERR_WFLUSH = 99,
+	_NFSSTAT = 0xffffffff
 };
 typedef enum nfsstat nfsstat;
 
@@ -61,6 +67,7 @@ enum ftype {
 	NFSOCK = 6,
 	NFBAD = 7,
 	NFFIFO = 8,
+	_FTYPE = 0xffffffff
 };
 typedef enum ftype ftype;
 
@@ -449,5 +456,5 @@ extern bool_t xdr_statfsres ();
 #ifdef __cplusplus
 }
 #endif
-
+/**@}*/
 #endif /* !_NFS_PROT_H_RPCGEN */

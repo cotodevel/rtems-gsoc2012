@@ -9,12 +9,13 @@
 
 @section Introduction
 
-The fatal error manager processes all fatal or
-irrecoverable errors.  The directive provided by the fatal error
-manager is:
+The fatal error manager processes all fatal or irrecoverable errors and other
+sources of system termination (for example after exit()).  The directives
+provided by the fatal error manager are:
 
 @itemize @bullet
 @item @code{@value{DIRPREFIX}fatal_error_occurred} - Invoke the fatal error handler
+@item @code{@value{DIRPREFIX}fatal} - Invoke the fatal error handler with error source
 @end itemize
 
 @section Background
@@ -39,7 +40,7 @@ upon detection of an error it considers to be fatal.  Similarly,
 the user should invoke the fatal error manager upon detection of
 a fatal error.
 
-Each status or dynamic user extension set may include
+Each static or dynamic user extension set may include
 a fatal error handler.  The fatal error handler in the static
 extension set can be used to provide access to debuggers and
 monitors which may be present on the target hardware.  If any
@@ -129,7 +130,7 @@ constants, usage, and status codes.
 @ifset is-C
 @findex rtems_fatal_error_occurred
 @example
-void volatile rtems_fatal_error_occurred(
+void rtems_fatal_error_occurred(
   uint32_t  the_error
 );
 @end example
@@ -167,3 +168,114 @@ NOT RETURN to the caller.
 
 The user-defined extension for this directive may
 wish to initiate a global shutdown.
+
+@c
+@c
+@c
+@page
+@subsection FATAL - Invoke the fatal error handler with error source
+
+@cindex announce fatal error
+@cindex fatal error, announce
+
+@subheading CALLING SEQUENCE:
+
+@ifset is-C
+@findex rtems_fatal
+@example
+void rtems_fatal(
+  rtems_fatal_source source,
+  rtems_fatal_code error
+);
+@end example
+@end ifset
+
+@subheading DIRECTIVE STATUS CODES
+
+NONE
+
+@subheading DESCRIPTION:
+
+This directive invokes the internal error handler with is internal set to
+false.  See also @code{@value{DIRPREFIX}fatal_error_occurred}.
+
+@c
+@c
+@c
+@page
+@subsection EXCEPTION_FRAME_PRINT - Prints the exception frame
+
+@cindex exception frame
+
+@subheading CALLING SEQUENCE:
+
+@ifset is-C
+@findex rtems_exception_frame_print
+@example
+void rtems_exception_frame_print(
+  const rtems_exception_frame *frame
+);
+@end example
+@end ifset
+
+@subheading DIRECTIVE STATUS CODES
+
+NONE
+
+@subheading DESCRIPTION:
+
+Prints the exception frame via printk().
+
+@c
+@c
+@c
+@page
+@subsection FATAL_SOURCE_DESCRIPTION - Returns a description for a fatal source
+
+@cindex fatal error
+
+@subheading CALLING SEQUENCE:
+
+@ifset is-C
+@findex rtems_fatal_source_description
+@example
+const char *rtems_fatal_source_description(
+  rtems_fatal_source source
+);
+@end example
+@end ifset
+
+@subheading DIRECTIVE STATUS CODES
+
+The fatal source description or "?" in case the passed fatal source is invalid.
+
+@subheading DESCRIPTION:
+
+Returns a description for a fatal source.
+
+@c
+@c
+@c
+@page
+@subsection INTERNAL_ERROR_DESCRIPTION - Returns a description for an internal error code
+
+@cindex fatal error
+
+@subheading CALLING SEQUENCE:
+
+@ifset is-C
+@findex rtems_internal_error_description
+@example
+const char *rtems_internal_error_description(
+  rtems_fatal_code error
+);
+@end example
+@end ifset
+
+@subheading DIRECTIVE STATUS CODES
+
+The error code description or "?" in case the passed error code is invalid.
+
+@subheading DESCRIPTION:
+
+Returns a description for an internal error code.

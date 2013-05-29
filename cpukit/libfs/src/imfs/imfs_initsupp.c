@@ -1,6 +1,11 @@
-/*
- *  IMFS Initialization
+/**
+ * @file
  *
+ * @brief IMFS Node Support
+ * @ingroup IMFS
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2010.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -141,8 +146,7 @@ IMFS_jnode_t *IMFS_node_initialize_default(
 }
 
 IMFS_jnode_t *IMFS_node_remove_default(
-  IMFS_jnode_t *node,
-  const IMFS_jnode_t *root_node
+  IMFS_jnode_t *node
 )
 {
   return node;

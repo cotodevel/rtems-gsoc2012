@@ -34,13 +34,6 @@ rtems_task Init(
   rtems_test_exit(0);
 }
 
-char *Sources[] = {
-  "INTERNAL_ERROR_CORE",
-  "INTERNAL_ERROR_RTEMS_API",
-  "INTERNAL_ERROR_POSIX_API",
-};
-
-
 char *Errors_Rtems[] = {
   "RTEMS_SUCCESSFUL",               /* successful completion */
   "RTEMS_TASK_EXITTED",             /* returned from a task */
@@ -69,35 +62,10 @@ char *Errors_Rtems[] = {
   "RTEMS_NOT_IMPLEMENTED"           /* directive not implemented */
 };
 
-char *Errors_Core[] = {
-  "INTERNAL_ERROR_NO_CONFIGURATION_TABLE",
-  "INTERNAL_ERROR_NO_CPU_TABLE",
-  "INTERNAL_ERROR_TOO_LITTLE_WORKSPACE",
-  "INTERNAL_ERROR_WORKSPACE_ALLOCATION",
-  "INTERNAL_ERROR_INTERRUPT_STACK_TOO_SMALL",
-  "INTERNAL_ERROR_THREAD_EXITTED",
-  "INTERNAL_ERROR_INCONSISTENT_MP_INFORMATION",
-  "INTERNAL_ERROR_INVALID_NODE",
-  "INTERNAL_ERROR_NO_MPCI",
-  "INTERNAL_ERROR_BAD_PACKET",
-  "INTERNAL_ERROR_OUT_OF_PACKETS",
-  "INTERNAL_ERROR_OUT_OF_GLOBAL_OBJECTS",
-  "INTERNAL_ERROR_OUT_OF_PROXIES",
-  "INTERNAL_ERROR_INVALID_GLOBAL_ID",
-  "INTERNAL_ERROR_BAD_STACK_HOOK",
-  "INTERNAL_ERROR_BAD_ATTRIBUTES",
-  "INTERNAL_ERROR_IMPLEMENTATION_KEY_CREATE_INCONSISTENCY",
-  "INTERNAL_ERROR_IMPLEMENTATION_BLOCKING_OPERATION_CANCEL",
-  "INTERNAL_ERROR_MUTEX_OBTAIN_FROM_BAD_STATE"
-};
-
 void Put_Error( uint32_t source, uint32_t error )
 {
   if ( source == INTERNAL_ERROR_CORE ) {
-    if ( error >  INTERNAL_ERROR_MUTEX_OBTAIN_FROM_BAD_STATE )
-      printk("Unknown Internal Core Error (%d)", error);
-    else
-      printk( Errors_Core[ error ] );
+    printk( rtems_internal_error_description( error ) );
   }
   else if (source == INTERNAL_ERROR_RTEMS_API ){
     if (error >  RTEMS_NOT_IMPLEMENTED )
@@ -107,19 +75,24 @@ void Put_Error( uint32_t source, uint32_t error )
   }
 }
 
-void Put_Source( uint32_t source )
+void Put_Source( rtems_fatal_source source )
 {
-  if ( source > INTERNAL_ERROR_POSIX_API )
-    printk("Unknown Source (%d)", source);
-  else
-    printk( Sources[ source ] );
+  printk( "%s", rtems_fatal_source_description( source ) );
 }
 
+static bool is_expected_error( rtems_fatal_code error )
+{
+#ifdef FATAL_ERROR_EXPECTED_ERROR
+  return error == FATAL_ERROR_EXPECTED_ERROR;
+#else /* FATAL_ERROR_EXPECTED_ERROR */
+  return FATAL_ERROR_EXPECTED_ERROR_CHECK( error );
+#endif /* FATAL_ERROR_EXPECTED_ERROR */
+}
 
 void Fatal_extension(
-  uint32_t   source,
-  bool       is_internal,
-  uint32_t   error
+  rtems_fatal_source source,
+  bool               is_internal,
+  rtems_fatal_code   error
 )
 {
   print_test_begin_message();
@@ -145,6 +118,7 @@ void Fatal_extension(
       );
   }
 
+#ifdef FATAL_ERROR_EXPECTED_ERROR
   if ( error !=  FATAL_ERROR_EXPECTED_ERROR ) {
     printk( "ERROR==> Fatal Error Expected (");
     Put_Error( source, FATAL_ERROR_EXPECTED_ERROR );
@@ -152,16 +126,14 @@ void Fatal_extension(
     Put_Error( source, error );
     printk( ")\n" );
   }
+#endif /* FATAL_ERROR_EXPECTED_ERROR */
 
   if (
     source == FATAL_ERROR_EXPECTED_SOURCE
       && is_internal == FATAL_ERROR_EXPECTED_IS_INTERNAL
-      && error == FATAL_ERROR_EXPECTED_ERROR
+      && is_expected_error( error )
   ) {
     printk( "*** END OF TEST FATAL " FATAL_ERROR_TEST_NAME " ***\n" );
   }
-
-  if ( _System_state_Is_up( _System_state_Get() ) )
-    _Thread_Stop_multitasking();
 }
 

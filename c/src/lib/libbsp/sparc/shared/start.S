@@ -146,7 +146,6 @@ SYM(trap_table):
 */
 
 	.global SYM(_ERC32_MEC_Timer_Control_Mirror), SYM(rdb_start), SYM(CLOCK_SPEED)
-	.global SYM(Configuration)
 
 SYM(rdb_start):
 SYM(_ERC32_MEC_Timer_Control_Mirror):
@@ -365,7 +364,9 @@ zerobss:
         nop
 
         PUBLIC(BSP_fatal_return)
+        PUBLIC(bsp_reset)
 SYM(BSP_fatal_return):
+SYM(bsp_reset):
 	mov	1, %g1
         ta      0                       ! Halt if _main returns ...
         nop

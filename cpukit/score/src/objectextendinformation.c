@@ -1,7 +1,11 @@
+/**
+ * @file
+ *
+ * @brief Extend Set of Objects
+ * @ingroup ScoreObject
+ */
+
 /*
- *  Object Handler
- *
- *
  *  COPYRIGHT (c) 1989-1999.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -113,6 +117,8 @@ void _Objects_Extend_information(
     Objects_Control **local_table;
     void             *old_tables;
     size_t            block_size;
+    uintptr_t         object_blocks_size;
+    uintptr_t         inactive_per_block_size;
 
     /*
      *  Growing the tables means allocating a new area, doing a copy and
@@ -137,25 +143,43 @@ void _Objects_Extend_information(
     block_count++;
 
     /*
-     *  Allocate the tables and break it up.
+     *  Allocate the tables and break it up. The tables are:
+     *      1. object_blocks        : void*
+     *      2. inactive_per_blocks : uint32_t
+     *      3. local_table         : Objects_Name*
      */
-    block_size = block_count *
-           (sizeof(void *) + sizeof(uint32_t) + sizeof(Objects_Name *)) +
-          ((maximum + minimum_index) * sizeof(Objects_Control *));
-    object_blocks = (void**) _Workspace_Allocate( block_size );
-
-    if ( !object_blocks ) {
-      _Workspace_Free( new_object_block );
-      return;
+    object_blocks_size = (uintptr_t)_Addresses_Align_up(
+        (void*)(block_count * sizeof(void*)),
+        CPU_ALIGNMENT
+    );
+    inactive_per_block_size =
+        (uintptr_t)_Addresses_Align_up(
+            (void*)(block_count * sizeof(uint32_t)),
+            CPU_ALIGNMENT
+        );
+    block_size = object_blocks_size + inactive_per_block_size +
+        ((maximum + minimum_index) * sizeof(Objects_Control *));
+    if ( information->auto_extend ) {
+      object_blocks = _Workspace_Allocate( block_size );
+      if ( !object_blocks ) {
+        _Workspace_Free( new_object_block );
+        return;
+      }
+    } else {
+      object_blocks = _Workspace_Allocate_or_fatal_error( block_size );
     }
 
     /*
      *  Break the block into the various sections.
      */
     inactive_per_block = (uint32_t *) _Addresses_Add_offset(
-        object_blocks, block_count * sizeof(void*) );
+        object_blocks,
+        object_blocks_size
+    );
     local_table = (Objects_Control **) _Addresses_Add_offset(
-        inactive_per_block, block_count * sizeof(uint32_t) );
+        inactive_per_block,
+        inactive_per_block_size
+    );
 
     /*
      *  Take the block count down. Saves all the (block_count - 1)

@@ -8,8 +8,10 @@
 
 #define AUTO_BOOT 0
 
-void bsp_cleanup(
-  uint32_t status
+void bsp_fatal_extension(
+  rtems_fatal_source source,
+  bool is_internal,
+  rtems_fatal_code error
 )
 {
 #if AUTO_BOOT

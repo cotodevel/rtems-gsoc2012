@@ -18,6 +18,7 @@
 #include <bsp/irq.h>
 #include <psim.h>
 #include <bsp/bootcard.h>
+#include <bsp/linker-symbols.h>
 #include <rtems/bspIo.h>
 #include <rtems/powerpc/powerpc.h>
 
@@ -77,10 +78,6 @@ void _BSP_Fatal_error(unsigned int v)
  */
 void bsp_start( void )
 {
-  rtems_status_code sc = RTEMS_SUCCESSFUL;
-  uintptr_t intrStackStart;
-  uintptr_t intrStackSize;
-
   /*
    * Note we can not get CPU identification dynamically.
    * PVR has to be set to PPC_PSIM (0xfffe) from the device
@@ -102,22 +99,13 @@ void bsp_start( void )
   bsp_exceptions_in_RAM = FALSE;
 
   /*
-   * Initialize the interrupt related settings.
-   */
-  intrStackStart = (uintptr_t) __rtems_end;
-  intrStackSize = rtems_configuration_get_interrupt_stack_size();
-
-  /*
    * Initialize default raw exception handlers.
    */
-  sc = ppc_exc_initialize(
+  ppc_exc_initialize(
     PPC_INTERRUPT_DISABLE_MASK_DEFAULT,
-    intrStackStart,
-    intrStackSize
+    (uintptr_t) bsp_section_work_begin,
+    rtems_configuration_get_interrupt_stack_size()
   );
-  if (sc != RTEMS_SUCCESSFUL) {
-    BSP_panic("cannot initialize exceptions");
-  }
 
   /*
    * Initalize RTEMS IRQ system

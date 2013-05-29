@@ -1,6 +1,11 @@
-/*
- *  Event Manager
+/**
+ *  @file
  *
+ *  @brief Surrender Event
+ *  @ingroup ClassicEvent
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2008.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -10,88 +15,64 @@
  */
 
 #if HAVE_CONFIG_H
-#include "config.h"
+  #include "config.h"
 #endif
 
-#include <rtems/system.h>
-#include <rtems/rtems/status.h>
 #include <rtems/rtems/event.h>
-#include <rtems/score/isr.h>
-#include <rtems/score/object.h>
-#include <rtems/rtems/options.h>
-#include <rtems/score/states.h>
-#include <rtems/score/thread.h>
-#include <rtems/rtems/tasks.h>
-
-/*
- *  _Event_Surrender
- *
- *  This routines remove a thread from the specified threadq.
- *
- *  Input parameters:
- *    the_thread - pointer to thread to be dequeued
- *
- *  Output parameters: NONE
- *
- *  INTERRUPT LATENCY:
- *    before flash
- *    after flash
- *    check sync
- */
 
 void _Event_Surrender(
-  Thread_Control *the_thread
+  Thread_Control                   *the_thread,
+  rtems_event_set                   event_in,
+  Event_Control                    *event,
+  Thread_blocking_operation_States *sync_state,
+  States_Control                    wait_state
 )
 {
-  ISR_Level           level;
-  rtems_event_set     pending_events;
-  rtems_event_set     event_condition;
-  rtems_event_set     seized_events;
-  rtems_option        option_set;
-  RTEMS_API_Control  *api;
+  ISR_Level       level;
+  rtems_event_set pending_events;
+  rtems_event_set event_condition;
+  rtems_event_set seized_events;
+  rtems_option    option_set;
 
-  api = the_thread->API_Extensions[ THREAD_API_RTEMS ];
-
-  option_set = (rtems_option) the_thread->Wait.option;
+  option_set = the_thread->Wait.option;
 
   _ISR_Disable( level );
-  pending_events  = api->pending_events;
-  event_condition = (rtems_event_set) the_thread->Wait.count;
+  _Event_sets_Post( event_in, &event->pending_events );
+  pending_events  = event->pending_events;
+
+  /*
+   * At this point the event condition is a speculative quantity.  Later state
+   * checks will show if the thread actually waits for an event.
+   */
+  event_condition = the_thread->Wait.count;
 
   seized_events = _Event_sets_Get( pending_events, event_condition );
 
-  /*
-   *  No events were seized in this operation
-   */
-  if ( _Event_sets_Is_empty( seized_events ) ) {
-    _ISR_Enable( level );
-    return;
-  }
-
-  /*
-   *  If we are in an ISR and sending to the current thread, then
-   *  we have a critical section issue to deal with.
-   */
-  if ( _ISR_Is_in_progress() &&
-       _Thread_Is_executing( the_thread ) &&
-       ((_Event_Sync_state == THREAD_BLOCKING_OPERATION_TIMEOUT) ||
-        (_Event_Sync_state == THREAD_BLOCKING_OPERATION_NOTHING_HAPPENED)) ) {
-    if ( seized_events == event_condition || _Options_Is_any(option_set) ) {
-      api->pending_events = _Event_sets_Clear( pending_events,seized_events );
+  if (
+    !_Event_sets_Is_empty( seized_events )
+      && ( seized_events == event_condition || _Options_Is_any( option_set ) )
+  ) {
+    /*
+     *  If we are sending to the executing thread, then we have a critical
+     *  section issue to deal with.  The entity sending to the executing thread
+     *  can be either the executing thread or an ISR.  In case it is the
+     *  executing thread, then the blocking operation state is not equal to
+     *  THREAD_BLOCKING_OPERATION_NOTHING_HAPPENED.
+     */
+    if ( _Thread_Is_executing( the_thread ) &&
+         *sync_state == THREAD_BLOCKING_OPERATION_NOTHING_HAPPENED ) {
+      event->pending_events = _Event_sets_Clear(
+        pending_events,
+        seized_events
+      );
       the_thread->Wait.count = 0;
       *(rtems_event_set *)the_thread->Wait.return_argument = seized_events;
-      _Event_Sync_state = THREAD_BLOCKING_OPERATION_SATISFIED;
-    }
-    _ISR_Enable( level );
-    return;
-  }
-
-  /*
-   *  Otherwise, this is a normal send to another thread
-   */
-  if ( _States_Is_waiting_for_event( the_thread->current_state ) ) {
-    if ( seized_events == event_condition || _Options_Is_any( option_set ) ) {
-      api->pending_events = _Event_sets_Clear( pending_events, seized_events );
+      *sync_state = THREAD_BLOCKING_OPERATION_SATISFIED;
+    } else if ( _States_Are_set( the_thread->current_state, wait_state ) ) {
+      event->pending_events = _Event_sets_Clear(
+        pending_events,
+        seized_events
+      );
       the_thread->Wait.count = 0;
       *(rtems_event_set *)the_thread->Wait.return_argument = seized_events;
 

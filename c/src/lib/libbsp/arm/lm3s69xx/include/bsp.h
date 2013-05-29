@@ -17,26 +17,22 @@
 
 #include <bspopts.h>
 
-#include <rtems.h>
-#include <rtems/console.h>
-#include <rtems/clockdrv.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #define BSP_FEATURE_IRQ_EXTENSION
 
 #define BSP_ARMV7M_IRQ_PRIORITY_DEFAULT (5 << 5)
 
 #define BSP_ARMV7M_SYSTICK_PRIORITY (6 << 5)
 
+#define BSP_ARMV7M_SYSTICK_FREQUENCY LM3S69XX_SYSTEM_CLOCK
+
 #ifndef ASM
 
-#endif /* ASM */
+#include <bsp/default-initial-extension.h>
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+#include <rtems.h>
+#include <rtems/console.h>
+#include <rtems/clockdrv.h>
+
+#endif /* ASM */
 
 #endif /* LIBBSP_ARM_LM3S69XX_BSP_H */

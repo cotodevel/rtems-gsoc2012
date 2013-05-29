@@ -3,7 +3,7 @@
  *
  * @ingroup ScoreUserExt
  *
- * @brief User Extension Handler API.
+ * @brief User Extension Handler API
  */
 
 /*
@@ -36,9 +36,8 @@ typedef void User_extensions_routine RTEMS_COMPILER_DEPRECATED_ATTRIBUTE;
  * @brief The User Extension Handler provides invocation of application
  * dependent routines at critical points in the life of each thread and the
  * system as a whole.
- *
- * @{
  */
+/**@{**/
 
 /**
  * @brief Task create extension.
@@ -230,94 +229,6 @@ typedef struct {
   User_extensions_Switch_control Switch;
   User_extensions_Table          Callouts;
 }   User_extensions_Control;
-
-/**
- * @brief List of active extensions.
- */
-SCORE_EXTERN Chain_Control _User_extensions_List;
-
-/**
- * @brief List of active task switch extensions.
- */
-SCORE_EXTERN Chain_Control _User_extensions_Switches_list;
-
-/**
- * @name Extension Maintainance
- *
- * @{
- */
-
-void _User_extensions_Handler_initialization( void );
-
-void _User_extensions_Add_set(
-  User_extensions_Control *extension
-);
-
-RTEMS_INLINE_ROUTINE void _User_extensions_Add_API_set(
-  User_extensions_Control *extension
-)
-{
-  _User_extensions_Add_set( extension );
-}
-
-RTEMS_INLINE_ROUTINE void _User_extensions_Add_set_with_table(
-  User_extensions_Control     *extension,
-  const User_extensions_Table *extension_table
-)
-{
-  extension->Callouts = *extension_table;
-
-  _User_extensions_Add_set( extension );
-}
-
-void _User_extensions_Remove_set(
-  User_extensions_Control *extension
-);
-
-/** @} */
-
-/**
- * @name Extension Callout Dispatcher
- *
- * @{
- */
-
-bool _User_extensions_Thread_create(
-  Thread_Control *created
-);
-
-void _User_extensions_Thread_delete(
-  Thread_Control *deleted
-);
-
-void _User_extensions_Thread_start(
-  Thread_Control *started
-);
-
-void _User_extensions_Thread_restart(
-  Thread_Control *restarted
-);
-
-void _User_extensions_Thread_begin(
-  Thread_Control *executing
-);
-
-void _User_extensions_Thread_switch(
-  Thread_Control *executing,
-  Thread_Control *heir
-);
-
-void _User_extensions_Thread_exitted(
-  Thread_Control *executing
-);
-
-void _User_extensions_Fatal(
-  Internal_errors_Source source,
-  bool                   is_internal,
-  Internal_errors_t      error
-);
-
-/** @} */
 
 /** @} */
 

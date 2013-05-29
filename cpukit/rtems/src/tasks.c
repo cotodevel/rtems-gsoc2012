@@ -1,6 +1,11 @@
-/*
- *  RTEMS Task Manager -- Initialize Manager
+/**
+ *  @file
  *
+ *  @brief RTEMS Task API Extensions
+ *  @ingroup ClassicTasks
+ */
+
+/*
  *  COPYRIGHT (c) 1989-2009.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -25,7 +30,7 @@
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
 #include <rtems/score/tod.h>
-#include <rtems/score/userext.h>
+#include <rtems/score/userextimpl.h>
 #include <rtems/score/wkspace.h>
 #include <rtems/score/apiext.h>
 #include <rtems/score/sysstate.h>
@@ -64,8 +69,8 @@ static bool _RTEMS_tasks_Create_extension(
 
   created->API_Extensions[ THREAD_API_RTEMS ] = api;
 
-  api->pending_events = EVENT_SETS_NONE_PENDING;
-  api->event_condition = 0;
+  _Event_Initialize( &api->Event );
+  _Event_Initialize( &api->System_event );
   _ASR_Initialize( &api->Signal );
   created->task_variables = NULL;
 
@@ -93,7 +98,8 @@ static void _RTEMS_tasks_Start_extension(
 
   api = started->API_Extensions[ THREAD_API_RTEMS ];
 
-  api->pending_events = EVENT_SETS_NONE_PENDING;
+  _Event_Initialize( &api->Event );
+  _Event_Initialize( &api->System_event );
 }
 
 /*
@@ -161,58 +167,11 @@ static void _RTEMS_tasks_Switch_extension(
   }
 }
 
-/*
- *  _RTEMS_tasks_Post_switch_extension
- *
- *  This extension routine is invoked at each context switch.
- */
-
-static void _RTEMS_tasks_Post_switch_extension(
-  Thread_Control *executing
-)
-{
-  ISR_Level          level;
-  RTEMS_API_Control *api;
-  ASR_Information   *asr;
-  rtems_signal_set   signal_set;
-  Modes_Control      prev_mode;
-
-  api = executing->API_Extensions[ THREAD_API_RTEMS ];
-  if ( !api )
-    return;
-
-  /*
-   *  Signal Processing
-   */
-
-  asr = &api->Signal;
-
-  _ISR_Disable( level );
-    signal_set = asr->signals_posted;
-    asr->signals_posted = 0;
-  _ISR_Enable( level );
-
-
-  if ( !signal_set ) /* similar to _ASR_Are_signals_pending( asr ) */
-    return;
-
-  asr->nest_level += 1;
-  rtems_task_mode( asr->mode_set, RTEMS_ALL_MODE_MASKS, &prev_mode );
-
-  (*asr->handler)( signal_set );
-
-  asr->nest_level -= 1;
-  rtems_task_mode( prev_mode, RTEMS_ALL_MODE_MASKS, &prev_mode );
-
-}
-
 API_extensions_Control _RTEMS_tasks_API_extensions = {
-  { NULL, NULL },
   #if defined(FUNCTIONALITY_NOT_CURRENTLY_USED_BY_ANY_API)
-    NULL,                                   /* predriver */
+    .predriver_hook = NULL,
   #endif
-  _RTEMS_tasks_Initialize_user_tasks,       /* postdriver */
-  _RTEMS_tasks_Post_switch_extension        /* post switch */
+  .postdriver_hook = _RTEMS_tasks_Initialize_user_tasks
 };
 
 User_extensions_Control _RTEMS_tasks_User_extensions = {
@@ -228,16 +187,6 @@ User_extensions_Control _RTEMS_tasks_User_extensions = {
     NULL                                      /* fatal */
   }
 };
-
-/*
- *  _RTEMS_tasks_Manager_initialization
- *
- *  This routine initializes all Task Manager related data structures.
- *
- *  Input parameters: NONE
- *
- *  Output parameters:  NONE
- */
 
 void _RTEMS_tasks_Manager_initialization(void)
 {
@@ -277,17 +226,6 @@ void _RTEMS_tasks_Manager_initialization(void)
 #endif
 
 }
-
-/*
- *  _RTEMS_tasks_Initialize_user_tasks
- *
- *  This routine creates and starts all configured user
- *  initialization threads.
- *
- *  Input parameters: NONE
- *
- *  Output parameters:  NONE
- */
 
 void _RTEMS_tasks_Initialize_user_tasks( void )
 {

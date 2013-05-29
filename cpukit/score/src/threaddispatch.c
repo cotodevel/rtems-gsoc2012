@@ -1,6 +1,11 @@
+/**
+ * @file
+ * 
+ * @brief Dispatch Thread
+ * @ingroup ScoreThread
+ */
+
 /*
- *  Thread Handler
- *
  *  COPYRIGHT (c) 1989-2009.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -24,7 +29,7 @@
 #include <rtems/score/sysstate.h>
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
-#include <rtems/score/userext.h>
+#include <rtems/score/userextimpl.h>
 #include <rtems/score/wkspace.h>
 
 #ifndef __RTEMS_USE_TICKS_FOR_STATISTICS__
@@ -35,28 +40,46 @@
   #include <rtems/score/smp.h>
 #endif
 
-/**
- *  _Thread_Dispatch
- *
- *  This kernel routine determines if a dispatch is needed, and if so
- *  dispatches to the heir thread.  Once the heir is running an attempt
- *  is made to dispatch any ASRs.
- *
- *  ALTERNATE ENTRY POINTS:
- *    void _Thread_Enable_dispatch();
- *
- *  INTERRUPT LATENCY:
- *    dispatch thread
- *    no dispatch thread
- */
 void _Thread_Dispatch( void )
 {
   Thread_Control   *executing;
   Thread_Control   *heir;
   ISR_Level         level;
 
-  _Thread_Disable_dispatch();
   #if defined(RTEMS_SMP)
+    /*
+     * WARNING: The SMP sequence has severe defects regarding the real-time
+     * performance.
+     *
+     * Consider the following scenario.  We have three tasks L (lowest
+     * priority), M (middle priority), and H (highest priority).  Now let a
+     * thread dispatch from M to L happen.  An interrupt occurs in
+     * _Thread_Dispatch() here:
+     *
+     * void _Thread_Dispatch( void )
+     * {
+     *   [...]
+     *
+     * post_switch:
+     *
+     *   _ISR_Enable( level );
+     *
+     *   <-- INTERRUPT
+     *   <-- AFTER INTERRUPT
+     *
+     *   _Thread_Unnest_dispatch();
+     *
+     *   _API_extensions_Run_post_switch();
+     * }
+     *
+     * The interrupt event makes task H ready.  The interrupt code will see
+     * _Thread_Dispatch_disable_level > 0 and thus doesn't perform a
+     * _Thread_Dispatch().  Now we return to position "AFTER INTERRUPT".  This
+     * means task L executes now although task H is ready!  Task H will execute
+     * once someone calls _Thread_Dispatch().
+     */
+    _Thread_Disable_dispatch();
+
     /*
      *  If necessary, send dispatch request to other cores.
      */
@@ -69,8 +92,10 @@ void _Thread_Dispatch( void )
   executing   = _Thread_Executing;
   _ISR_Disable( level );
   while ( _Thread_Dispatch_necessary == true ) {
-
     heir = _Thread_Heir;
+    #ifndef RTEMS_SMP
+      _Thread_Dispatch_set_disable_level( 1 );
+    #endif
     _Thread_Dispatch_necessary = false;
     _Thread_Executing = heir;
 
@@ -109,7 +134,7 @@ void _Thread_Dispatch( void )
       }
     #else
       {
-        TOD_Get_uptime( &_Thread_Time_of_last_context_switch );
+        _TOD_Get_uptime( &_Thread_Time_of_last_context_switch );
         heir->cpu_time_used++;
       }
     #endif
@@ -167,10 +192,15 @@ void _Thread_Dispatch( void )
   }
 
 post_switch:
+  #ifndef RTEMS_SMP
+    _Thread_Dispatch_set_disable_level( 0 );
+  #endif
 
   _ISR_Enable( level );
 
-  _Thread_Unnest_dispatch();
- 
-  _API_extensions_Run_postswitch();
+  #ifdef RTEMS_SMP
+    _Thread_Unnest_dispatch();
+  #endif
+
+  _API_extensions_Run_post_switch( executing );
 }

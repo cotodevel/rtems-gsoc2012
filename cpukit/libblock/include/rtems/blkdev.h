@@ -3,7 +3,7 @@
  *
  * @ingroup rtems_blkdev
  *
- * Block device management.
+ * @brief Block Device Management
  */
 
 /*
@@ -36,12 +36,11 @@ extern "C" {
  * control. This call puts IO @ref rtems_blkdev_request "requests" to the block
  * device for asynchronous processing. When a driver executes a request, it
  * invokes the request done callback function to finish the request.
- *
- * @{
  */
+/**@{**/
 
 /**
- * Block device request type.
+ * @brief Block device request type.
  *
  * @warning The sync request is an IO one and only used from the cache. Use the
  *          Block IO when operating at the device level. We need a sync request
@@ -53,21 +52,18 @@ typedef enum rtems_blkdev_request_op {
   RTEMS_BLKDEV_REQ_SYNC        /**< Sync any data with the media. */
 } rtems_blkdev_request_op;
 
-/**
- * @brief Block device request done callback function type.
- *
- * The first parameter @a arg must be the argument provided by the block device
- * request structure @ref rtems_blkdev_request.
- *
- * The second parameter @a status should contain the status of the operation:
- *  - @c RTEMS_SUCCESSFUL Operation was successful.
- *  - @c RTEMS_IO_ERROR Some sort of input or output error.
- *  - @c RTEMS_UNSATISFIED Media no more present.
- */
-typedef void (*rtems_blkdev_request_cb)(void *arg, rtems_status_code status);
+struct rtems_blkdev_request;
 
 /**
- * Block device scatter or gather buffer structure.
+ * @brief Block device request done callback function type.
+ */
+typedef void (*rtems_blkdev_request_cb)(
+  struct rtems_blkdev_request *req,
+  rtems_status_code status
+);
+
+/**
+ * @brief Block device scatter or gather buffer structure.
  */
 typedef struct rtems_blkdev_sg_buffer {
   /**
@@ -92,15 +88,16 @@ typedef struct rtems_blkdev_sg_buffer {
 } rtems_blkdev_sg_buffer;
 
 /**
- * The block device request structure is used to read or write a number of
- * blocks from or to the device.
+ * @brief The block device transfer request is used to read or write a number
+ * of blocks from or to the device.
  *
- * TODO: The use of these req blocks is not a great design. The req is a
- *       struct with a single 'bufs' declared in the req struct and the
- *       others are added in the outer level struct. This relies on the
- *       structs joining as a single array and that assumes the compiler
- *       packs the structs. Why not just place on a list ? The BD has a
- *       node that can be used.
+ * Transfer requests are issued to the disk device driver with the
+ * @ref RTEMS_BLKIO_REQUEST IO control.  The transfer request completion status
+ * must be signalled with rtems_blkdev_request_done().  This function must be
+ * called exactly once per request.  The return value of the IO control will be
+ * ignored for transfer requests.
+ *
+ * @see rtems_blkdev_create().
  */
 typedef struct rtems_blkdev_request {
   /**
@@ -111,7 +108,7 @@ typedef struct rtems_blkdev_request {
   /**
    * Request done callback function.
    */
-  rtems_blkdev_request_cb req_done;
+  rtems_blkdev_request_cb done;
 
   /**
    * Argument to be passed to callback function.
@@ -133,6 +130,15 @@ typedef struct rtems_blkdev_request {
    */
   rtems_id io_task;
 
+  /*
+   * TODO: The use of these req blocks is not a great design. The req is a
+   *       struct with a single 'bufs' declared in the req struct and the
+   *       others are added in the outer level struct. This relies on the
+   *       structs joining as a single array and that assumes the compiler
+   *       packs the structs. Why not just place on a list ? The BD has a
+   *       node that can be used.
+   */
+
   /**
    * List of scatter or gather buffers.
    */
@@ -140,18 +146,36 @@ typedef struct rtems_blkdev_request {
 } rtems_blkdev_request;
 
 /**
- * The start block in a request.
+ * @brief Signals transfer request completion status.
  *
- * Only valid if the driver has returned the @ref RTEMS_BLKIO_CAPABILITIES of
- * @ref RTEMS_BLKDEV_CAP_MULTISECTOR_CONT.
+ * This function must be called exactly once per request.
+ *
+ * @param[in,out] req The transfer request.
+ * @param[in] status The status of the operation should be
+ *  - @c RTEMS_SUCCESSFUL, if the operation was successful,
+ *  - @c RTEMS_IO_ERROR, if some sort of input or output error occurred, or
+ *  - @c RTEMS_UNSATISFIED, if media is no more present.
+ */
+static inline void rtems_blkdev_request_done(
+  rtems_blkdev_request *req,
+  rtems_status_code status
+)
+{
+  (*req->done)(req, status);
+}
+
+/**
+ * @brief The start block in a request.
+ *
+ * Only valid if the driver has returned the
+ * @ref RTEMS_BLKDEV_CAP_MULTISECTOR_CONT capability.
  */
 #define RTEMS_BLKDEV_START_BLOCK(req) (req->bufs[0].block)
 
 /**
  * @name IO Control Request Codes
- *
- * @{
  */
+/**@{**/
 
 #define RTEMS_BLKIO_REQUEST         _IOWR('B', 1, rtems_blkdev_request)
 #define RTEMS_BLKIO_GETMEDIABLKSIZE _IOR('B', 2, uint32_t)
@@ -226,7 +250,12 @@ static inline int rtems_disk_fd_reset_device_stats(int fd)
 }
 
 /**
- * Only consecutive multi-sector buffer requests are supported.
+ * @name Block Device Driver Capabilities
+ */
+/**@{**/
+
+/**
+ * @brief Only consecutive multi-sector buffer requests are supported.
  *
  * This option means the cache will only supply multiple buffers that are
  * inorder so the ATA multi-sector command for example can be used. This is a
@@ -235,10 +264,110 @@ static inline int rtems_disk_fd_reset_device_stats(int fd)
 #define RTEMS_BLKDEV_CAP_MULTISECTOR_CONT (1 << 0)
 
 /**
- * The driver will accept a sync call. A sync call is made to a driver
- * after a bdbuf cache sync has finished.
+ * @brief The driver will accept a sync call.
+ *
+ * A sync call is made to a driver after a bdbuf cache sync has finished.
  */
 #define RTEMS_BLKDEV_CAP_SYNC (1 << 1)
+
+/** @} */
+
+/**
+ * @brief Common IO control primitive.
+ *
+ * Use this in all block devices to handle the common set of IO control
+ * requests.
+ */
+int
+rtems_blkdev_ioctl(rtems_disk_device *dd, uint32_t req, void *argp);
+
+/**
+ * @brief Creates a block device.
+ *
+ * The block size is set to the media block size.
+ *
+ * @param[in] device The path for the new block device.
+ * @param[in] media_block_size The media block size in bytes.  Must be positive.
+ * @param[in] media_block_count The media block count.  Must be positive.
+ * @param[in] handler The block device IO control handler.  Must not be @c NULL.
+ * @param[in] driver_data The block device driver data.
+ *
+ * @retval RTEMS_SUCCESSFUL Successful operation.
+ * @retval RTEMS_INVALID_NUMBER Media block size or count is not positive.
+ * @retval RTEMS_NO_MEMORY Not enough memory.
+ * @retval RTEMS_UNSATISFIED Cannot create generic device node.
+ *
+ * @see rtems_blkdev_create_partition(), rtems_bdbuf_set_block_size(), and
+ * rtems_blkdev_request.
+ */
+rtems_status_code rtems_blkdev_create(
+  const char *device,
+  uint32_t media_block_size,
+  rtems_blkdev_bnum media_block_count,
+  rtems_block_device_ioctl handler,
+  void *driver_data
+);
+
+/**
+ * @brief Creates a partition within a parent block device.
+ *
+ * A partition manages a subset of consecutive blocks contained in a parent block
+ * device.  The blocks must be within the range of blocks managed by the
+ * associated parent block device.  The media block size and IO control
+ * handler are inherited by the parent block device.  The block size is set to
+ * the media block size.
+ *
+ * @param[in] partition The path for the new partition device.
+ * @param[in] parent_block_device The parent block device path.
+ * @param[in] media_block_begin The media block begin of the partition within
+ * the parent block device.
+ * @param[in] media_block_count The media block count of the partition.
+ *
+ * @retval RTEMS_SUCCESSFUL Successful operation.
+ * @retval RTEMS_INVALID_ID Block device node does not exist.
+ * @retval RTEMS_INVALID_NODE File system node is not a block device.
+ * @retval RTEMS_NOT_IMPLEMENTED Block device implementation is incomplete.
+ * @retval RTEMS_INVALID_NUMBER Block begin or block count is invalid.
+ * @retval RTEMS_NO_MEMORY Not enough memory.
+ * @retval RTEMS_UNSATISFIED Cannot create generic device node.
+ *
+ * @see rtems_blkdev_create() and rtems_bdbuf_set_block_size().
+ */
+rtems_status_code rtems_blkdev_create_partition(
+  const char *partition,
+  const char *parent_block_device,
+  rtems_blkdev_bnum media_block_begin,
+  rtems_blkdev_bnum media_block_count
+);
+
+/**
+ * @brief Prints the block device statistics.
+ */
+void rtems_blkdev_print_stats(
+  const rtems_blkdev_stats *stats,
+  rtems_printk_plugin_t print,
+  void *print_arg
+);
+
+/**
+ * @brief Block device statistics command.
+ */
+void rtems_blkstats(
+  FILE *output,
+  const char *device,
+  bool reset
+);
+
+/** @} */
+
+/**
+ * @defgroup rtems_blkdev_generic Generic Disk Device
+ *
+ * @ingroup rtems_blkdev
+ *
+ * Generic disk device operations for standard RTEMS IO drivers.
+ */
+/**@{**/
 
 /**
  * The device driver interface conventions suppose that a driver may contain an
@@ -316,85 +445,9 @@ rtems_blkdev_generic_ioctl(
 );
 
 /**
- * Common IO control primitive.
- *
- * Use this in all block devices to handle the common set of ioctl requests.
- */
-int
-rtems_blkdev_ioctl(rtems_disk_device *dd, uint32_t req, void *argp);
-
-/**
  * @brief Generic block operations driver address table.
  */
 extern const rtems_driver_address_table rtems_blkdev_generic_ops;
-
-/**
- * @brief Creates a block device.
- *
- * @param[in] device The path for the new block device.
- * @param[in] block_size The block size.  Must be positive.
- * @param[in] block_count The block count.  Must be positive.
- * @param[in] handler The block device IO control handler.  Must not be @c NULL.
- * @param[in] driver_data The block device driver data.
- *
- * @retval RTEMS_SUCCESSFUL Successful operation.
- * @retval RTEMS_INVALID_NUMBER Block size or block count is not positive.
- * @retval RTEMS_NO_MEMORY Not enough memory.
- * @retval RTEMS_UNSATISFIED Cannot create generic device node.
- */
-rtems_status_code rtems_blkdev_create(
-  const char *device,
-  uint32_t block_size,
-  rtems_blkdev_bnum block_count,
-  rtems_block_device_ioctl handler,
-  void *driver_data
-);
-
-/**
- * @brief Creates a partition within a block device.
- *
- * A partition manages a subset of consecutive blocks contained in a block
- * device.  The blocks must be within the range of blocks managed by the
- * associated block device.  The media block size, block size, and IO control
- * handler are inherited by the block device.
- *
- * @param[in] partition The path for the new partition device.
- * @param[in] device The block device path.
- * @param[in] block_begin The block begin of the partition.
- * @param[in] block_count The block count of the partition.
- *
- * @retval RTEMS_SUCCESSFUL Successful operation.
- * @retval RTEMS_INVALID_ID Block device node does not exist.
- * @retval RTEMS_INVALID_NODE File system node is not a block device.
- * @retval RTEMS_NOT_IMPLEMENTED Block device implementation is incomplete.
- * @retval RTEMS_INVALID_NUMBER Block begin or block count is invalid.
- * @retval RTEMS_NO_MEMORY Not enough memory.
- * @retval RTEMS_UNSATISFIED Cannot create generic device node.
- */
-rtems_status_code rtems_blkdev_create_partition(
-  const char *partition,
-  const char *device,
-  rtems_blkdev_bnum block_begin,
-  rtems_blkdev_bnum block_count
-);
-
-/**
- * @brief Prints the block device statistics.
- */
-void rtems_blkdev_print_stats(
-  const rtems_blkdev_stats *stats,
-  rtems_printk_plugin_t print,
-  void *print_arg
-);
-
-/**
- * @brief Block device statistics command.
- */
-void rtems_blkstats(
-  FILE *output,
-  const char *device,
-  bool reset
-);
 
 /** @} */
 

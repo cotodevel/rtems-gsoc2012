@@ -1,6 +1,11 @@
-/*
- *  MSDOS directory handlers implementation
+/**
+ * @file
  *
+ * @brief Remove Node from MSDOS Directory
+ * @ingroup libfs_msdos MSDOS FileSystem
+ */
+
+/*
  *  Copyright (C) 2001 OKTET Ltd., St.-Petersburg, Russia
  *  Author: Eugeny S. Mints <Eugeny.Mints@oktet.ru>
  *
@@ -46,14 +51,6 @@ msdos_rmnod(const rtems_filesystem_location_info_t *parent_pathloc,
          * directory we assume it is open one)
          */
         if (fat_fd->links_num > 1)
-        {
-            rtems_set_errno_and_return_minus_one(EBUSY);
-        }
-
-        /*
-         * You cannot remove the file system root node.
-         */
-        if (rtems_filesystem_location_is_root(pathloc))
         {
             rtems_set_errno_and_return_minus_one(EBUSY);
         }

@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Locking and Unlocking a Mutex
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).

@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Process will get Executed and then Terminated by execl
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  execl() - POSIX 1003.1b 3.1.2
  *

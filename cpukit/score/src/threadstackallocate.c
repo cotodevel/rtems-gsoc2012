@@ -1,6 +1,12 @@
+/**
+ * @file
+ * 
+ * @brief Stack Allocate Helper
+ * @ingroup ScoreThread
+ */
+
+
 /*
- *  Thread Handler - Stack Allocate Helper
- *
  *  COPYRIGHT (c) 1989-2010.
  *  On-Line Applications Research Corporation (OAR).
  *
@@ -24,18 +30,8 @@
 #include <rtems/score/sysstate.h>
 #include <rtems/score/thread.h>
 #include <rtems/score/threadq.h>
-#include <rtems/score/userext.h>
 #include <rtems/score/wkspace.h>
 #include <rtems/config.h>
-
-/*
- *  _Thread_Stack_Allocate
- *
- *  Allocate the requested stack space for the thread.
- *  return the actual size allocated after any adjustment
- *  or return zero if the allocation failed.
- *  Set the Start.stack field to the address of the stack
- */
 
 size_t _Thread_Stack_Allocate(
   Thread_Control *the_thread,

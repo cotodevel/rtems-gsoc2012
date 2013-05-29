@@ -32,13 +32,13 @@
 #define CONSOLE_UART_A_TRAP  ERC32_TRAP_TYPE(ERC32_INTERRUPT_UART_A_RX_TX)
 #define CONSOLE_UART_B_TRAP  ERC32_TRAP_TYPE(ERC32_INTERRUPT_UART_B_RX_TX)
 
-static uint8_t erc32_console_get_register(uint32_t addr, uint8_t i)
+static uint8_t erc32_console_get_register(uintptr_t addr, uint8_t i)
 {
   volatile uint32_t *reg = (volatile uint32_t *)addr;
   return (uint8_t) reg [i];
 }
 
-static void erc32_console_set_register(uint32_t addr, uint8_t i, uint8_t val)
+static void erc32_console_set_register(uintptr_t addr, uint8_t i, uint8_t val)
 {
   volatile uint32_t *reg = (volatile uint32_t *)addr;
   reg [i] = val;
@@ -57,7 +57,7 @@ static int erc32_console_first_open(int major, int minor, void *arg);
 static void erc32_console_initialize(int minor);
 
 #if (CONSOLE_USE_INTERRUPTS)
-  console_fns erc32_fns = {
+  const console_fns erc32_fns = {
     libchip_serial_default_probe,           /* deviceProbe */
     erc32_console_first_open,               /* deviceFirstOpen */
     NULL,                                   /* deviceLastClose */
@@ -69,7 +69,7 @@ static void erc32_console_initialize(int minor);
     TERMIOS_IRQ_DRIVEN                      /* deviceOutputUsesInterrupts */
   };
 #else
-  console_fns erc32_fns = {
+  const console_fns erc32_fns = {
     libchip_serial_default_probe,           /* deviceProbe */
     erc32_console_first_open,               /* deviceFirstOpen */
     NULL,                                   /* deviceLastClose */

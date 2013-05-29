@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Returns the error status for the Asynchronous I/O request
+ * @ingroup POSIXAPI
+ */
+
 /*
  * Copyright 2010, Alin Rus <alin.codejunkie@gmail.com> 
  * 

@@ -1,3 +1,10 @@
+/**
+ * @file
+ *
+ * @brief Initializing of an Unnamed Semaphore
+ * @ingroup POSIXAPI
+ */
+
 /*
  *  COPYRIGHT (c) 1989-2007.
  *  On-Line Applications Research Corporation (OAR).

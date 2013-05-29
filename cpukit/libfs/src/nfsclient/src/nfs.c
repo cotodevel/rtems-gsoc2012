@@ -1,15 +1,20 @@
-/* NFS client implementation for RTEMS; hooks into the RTEMS filesystem */
-
-/* Author: Till Straumann <strauman@slac.stanford.edu> 2002 */
+/**
+ * @file
+ *
+ * @brief NFS Client Implementation for RTEMS
+ * @ingroup libfs
+ *
+ * Hooks Into the RTEMS NFS Filesystem
+ */
 
 /*
+ * Author: Till Straumann <strauman@slac.stanford.edu>, 2002
+ *
  * Hacked on by others.
  *
  * Modifications to support reference counting in the file system are
  * Copyright (c) 2012 embedded brains GmbH.
- */
-
-/*
+ *
  * Authorship
  * ----------
  * This software (NFS-2 client implementation for RTEMS) was created by
@@ -674,7 +679,19 @@ static struct nfsstats {
 		 * during the system lifetime
 		 */
 	u_short						fs_ids;
-} nfsGlob = {0, 0,  0, 0, 0, 0};
+
+	/* Two pools of RPC transactions;
+	 * One with small send buffers
+	 * the other with a big one.
+	 * The actual size of the small
+	 * buffer is configurable (see top).
+	 *
+	 * Note: The RX buffers are always
+	 * big
+	 */
+	RpcUdpXactPool smallPool;
+	RpcUdpXactPool bigPool;
+} nfsGlob = {0, 0,  0xffffffff, 0, 0, 0, NULL, NULL};
 
 /*
  * Global variable to tune the 'st_blksize' (stat(2)) value this nfs
@@ -686,22 +703,99 @@ static struct nfsstats {
 #endif
 int nfsStBlksize = DEFAULT_NFS_ST_BLKSIZE;
 
-/* Two pools of RPC transactions;
- * One with small send buffers
- * the other with a big one.
- * The actual size of the small
- * buffer is configurable (see top).
- *
- * Note: The RX buffers are always
- * big
- */
-static RpcUdpXactPool smallPool = 0;
-static RpcUdpXactPool bigPool   = 0;
-
 
 /*****************************************
 	Implementation
  *****************************************/
+
+static int nfsEvaluateStatus(nfsstat nfsStatus)
+{
+	static const uint8_t nfsStatusToErrno [71] = {
+		[NFS_OK] = 0,
+		[NFSERR_PERM] = EPERM,
+		[NFSERR_NOENT] = ENOENT,
+		[3] = EIO,
+		[4] = EIO,
+		[NFSERR_IO] = EIO,
+		[NFSERR_NXIO] = ENXIO,
+		[7] = EIO,
+		[8] = EIO,
+		[9] = EIO,
+		[10] = EIO,
+		[11] = EIO,
+		[12] = EIO,
+		[NFSERR_ACCES] = EACCES,
+		[14] = EIO,
+		[15] = EIO,
+		[16] = EIO,
+		[NFSERR_EXIST] = EEXIST,
+		[18] = EIO,
+		[NFSERR_NODEV] = ENODEV,
+		[NFSERR_NOTDIR] = ENOTDIR,
+		[NFSERR_ISDIR] = EISDIR,
+		[22] = EIO,
+		[24] = EIO,
+		[25] = EIO,
+		[26] = EIO,
+		[27] = EIO,
+		[NFSERR_FBIG] = EFBIG,
+		[NFSERR_NOSPC] = ENOSPC,
+		[29] = EIO,
+		[NFSERR_ROFS] = EROFS,
+		[31] = EIO,
+		[32] = EIO,
+		[34] = EIO,
+		[35] = EIO,
+		[36] = EIO,
+		[37] = EIO,
+		[38] = EIO,
+		[39] = EIO,
+		[40] = EIO,
+		[41] = EIO,
+		[42] = EIO,
+		[44] = EIO,
+		[45] = EIO,
+		[46] = EIO,
+		[47] = EIO,
+		[48] = EIO,
+		[49] = EIO,
+		[50] = EIO,
+		[51] = EIO,
+		[52] = EIO,
+		[54] = EIO,
+		[55] = EIO,
+		[56] = EIO,
+		[57] = EIO,
+		[58] = EIO,
+		[59] = EIO,
+		[60] = EIO,
+		[61] = EIO,
+		[62] = EIO,
+		[NFSERR_NAMETOOLONG] = ENAMETOOLONG,
+		[64] = EIO,
+		[65] = EIO,
+		[NFSERR_NOTEMPTY] = ENOTEMPTY,
+		[67] = EIO,
+		[68] = EIO,
+		[NFSERR_DQUOT] = EDQUOT,
+		[NFSERR_STALE] = ESTALE
+	};
+
+	size_t idx = (size_t) nfsStatus;
+	int eno = EIO;
+	int rv = 0;
+
+	if (idx < sizeof(nfsStatusToErrno) / sizeof(nfsStatusToErrno [0])) {
+		eno = nfsStatusToErrno [idx];
+	}
+
+	if (eno != 0) {
+		errno = eno;
+		rv = -1;
+	}
+
+	return rv;
+}
 
 /* Create a Nfs object. This is
  * per-mounted NFS information.
@@ -903,7 +997,7 @@ NfsNode rval = nfsNodeCreate(node->nfs, 0);
  * 			they are created and destroyed
  * 			on the fly).
  */
-void
+int
 nfsInit(int smallPoolDepth, int bigPoolDepth)
 {
 static int initialised = 0;
@@ -911,7 +1005,7 @@ entry	dummy;
 rtems_status_code status;
 
 	if (initialised)
-		return;
+		return 0;
 
 	initialised = 1;
 
@@ -924,7 +1018,8 @@ rtems_status_code status;
 
 	if (RTEMS_SUCCESSFUL != rtems_io_register_driver(0, &drvNfs, &nfsGlob.nfs_major)) {
 		fprintf(stderr,"Registering NFS driver failed - %s\n", strerror(errno));
-		return;
+		errno = ENOMEM;
+		return -1;
 	}
 
 	if (0==smallPoolDepth)
@@ -945,19 +1040,23 @@ rtems_status_code status;
 	dummy.name        = "somename"; /* guess average length of a filename */
 	dirres_entry_size = xdr_sizeof((xdrproc_t)xdr_entry, &dummy);
 
-	smallPool = rpcUdpXactPoolCreate(
+	nfsGlob.smallPool = rpcUdpXactPoolCreate(
 		NFS_PROGRAM,
 		NFS_VERSION_2,
 		CONFIG_NFS_SMALL_XACT_SIZE,
 		smallPoolDepth);
-	assert( smallPool );
+	if (nfsGlob.smallPool == NULL) {
+		goto cleanup;
+	}
 
-	bigPool = rpcUdpXactPoolCreate(
+	nfsGlob.bigPool = rpcUdpXactPoolCreate(
 		NFS_PROGRAM,
 		NFS_VERSION_2,
 		CONFIG_NFS_BIG_XACT_SIZE,
 		bigPoolDepth);
-	assert( bigPool );
+	if (nfsGlob.bigPool == NULL) {
+		goto cleanup;
+	}
 
 	status = rtems_semaphore_create(
 		rtems_build_name('N','F','S','l'),
@@ -965,14 +1064,19 @@ rtems_status_code status;
 		MUTEX_ATTRIBUTES,
 		0,
 		&nfsGlob.llock);
-	assert( status == RTEMS_SUCCESSFUL );
+	if (status != RTEMS_SUCCESSFUL) {
+		goto cleanup;
+	}
+
 	status = rtems_semaphore_create(
 		rtems_build_name('N','F','S','m'),
 		1,
 		MUTEX_ATTRIBUTES,
 		0,
 		&nfsGlob.lock);
-	assert( status == RTEMS_SUCCESSFUL );
+	if (status != RTEMS_SUCCESSFUL) {
+		goto cleanup;
+	}
 
 	if (sizeof(ino_t) < sizeof(u_int)) {
 		fprintf(stderr,
@@ -981,6 +1085,15 @@ rtems_status_code status;
 			"you should fix newlib's sys/stat.h - for now I'll enable a hack...\n");
 
 	}
+
+	return 0;
+
+cleanup:
+
+	nfsCleanup();
+	initialised = 0;
+
+	return -1;
 }
 
 /* Driver cleanup code
@@ -988,38 +1101,47 @@ rtems_status_code status;
 int
 nfsCleanup(void)
 {
-rtems_id	l;
 int			refuse;
 
-	if (!nfsGlob.llock) {
-		/* registering the driver failed - let them still cleanup */
-		return 0;
+	if (nfsGlob.llock != 0) {
+		LOCK(nfsGlob.llock);
+		if ( (refuse = nfsGlob.num_mounted_fs) ) {
+			fprintf(stderr,"Refuse to unload NFS; %i filesystems still mounted.\n",
+							refuse);
+			nfsMountsShow(stderr);
+			/* yes, printing is slow - but since you try to unload the driver,
+			 * you assume nobody is using NFS, so what if they have to wait?
+			 */
+			UNLOCK(nfsGlob.llock);
+			return -1;
+		}
 	}
 
-	LOCK(nfsGlob.llock);
-	if ( (refuse = nfsGlob.num_mounted_fs) ) {
-		fprintf(stderr,"Refuse to unload NFS; %i filesystems still mounted.\n",
-						refuse);
-		nfsMountsShow(stderr);
-		/* yes, printing is slow - but since you try to unload the driver,
-		 * you assume nobody is using NFS, so what if they have to wait?
-		 */
-		UNLOCK(nfsGlob.llock);
-		return -1;
+	if (nfsGlob.lock != 0) {
+		rtems_semaphore_delete(nfsGlob.lock);
+		nfsGlob.lock = 0;
 	}
 
-	rtems_semaphore_delete(nfsGlob.lock);
-	nfsGlob.lock = 0;
+	if (nfsGlob.smallPool != NULL) {
+		rpcUdpXactPoolDestroy(nfsGlob.smallPool);
+		nfsGlob.smallPool = NULL;
+	}
 
-	/* hold the lock while cleaning up... */
+	if (nfsGlob.bigPool != NULL) {
+		rpcUdpXactPoolDestroy(nfsGlob.bigPool);
+		nfsGlob.bigPool = NULL;
+	}
 
-	rpcUdpXactPoolDestroy(smallPool);
-	rpcUdpXactPoolDestroy(bigPool);
-	l = nfsGlob.llock;
-	rtems_io_unregister_driver(nfsGlob.nfs_major);
+	if (nfsGlob.nfs_major != 0xffffffff) {
+		rtems_io_unregister_driver(nfsGlob.nfs_major);
+		nfsGlob.nfs_major = 0xffffffff;
+	}
 
-	rtems_semaphore_delete(l);
-	nfsGlob.llock = 0;
+	if (nfsGlob.llock != 0) {
+		rtems_semaphore_delete(nfsGlob.llock);
+		nfsGlob.llock = 0;
+	}
+
 	return 0;
 }
 
@@ -1059,8 +1181,8 @@ int				rval = -1;
 	switch (proc) {
 		case NFSPROC_SYMLINK:
 		case NFSPROC_WRITE:
-					pool = bigPool;		break;
-		default:	pool = smallPool;	break;
+					pool = nfsGlob.bigPool;		break;
+		default:	pool = nfsGlob.smallPool;	break;
 	}
 
 	xact = rpcUdpXactPoolGet(pool, XactGetCreate);
@@ -1126,27 +1248,30 @@ int				rval = -1;
 static int
 updateAttr(NfsNode node, int force)
 {
+	int rv = 0;
 
 	if (force
 #ifdef CONFIG_ATTR_LIFETIME
 		|| (nowSeconds() - node->age > CONFIG_ATTR_LIFETIME)
 #endif
-		) {
-		if ( nfscall(node->nfs->server,
-					  NFSPROC_GETATTR,
-					  (xdrproc_t)xdr_nfs_fh,	&SERP_FILE(node),
-					  (xdrproc_t)xdr_attrstat, &node->serporid) )
-		return -1;
+	) {
+		rv = nfscall(
+			node->nfs->server,
+			NFSPROC_GETATTR,
+			(xdrproc_t) xdr_nfs_fh, &SERP_FILE(node),
+			(xdrproc_t) xdr_attrstat, &node->serporid
+		);
 
-		if ( NFS_OK != node->serporid.status ) {
-			errno = node->serporid.status;
-			return -1;
+		if (rv == 0) {
+			rv = nfsEvaluateStatus(node->serporid.status);
+
+			if (rv == 0) {
+				node->age = nowSeconds();
+			}
 		}
-
-		node->age = nowSeconds();
 	}
 
-	return 0;
+	return rv;
 }
 
 /*
@@ -1221,7 +1346,7 @@ int		len;
 	}
 
 	memcpy(&psa->sin_addr, h->h_addr, sizeof (struct in_addr));
-  
+
   /* END OF NON-THREAD SAFE REGION */
 
 	psa->sin_family = AF_INET;
@@ -1387,7 +1512,7 @@ static void nfs_eval_set_handlers(
 	}
 }
 
-static int nfs_move_node(NfsNode dst, const NfsNode src)
+static int nfs_move_node(NfsNode dst, const NfsNode src, const char *part)
 {
 	int rv = 0;
 
@@ -1402,20 +1527,17 @@ static int nfs_move_node(NfsNode dst, const NfsNode src)
 	}
 
 	*dst = *src;
-	dst->str = NULL;
 
-	if (src->args.name != NULL) {
-		dst->str = dst->args.name = strdup(src->args.name);
-		if (dst->str != NULL) {
+	dst->str = dst->args.name = strdup(part);
+	if (dst->str != NULL) {
 #if DEBUG & DEBUG_COUNT_NODES
-			rtems_interrupt_level flags;
-			rtems_interrupt_disable(flags);
-				dst->nfs->stringsInUse++;
-			rtems_interrupt_enable(flags);
+		rtems_interrupt_level flags;
+		rtems_interrupt_disable(flags);
+			dst->nfs->stringsInUse++;
+		rtems_interrupt_enable(flags);
 #endif
-		} else {
-			rv = -1;
-		}
+	} else {
+		rv = -1;
 	}
 
 	return rv;
@@ -1446,7 +1568,7 @@ static rtems_filesystem_eval_path_generic_status nfs_eval_part(
 		if (type == NFLNK && (follow_sym_link || !terminal)) {
 			nfs_eval_follow_link(ctx, &entry);
 		} else {
-			rv = nfs_move_node(dir, &entry);
+			rv = nfs_move_node(dir, &entry, part);
 			if (rv == 0) {
 				nfs_eval_set_handlers(ctx, type);
 				if (!terminal) {
@@ -1531,16 +1653,20 @@ char *dupname;
 
 	SERP_ARGS(tNode).linkarg.to.name = dupname;
 
-	if ( nfscall(tNode->nfs->server,
-					  NFSPROC_LINK,
-					  (xdrproc_t)xdr_linkargs,	&SERP_FILE(tNode),
-					  (xdrproc_t)xdr_nfsstat,	&status)
-	     || (NFS_OK != (errno = status))
-	   ) {
+	rv = nfscall(
+		tNode->nfs->server,
+		NFSPROC_LINK,
+		(xdrproc_t)xdr_linkargs, &SERP_FILE(tNode),
+		(xdrproc_t)xdr_nfsstat, &status
+	);
+
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(status);
 #if DEBUG & DEBUG_SYSCALLS
-		perror("nfs_link");
+		if (rv != 0) {
+			perror("nfs_link");
+		}
 #endif
-		rv = -1;
 	}
 
 	free(dupname);
@@ -1555,6 +1681,7 @@ static int nfs_do_unlink(
 	int								  proc
 )
 {
+int rv = 0;
 nfsstat			status;
 NfsNode			node  = loc->node_access;
 Nfs				nfs   = node->nfs;
@@ -1574,19 +1701,23 @@ char			*name = NFSPROC_REMOVE == proc ?
 	fprintf(stderr,"%s '%s'\n", name, node->args.name);
 #endif
 
-	if ( nfscall(nfs->server,
-				 proc,
-				 (xdrproc_t)xdr_diropargs,	&node->args,
-				 (xdrproc_t)xdr_nfsstat,	&status)
-	     || (NFS_OK != (errno = status))
-	    ) {
+	rv = nfscall(
+		nfs->server,
+		proc,
+		(xdrproc_t)xdr_diropargs, &node->args,
+		(xdrproc_t)xdr_nfsstat, &status
+	);
+
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(status);
 #if DEBUG & DEBUG_SYSCALLS
-		perror(name);
+		if (rv != 0) {
+			perror(name);
+		}
 #endif
-		return -1;
 	}
 
-	return 0;
+	return rv;
 }
 
 static int nfs_chown(
@@ -1672,13 +1803,16 @@ char				*path     = mt_entry->dev;
     fprintf (stderr, "error: initialising RPC\n");
     return -1;
   }
-  
-	nfsInit(0, 0);
+
+	if (nfsInit(0, 0) != 0) {
+		fprintf (stderr, "error: initialising NFS\n");
+		return -1;
+	};
 
 #if 0
 	printf("Trying to mount %s on %s\n",path,mntpoint);
 #endif
-  
+
 	if ( buildIpAddr(&uid, &gid, &host, &saddr, &path) )
 		return -1;
 
@@ -1929,15 +2063,20 @@ char					*dupname;
 	SERP_ARGS(node).createarg.attributes.mtime.seconds	= now.tv_sec;
 	SERP_ARGS(node).createarg.attributes.mtime.useconds	= now.tv_usec;
 
-	if ( nfscall( nfs->server,
-						(type == S_IFDIR) ? NFSPROC_MKDIR : NFSPROC_CREATE,
-						(xdrproc_t)xdr_createargs,	&SERP_FILE(node),
-						(xdrproc_t)xdr_diropres,	&res)
-		|| (NFS_OK != (errno = res.status)) ) {
+	rv = nfscall(
+		nfs->server,
+		(type == S_IFDIR) ? NFSPROC_MKDIR : NFSPROC_CREATE,
+		(xdrproc_t)xdr_createargs, &SERP_FILE(node),
+		(xdrproc_t)xdr_diropres, &res
+	);
+
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(res.status);
 #if DEBUG & DEBUG_SYSCALLS
-		perror("nfs_mknod");
+		if (rv != 0) {
+			perror("nfs_mknod");
+		}
 #endif
-                rv = -1;
 	}
 
 	free(dupname);
@@ -2020,15 +2159,18 @@ char					*dupname;
 	SERP_ARGS(node).symlinkarg.attributes.mtime.seconds  = now.tv_sec;
 	SERP_ARGS(node).symlinkarg.attributes.mtime.useconds = now.tv_usec;
 
-	if ( nfscall( nfs->server,
-						NFSPROC_SYMLINK,
-						(xdrproc_t)xdr_symlinkargs,	&SERP_FILE(node),
-						(xdrproc_t)xdr_nfsstat,		&status)
-		|| (NFS_OK != (errno = status)) ) {
+	rv = nfscall(
+		nfs->server,
+		NFSPROC_SYMLINK,
+		(xdrproc_t)xdr_symlinkargs, &SERP_FILE(node),
+		(xdrproc_t)xdr_nfsstat, &status
+	);
+
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(status);
 #if DEBUG & DEBUG_SYSCALLS
 		perror("nfs_symlink");
 #endif
-                rv = -1;
 	}
 
 	free(dupname);
@@ -2042,24 +2184,33 @@ static ssize_t nfs_readlink_with_node(
 	size_t len
 )
 {
+	ssize_t rv;
 	Nfs nfs = node->nfs;
 	readlinkres_strbuf rr;
 
 	rr.strbuf.buf = buf;
 	rr.strbuf.max = len - 1;
 
-	if ( nfscall(nfs->server,
-							NFSPROC_READLINK,
-							(xdrproc_t)xdr_nfs_fh,      		&SERP_FILE(node),
-							(xdrproc_t)xdr_readlinkres_strbuf, &rr)
-		|| (NFS_OK != (errno = rr.status)) ) {
+	rv = nfscall(
+		nfs->server,
+		NFSPROC_READLINK,
+		(xdrproc_t)xdr_nfs_fh, &SERP_FILE(node),
+		(xdrproc_t)xdr_readlinkres_strbuf, &rr
+	);
+
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(rr.status);
+
+		if (rv == 0) {
+			rv = (ssize_t) strlen(rr.strbuf.buf);
+		} else {
 #if DEBUG & DEBUG_SYSCALLS
-		perror("nfs_readlink_with_node");
+			perror("nfs_readlink_with_node");
 #endif
-		return -1;
+		}
 	}
 
-	return (ssize_t) strlen(rr.strbuf.buf);
+	return rv;
 }
 
 static ssize_t nfs_readlink(
@@ -2105,8 +2256,9 @@ static int nfs_rename(
 			(xdrproc_t) xdr_nfsstat,
 			&status
 		);
-		if (rv == 0 && (errno = status) != NFS_OK) {
-			rv = -1;
+
+		if (rv == 0) {
+			rv = nfsEvaluateStatus(status);
 		}
 
 		free(dupname);
@@ -2280,6 +2432,7 @@ static ssize_t nfs_file_read_chunk(
 	size_t count
 )
 {
+ssize_t rv;
 readres	rr;
 Nfs		nfs  = node->nfs;
 
@@ -2289,29 +2442,31 @@ Nfs		nfs  = node->nfs;
 
 	rr.readres_u.reply.data.data_val	= buffer;
 
-	if ( nfscall(	nfs->server,
-						NFSPROC_READ,
-						(xdrproc_t)xdr_readargs,	&SERP_FILE(node),
-						(xdrproc_t)xdr_readres,	&rr) ) {
-		return -1;
-	}
+	rv = nfscall(
+		nfs->server,
+		NFSPROC_READ,
+		(xdrproc_t)xdr_readargs, &SERP_FILE(node),
+		(xdrproc_t)xdr_readres, &rr
+	);
 
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(rr.status);
 
-	if (NFS_OK != rr.status) {
-		rtems_set_errno_and_return_minus_one(rr.status);
-	}
+		if (rv == 0) {
+			rv = rr.readres_u.reply.data.data_len;
 
 #if DEBUG & DEBUG_SYSCALLS
-	fprintf(stderr,
-			"Read %i (asked for %i) bytes from offset %i to 0x%08x\n",
-			rr.readres_u.reply.data.data_len,
-			count,
-			iop->offset,
-			rr.readres_u.reply.data.data_val);
+			fprintf(stderr,
+				"Read %i (asked for %i) bytes from offset %i to 0x%08x\n",
+				rr.readres_u.reply.data.data_len,
+				count,
+				iop->offset,
+				rr.readres_u.reply.data.data_val);
 #endif
+		}
+	}
 
-
-	return rr.readres_u.reply.data.data_len;
+	return rv;
 }
 
 static ssize_t nfs_file_read(
@@ -2356,6 +2511,7 @@ static ssize_t nfs_dir_read(
 	size_t        count
 )
 {
+ssize_t rv;
 DirInfo			di     = iop->pathinfo.node_access_2;
 RpcUdpServer	server = ((Nfs)iop->pathinfo.mt_entry->fs_info)->server;
 
@@ -2391,20 +2547,22 @@ RpcUdpServer	server = ((Nfs)iop->pathinfo.mt_entry->fs_info)->server;
 			count, di->len);
 #endif
 
-	if ( nfscall(
-					server,
-					NFSPROC_READDIR,
-					(xdrproc_t)xdr_readdirargs, &di->readdirargs,
-					(xdrproc_t)xdr_dir_info,    di) ) {
-		return -1;
+	rv = nfscall(
+		server,
+		NFSPROC_READDIR,
+		(xdrproc_t)xdr_readdirargs, &di->readdirargs,
+		(xdrproc_t)xdr_dir_info, di
+	);
+
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(di->status);
+
+		if (rv == 0) {
+			rv = (char*)di->ptr - (char*)buffer;
+		}
 	}
 
-
-	if (NFS_OK != di->status) {
-		rtems_set_errno_and_return_minus_one(di->status);
-	}
-
-	return (char*)di->ptr - (char*)buffer;
+	return rv;
 }
 
 static ssize_t nfs_file_write(
@@ -2413,9 +2571,9 @@ static ssize_t nfs_file_write(
 	size_t        count
 )
 {
+ssize_t rv;
 NfsNode 	node = iop->pathinfo.node_access;
 Nfs			nfs  = node->nfs;
-int			e;
 
 	if (count > NFS_MAXDATA)
 		count = NFS_MAXDATA;
@@ -2438,25 +2596,28 @@ int			e;
 	 * on the PROC specifier
 	 */
 
-	if ( nfscall(	nfs->server,
-						NFSPROC_WRITE,
-						(xdrproc_t)xdr_writeargs,	&SERP_FILE(node),
-						(xdrproc_t)xdr_attrstat,	&node->serporid) ) {
-		return -1;
+	rv = nfscall(
+		nfs->server,
+		NFSPROC_WRITE,
+		(xdrproc_t)xdr_writeargs, &SERP_FILE(node),
+		(xdrproc_t)xdr_attrstat, &node->serporid
+	);
+
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(node->serporid.status);
+
+		if (rv == 0) {
+			node->age = nowSeconds();
+
+			iop->offset += count;
+			rv = count;
+		} else {
+			/* try at least to recover the current attributes */
+			updateAttr(node, 1 /* force */);
+		}
 	}
 
-
-	if (NFS_OK != (e=node->serporid.status) ) {
-		/* try at least to recover the current attributes */
-		updateAttr(node, 1 /* force */);
-		rtems_set_errno_and_return_minus_one(e);
-	}
-
-	node->age = nowSeconds();
-
-	iop->offset += count;
-
-	return count;
+	return rv;
 }
 
 static off_t nfs_dir_lseek(
@@ -2593,10 +2754,9 @@ fattr	*fa  = &SERP_ATTR(node);
 static int
 nfs_sattr(NfsNode node, sattr *arg, u_long mask)
 {
-
+int rv;
 struct timeval				now;
 nfstime					nfsnow, t;
-int						e;
 u_int					mode;
 
 	if (updateAttr(node, 0 /* only if old */))
@@ -2645,31 +2805,35 @@ u_int					mode;
 
 	node->serporid.status = NFS_OK;
 
-	if ( nfscall( node->nfs->server,
-						NFSPROC_SETATTR,
-						(xdrproc_t)xdr_sattrargs,	&SERP_FILE(node),
-						(xdrproc_t)xdr_attrstat,	&node->serporid) ) {
+	rv = nfscall(
+		node->nfs->server,
+		NFSPROC_SETATTR,
+		(xdrproc_t)xdr_sattrargs, &SERP_FILE(node),
+		(xdrproc_t)xdr_attrstat, &node->serporid
+	);
+
+	if (rv == 0) {
+		rv = nfsEvaluateStatus(node->serporid.status);
+
+		if (rv == 0) {
+			node->age = nowSeconds();
+		} else {
+#if DEBUG & DEBUG_SYSCALLS
+			fprintf(stderr,"nfs_sattr: %s\n",strerror(errno));
+#endif
+			/* try at least to recover the current attributes */
+			updateAttr(node, 1 /* force */);
+		}
+	} else {
 #if DEBUG & DEBUG_SYSCALLS
 		fprintf(stderr,
 				"nfs_sattr (mask 0x%08x): %s",
 				mask,
 				strerror(errno));
 #endif
-		return -1;
 	}
 
-	if (NFS_OK != (e=node->serporid.status) ) {
-#if DEBUG & DEBUG_SYSCALLS
-		fprintf(stderr,"nfs_sattr: %s\n",strerror(e));
-#endif
-		/* try at least to recover the current attributes */
-		updateAttr(node, 1 /* force */);
-		rtems_set_errno_and_return_minus_one(e);
-	}
-
-	node->age = nowSeconds();
-
-	return 0;
+	return rv;
 }
 
 /* just set the size attribute to 'length'

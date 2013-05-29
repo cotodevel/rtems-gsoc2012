@@ -1,8 +1,11 @@
+/**
+ * @file
+ *
+ * @brief Low-level Operations on a Volume with a DOSFS FAT filesystem
+ * @ingroup libfs
+ */
+
 /*
- * fat.c
- *
- * Low-level operations on a volume with FAT filesystem
- *
  * Copyright (C) 2001 OKTET Ltd., St.-Petersburg, Russia
  * Author: Eugeny S. Mints <Eugeny.Mints@oktet.ru>
  */
@@ -17,88 +20,62 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <rtems/libio_.h>
 
 #include "fat.h"
 #include "fat_fat_operations.h"
 
+static int
+ _fat_block_release(fat_fs_info_t *fs_info);
+
+static inline uint32_t
+fat_cluster_num_to_block_num (const fat_fs_info_t *fs_info,
+                              uint32_t             cln)
+{
+    uint32_t blk;
+
+    if ( (cln == 0) && (fs_info->vol.type & (FAT_FAT12 | FAT_FAT16)) )
+        blk = fat_sector_num_to_block_num(fs_info, fs_info->vol.rdir_loc);
+    else
+    {
+        cln -= FAT_RSRVD_CLN;
+        blk = cln << (fs_info->vol.bpc_log2 - fs_info->vol.bytes_per_block_log2);
+        blk += fat_sector_num_to_block_num(fs_info, fs_info->vol.data_fsec);
+    }
+
+    return blk;
+}
+
 int
-fat_buf_access(fat_fs_info_t *fs_info, uint32_t   blk, int op_type,
-               rtems_bdbuf_buffer **buf)
+fat_buf_access(fat_fs_info_t   *fs_info,
+               const uint32_t   sec_num,
+               const int        op_type,
+               uint8_t        **sec_buf)
 {
     rtems_status_code sc = RTEMS_SUCCESSFUL;
-    uint8_t           i;
-    bool              sec_of_fat;
+    uint32_t          blk = fat_sector_num_to_block_num (fs_info,
+                                                         sec_num);
+    uint32_t          blk_ofs = fat_sector_offset_to_block_offset (fs_info,
+                                                                   sec_num,
+                                                                   0);
 
-
-    if (fs_info->c.state == FAT_CACHE_EMPTY)
+    if (fs_info->c.state == FAT_CACHE_EMPTY || fs_info->c.blk_num != sec_num)
     {
+        fat_buf_release(fs_info);
+
         if (op_type == FAT_OP_TYPE_READ)
             sc = rtems_bdbuf_read(fs_info->vol.dd, blk, &fs_info->c.buf);
         else
             sc = rtems_bdbuf_get(fs_info->vol.dd, blk, &fs_info->c.buf);
         if (sc != RTEMS_SUCCESSFUL)
             rtems_set_errno_and_return_minus_one(EIO);
-        fs_info->c.blk_num = blk;
+        fs_info->c.blk_num = sec_num;
         fs_info->c.modified = 0;
         fs_info->c.state = FAT_CACHE_ACTUAL;
     }
-
-    sec_of_fat = ((fs_info->c.blk_num >= fs_info->vol.fat_loc) &&
-                  (fs_info->c.blk_num < fs_info->vol.rdir_loc));
-
-    if (fs_info->c.blk_num != blk)
-    {
-        if (fs_info->c.modified)
-        {
-            if (sec_of_fat && !fs_info->vol.mirror)
-                memcpy(fs_info->sec_buf, fs_info->c.buf->buffer,
-                       fs_info->vol.bps);
-
-            sc = rtems_bdbuf_release_modified(fs_info->c.buf);
-            fs_info->c.state = FAT_CACHE_EMPTY;
-            fs_info->c.modified = 0;
-            if (sc != RTEMS_SUCCESSFUL)
-                rtems_set_errno_and_return_minus_one(EIO);
-
-            if (sec_of_fat && !fs_info->vol.mirror)
-            {
-                rtems_bdbuf_buffer *b;
-
-                for (i = 1; i < fs_info->vol.fats; i++)
-                {
-                    sc = rtems_bdbuf_get(fs_info->vol.dd,
-                                         fs_info->c.blk_num +
-                                         fs_info->vol.fat_length * i,
-                                         &b);
-                    if ( sc != RTEMS_SUCCESSFUL)
-                        rtems_set_errno_and_return_minus_one(ENOMEM);
-                    memcpy(b->buffer, fs_info->sec_buf, fs_info->vol.bps);
-                    sc = rtems_bdbuf_release_modified(b);
-                    if ( sc != RTEMS_SUCCESSFUL)
-                        rtems_set_errno_and_return_minus_one(ENOMEM);
-                }
-            }
-        }
-        else
-        {
-            sc = rtems_bdbuf_release(fs_info->c.buf);
-            fs_info->c.state = FAT_CACHE_EMPTY;
-            if (sc != RTEMS_SUCCESSFUL)
-                rtems_set_errno_and_return_minus_one(EIO);
-
-        }
-        if (op_type == FAT_OP_TYPE_READ)
-            sc = rtems_bdbuf_read(fs_info->vol.dd, blk, &fs_info->c.buf);
-        else
-            sc = rtems_bdbuf_get(fs_info->vol.dd, blk, &fs_info->c.buf);
-        if (sc != RTEMS_SUCCESSFUL)
-            rtems_set_errno_and_return_minus_one(EIO);
-        fs_info->c.blk_num = blk;
-        fs_info->c.state = FAT_CACHE_ACTUAL;
-    }
-    *buf = fs_info->c.buf;
+    *sec_buf = &fs_info->c.buf->buffer[blk_ofs];
     return RC_OK;
 }
 
@@ -106,19 +83,24 @@ int
 fat_buf_release(fat_fs_info_t *fs_info)
 {
     rtems_status_code sc = RTEMS_SUCCESSFUL;
-    uint8_t           i;
-    bool              sec_of_fat;
 
     if (fs_info->c.state == FAT_CACHE_EMPTY)
         return RC_OK;
 
-    sec_of_fat = ((fs_info->c.blk_num >= fs_info->vol.fat_loc) &&
-                  (fs_info->c.blk_num < fs_info->vol.rdir_loc));
-
     if (fs_info->c.modified)
     {
+        uint32_t sec_num = fs_info->c.blk_num;
+        bool     sec_of_fat = ((sec_num >= fs_info->vol.fat_loc) &&
+                              (sec_num < fs_info->vol.rdir_loc));
+        uint32_t blk = fat_sector_num_to_block_num(fs_info, sec_num);
+        uint32_t blk_ofs = fat_sector_offset_to_block_offset(fs_info,
+                                                             sec_num,
+                                                             0);
+
         if (sec_of_fat && !fs_info->vol.mirror)
-            memcpy(fs_info->sec_buf, fs_info->c.buf->buffer, fs_info->vol.bps);
+            memcpy(fs_info->sec_buf,
+                   fs_info->c.buf->buffer + blk_ofs,
+                   fs_info->vol.bps);
 
         sc = rtems_bdbuf_release_modified(fs_info->c.buf);
         if (sc != RTEMS_SUCCESSFUL)
@@ -127,18 +109,31 @@ fat_buf_release(fat_fs_info_t *fs_info)
 
         if (sec_of_fat && !fs_info->vol.mirror)
         {
-            rtems_bdbuf_buffer *b;
+            uint8_t i;
 
             for (i = 1; i < fs_info->vol.fats; i++)
             {
-                sc = rtems_bdbuf_get(fs_info->vol.dd,
-                                     fs_info->c.blk_num +
-                                     fs_info->vol.fat_length * i,
-                                     &b);
+                rtems_bdbuf_buffer *bd;
+
+                sec_num = fs_info->c.blk_num + fs_info->vol.fat_length * i,
+                blk = fat_sector_num_to_block_num(fs_info, sec_num);
+                blk_ofs = fat_sector_offset_to_block_offset(fs_info,
+                                                            sec_num,
+                                                            0);
+
+                if (blk_ofs == 0
+                    && fs_info->vol.bps == fs_info->vol.bytes_per_block)
+                {
+                    sc = rtems_bdbuf_get(fs_info->vol.dd, blk, &bd);
+                }
+                else
+                {
+                    sc = rtems_bdbuf_read(fs_info->vol.dd, blk, &bd);
+                }
                 if ( sc != RTEMS_SUCCESSFUL)
                     rtems_set_errno_and_return_minus_one(ENOMEM);
-                memcpy(b->buffer, fs_info->sec_buf, fs_info->vol.bps);
-                sc = rtems_bdbuf_release_modified(b);
+                memcpy(bd->buffer + blk_ofs, fs_info->sec_buf, fs_info->vol.bps);
+                sc = rtems_bdbuf_release_modified(bd);
                 if ( sc != RTEMS_SUCCESSFUL)
                     rtems_set_errno_and_return_minus_one(ENOMEM);
             }
@@ -182,29 +177,66 @@ _fat_block_read(
 {
     int                     rc = RC_OK;
     ssize_t                 cmpltd = 0;
-    uint32_t                blk = start;
+    uint32_t                sec_num = start;
     uint32_t                ofs = offset;
-    rtems_bdbuf_buffer     *block = NULL;
+    uint8_t                *sec_buf;
     uint32_t                c = 0;
 
     while (count > 0)
     {
-        rc = fat_buf_access(fs_info, blk, FAT_OP_TYPE_READ, &block);
+        rc = fat_buf_access(fs_info, sec_num, FAT_OP_TYPE_READ, &sec_buf);
         if (rc != RC_OK)
             return -1;
 
         c = MIN(count, (fs_info->vol.bps - ofs));
-        memcpy((buff + cmpltd), (block->buffer + ofs), c);
+        memcpy((buff + cmpltd), (sec_buf + ofs), c);
 
         count -= c;
         cmpltd += c;
-        blk++;
+        sec_num++;
         ofs = 0;
     }
     return cmpltd;
 }
 
-/* _fat_block_write --
+static ssize_t
+ fat_block_write(
+    fat_fs_info_t                        *fs_info,
+    const uint32_t                        start_blk,
+    const uint32_t                        offset,
+    const uint32_t                        count,
+    const void                           *buf,
+    const bool                            overwrite_block)
+{
+    int                 rc             = RC_OK;
+    uint32_t            bytes_to_write = MIN(count, (fs_info->vol.bytes_per_block - offset));
+    uint8_t            *blk_buf;
+    uint32_t            sec_num        = fat_block_num_to_sector_num(fs_info, start_blk);
+
+    if (0 < bytes_to_write)
+    {
+        if (   overwrite_block
+            || (bytes_to_write == fs_info->vol.bytes_per_block))
+        {
+            rc = fat_buf_access(fs_info, sec_num, FAT_OP_TYPE_GET, &blk_buf);
+        }
+        else
+            rc = fat_buf_access(fs_info, sec_num, FAT_OP_TYPE_READ, &blk_buf);
+
+        if (RC_OK == rc)
+        {
+            memcpy(blk_buf + offset, buf, bytes_to_write);
+
+            fat_buf_mark_modified(fs_info);
+        }
+    }
+    if (RC_OK != rc)
+        return rc;
+    else
+        return bytes_to_write;
+}
+
+/* fat_sector_write --
  *     This function write 'count' bytes to device filesystem is mounted on,
  *     starts at 'start+offset' position where 'start' computed in sectors
  *     and 'offset' is offset inside sector (writing may cross sectors
@@ -222,7 +254,7 @@ _fat_block_read(
  *     and errno set appropriately
  */
 ssize_t
-_fat_block_write(
+fat_sector_write(
     fat_fs_info_t                        *fs_info,
     uint32_t                              start,
     uint32_t                              offset,
@@ -231,67 +263,112 @@ _fat_block_write(
 {
     int                 rc = RC_OK;
     ssize_t             cmpltd = 0;
-    uint32_t            blk  = start;
+    uint32_t            sec_num = start;
     uint32_t            ofs = offset;
-    rtems_bdbuf_buffer *block = NULL;
+    uint8_t            *sec_buf;
     uint32_t            c = 0;
 
     while(count > 0)
     {
         c = MIN(count, (fs_info->vol.bps - ofs));
 
-        if (c == fs_info->vol.bps)
-            rc = fat_buf_access(fs_info, blk, FAT_OP_TYPE_GET, &block);
+        if (c == fs_info->vol.bytes_per_block)
+            rc = fat_buf_access(fs_info, sec_num, FAT_OP_TYPE_GET, &sec_buf);
         else
-            rc = fat_buf_access(fs_info, blk, FAT_OP_TYPE_READ, &block);
+            rc = fat_buf_access(fs_info, sec_num, FAT_OP_TYPE_READ, &sec_buf);
         if (rc != RC_OK)
             return -1;
 
-        memcpy((block->buffer + ofs), (buff + cmpltd), c);
+        memcpy((sec_buf + ofs), (buff + cmpltd), c);
 
         fat_buf_mark_modified(fs_info);
 
         count -= c;
         cmpltd +=c;
-        blk++;
+        sec_num++;
         ofs = 0;
     }
     return cmpltd;
 }
 
-int
-_fat_block_zero(
-    fat_fs_info_t                        *fs_info,
-    uint32_t                              start,
-    uint32_t                              offset,
-    uint32_t                              count)
+static ssize_t
+ fat_block_set (
+     fat_fs_info_t                        *fs_info,
+     const uint32_t                        start_blk,
+     const uint32_t                        offset,
+     const uint32_t                        count,
+     const uint8_t                         pattern)
 {
-    int                 rc = RC_OK;
-    uint32_t            blk  = start;
-    uint32_t            ofs = offset;
-    rtems_bdbuf_buffer *block = NULL;
-    uint32_t            c = 0;
+    int                 rc             = RC_OK;
+    uint32_t            bytes_to_write = MIN(count, (fs_info->vol.bytes_per_block - offset));
+    uint8_t            *blk_buf;
+    uint32_t            sec_num        = fat_block_num_to_sector_num(fs_info, start_blk);
 
-    while(count > 0)
+    if (0 < bytes_to_write)
     {
-        c = MIN(count, (fs_info->vol.bps - ofs));
-
-        if (c == fs_info->vol.bps)
-            rc = fat_buf_access(fs_info, blk, FAT_OP_TYPE_GET, &block);
+        if (bytes_to_write == fs_info->vol.bytes_per_block)
+        {
+            rc = fat_buf_access(fs_info, sec_num, FAT_OP_TYPE_GET, &blk_buf);
+        }
         else
-            rc = fat_buf_access(fs_info, blk, FAT_OP_TYPE_READ, &block);
-        if (rc != RC_OK)
-            return -1;
+            rc = fat_buf_access(fs_info, sec_num, FAT_OP_TYPE_READ, &blk_buf);
 
-        memset((block->buffer + ofs), 0, c);
+        if (RC_OK == rc)
+        {
+            memset(blk_buf + offset, pattern, bytes_to_write);
 
-        fat_buf_mark_modified(fs_info);
-
-        count -= c;
-        blk++;
-        ofs = 0;
+            fat_buf_mark_modified(fs_info);
+        }
     }
-    return 0;
+    if (RC_OK != rc)
+        return rc;
+    else
+        return bytes_to_write;
+}
+
+ssize_t
+fat_cluster_set(
+     fat_fs_info_t                        *fs_info,
+     const uint32_t                        start_cln,
+     const uint32_t                        offset,
+     const uint32_t                        count,
+     const uint8_t                         pattern)
+{
+  ssize_t             rc               = RC_OK;
+  uint32_t            bytes_to_write   = MIN(count, (fs_info->vol.bpc - offset));
+  uint32_t            cur_blk          = fat_cluster_num_to_block_num(fs_info, start_cln);
+  uint32_t            blocks_in_offset = offset >> fs_info->vol.bytes_per_block_log2;
+  uint32_t            ofs_blk          = offset - (blocks_in_offset << fs_info->vol.bytes_per_block_log2);
+  ssize_t             bytes_written    = 0;
+  ssize_t             ret;
+
+  cur_blk += blocks_in_offset;
+
+  while (   (RC_OK == rc)
+         && (0 < bytes_to_write))
+  {
+    uint32_t c = MIN(bytes_to_write, (fs_info->vol.bytes_per_block - ofs_blk));
+
+    ret = fat_block_set(
+        fs_info,
+        cur_blk,
+        ofs_blk,
+        c,
+        pattern);
+    if (c != ret)
+      rc = -1;
+    else
+    {
+        bytes_to_write -= ret;
+        bytes_written  += ret;
+        ++cur_blk;
+    }
+    ofs_blk = 0;
+  }
+  if (RC_OK != rc)
+    return rc;
+  else
+    return bytes_written;
 }
 
 /* _fat_block_release --
@@ -310,40 +387,19 @@ _fat_block_release(fat_fs_info_t *fs_info)
     return fat_buf_release(fs_info);
 }
 
-/* fat_cluster_read --
- *     wrapper for reading a whole cluster at once
- *
- * PARAMETERS:
- *     fs_info  - FS info
- *     cln      - number of cluster to read
- *     buff     - buffer provided by user
- *
- * RETURNS:
- *     bytes read on success, or -1 if error occured
- *     and errno set appropriately
- */
-ssize_t
-fat_cluster_read(
-    fat_fs_info_t                        *fs_info,
-    uint32_t                              cln,
-    void                                 *buff
-    )
-{
-    uint32_t       fsec = 0;
-
-    fsec = fat_cluster_num_to_sector_num(fs_info, cln);
-
-    return _fat_block_read(fs_info, fsec, 0,
-                           fs_info->vol.spc << fs_info->vol.sec_log2, buff);
-}
-
 /* fat_cluster_write --
- *     wrapper for writting a whole cluster at once
+ *     This function write 'count' bytes to device filesystem is mounted on,
+ *     starts at 'start+offset' position where 'start' computed in clusters
+ *     and 'offset' is offset inside cluster.
+ *     Writing will NOT cross cluster boundaries!
  *
  * PARAMETERS:
- *     fs_info  - FS info
- *     cln      - number of cluster to write
- *     buff     - buffer provided by user
+ *     fs_info            - FS info
+ *     start_cln          - cluster number to start writing to
+ *     offset             - offset inside cluster 'start'
+ *     count              - count of bytes to write
+ *     buff               - buffer provided by user
+ *     overwrite_cluster  - true if cluster can get overwritten, false if cluster content must be kept
  *
  * RETURNS:
  *     bytes written on success, or -1 if error occured
@@ -352,16 +408,55 @@ fat_cluster_read(
 ssize_t
 fat_cluster_write(
     fat_fs_info_t                        *fs_info,
-    uint32_t                              cln,
-    const void                           *buff
-    )
+    const uint32_t                        start_cln,
+    const uint32_t                        offset,
+    const uint32_t                        count,
+    const void                           *buff,
+    const bool                            overwrite_cluster)
 {
-    uint32_t       fsec = 0;
+    ssize_t             rc               = RC_OK;
+    uint32_t            bytes_to_write   = MIN(count, (fs_info->vol.bpc - offset));
+    uint32_t            cur_blk          = fat_cluster_num_to_block_num(fs_info, start_cln);
+    uint32_t            blocks_in_offset = (offset >> fs_info->vol.bytes_per_block_log2);
+    uint32_t            ofs_blk          = offset - (blocks_in_offset << fs_info->vol.bytes_per_block_log2);
+    ssize_t             bytes_written    = 0;
+    uint8_t             *buffer          = (uint8_t*)buff;
+    ssize_t             ret;
+    uint32_t            c;
 
-    fsec = fat_cluster_num_to_sector_num(fs_info, cln);
+    cur_blk += blocks_in_offset;
 
-    return _fat_block_write(fs_info, fsec, 0,
-                          fs_info->vol.spc << fs_info->vol.sec_log2, buff);
+    while (   (RC_OK == rc)
+           && (0 < bytes_to_write))
+    {
+      c = MIN(bytes_to_write, (fs_info->vol.bytes_per_block - ofs_blk));
+
+      ret = fat_block_write(
+          fs_info,
+          cur_blk,
+          ofs_blk,
+          c,
+          &buffer[bytes_written],
+          overwrite_cluster);
+      if (c != ret)
+        rc = -1;
+      else
+      {
+          bytes_to_write -= ret;
+          bytes_written  += ret;
+          ++cur_blk;
+      }
+      ofs_blk = 0;
+    }
+    if (RC_OK != rc)
+      return rc;
+    else
+      return bytes_written;
+}
+
+static bool is_cluster_aligned(const fat_vol_t *vol, uint32_t sec_num)
+{
+    return (sec_num & (vol->spc - 1)) == 0;
 }
 
 /* fat_init_volume_info --
@@ -444,11 +539,14 @@ fat_init_volume_info(fat_fs_info_t *fs_info, const char *device)
         close(vol->fd);
         rtems_set_errno_and_return_minus_one( EINVAL );
     }
-
     for (vol->sec_mul = 0, i = (vol->bps >> FAT_SECTOR512_BITS); (i & 1) == 0;
          i >>= 1, vol->sec_mul++);
     for (vol->sec_log2 = 0, i = vol->bps; (i & 1) == 0;
          i >>= 1, vol->sec_log2++);
+
+    vol->bytes_per_block = vol->bps;
+    vol->bytes_per_block_log2 = vol->sec_log2;
+    vol->sectors_per_block = 1;
 
     vol->spc = FAT_GET_BR_SECTORS_PER_CLUSTER(boot_rec);
     /*
@@ -522,11 +620,16 @@ fat_init_volume_info(fat_fs_info_t *fs_info, const char *device)
             vol->mask = FAT_FAT16_MASK;
             vol->eoc_val = FAT_FAT16_EOC;
         }
-        else
+        else if ( vol->data_cls < FAT_FAT32_MASK - 1 )
         {
             vol->type = FAT_FAT32;
             vol->mask = FAT_FAT32_MASK;
             vol->eoc_val = FAT_FAT32_EOC;
+        }
+        else
+        {
+            close(vol->fd);
+            rtems_set_errno_and_return_minus_one( EINVAL );
         }
     }
 
@@ -574,16 +677,12 @@ fat_init_volume_info(fat_fs_info_t *fs_info, const char *device)
                     return -1;
                 }
 
-                vol->free_cls = FAT_GET_FSINFO_FREE_CLUSTER_COUNT(fs_info_sector);
-                vol->next_cl = FAT_GET_FSINFO_NEXT_FREE_CLUSTER(fs_info_sector);
-                rc = fat_fat32_update_fsinfo_sector(fs_info, 0xFFFFFFFF,
-                                                    0xFFFFFFFF);
-                if ( rc != RC_OK )
-                {
-                    _fat_block_release(fs_info);
-                    close(vol->fd);
-                    return rc;
-                }
+                vol->free_cls_in_fs_info =
+                  FAT_GET_FSINFO_FREE_CLUSTER_COUNT(fs_info_sector);
+                vol->free_cls = vol->free_cls_in_fs_info;
+                vol->next_cl_in_fs_info =
+                  FAT_GET_FSINFO_NEXT_FREE_CLUSTER(fs_info_sector);
+                vol->next_cl = vol->next_cl_in_fs_info;
             }
         }
     }
@@ -592,8 +691,8 @@ fat_init_volume_info(fat_fs_info_t *fs_info, const char *device)
         vol->rdir_cl = 0;
         vol->mirror = 0;
         vol->afat = 0;
-        vol->free_cls = 0xFFFFFFFF;
-        vol->next_cl = 0xFFFFFFFF;
+        vol->free_cls = FAT_UNDEFINED_VALUE;
+        vol->next_cl = FAT_UNDEFINED_VALUE;
     }
 
     _fat_block_release(fs_info);
@@ -642,7 +741,93 @@ fat_init_volume_info(fat_fs_info_t *fs_info, const char *device)
         rtems_set_errno_and_return_minus_one( ENOMEM );
     }
 
+    /*
+     * If possible we will use the cluster size as bdbuf block size for faster
+     * file access. This requires that certain sectors are aligned to cluster
+     * borders.
+     */
+    if (is_cluster_aligned(vol, vol->data_fsec)
+        && (FAT_FAT32 == vol->type || is_cluster_aligned(vol, vol->rdir_loc)))
+    {
+        sc = rtems_bdbuf_set_block_size (vol->dd, vol->bpc, true);
+        if (sc == RTEMS_SUCCESSFUL)
+        {
+            vol->bytes_per_block = vol->bpc;
+            vol->bytes_per_block_log2 = vol->bpc_log2;
+            vol->sectors_per_block = vol->spc;
+        }
+    }
+
     return RC_OK;
+}
+
+/* fat_fat32_update_fsinfo_sector --
+ *     Synchronize fsinfo sector for FAT32 volumes
+ *
+ * PARAMETERS:
+ *     fs_info    - FS info
+ *
+ * RETURNS:
+ *     RC_OK on success, or -1 if error occured (errno set appropriately)
+ */
+static int
+fat_fat32_update_fsinfo_sector(fat_fs_info_t *fs_info)
+{
+    ssize_t ret1 = 0, ret2 = 0;
+
+    if (fs_info->vol.type == FAT_FAT32)
+    {
+        uint32_t free_count = fs_info->vol.free_cls;
+        uint32_t next_free = fs_info->vol.next_cl;
+
+        if (free_count != fs_info->vol.free_cls_in_fs_info)
+        {
+            uint32_t le_free_count = CT_LE_L(free_count);
+
+            fs_info->vol.free_cls_in_fs_info = free_count;
+
+            ret1 = fat_sector_write(fs_info,
+                                    fs_info->vol.info_sec,
+                                    FAT_FSINFO_FREE_CLUSTER_COUNT_OFFSET,
+                                    sizeof(le_free_count),
+                                    &le_free_count);
+        }
+
+        if (next_free != fs_info->vol.next_cl_in_fs_info)
+        {
+            uint32_t le_next_free = CT_LE_L(next_free);
+
+            fs_info->vol.next_cl_in_fs_info = next_free;
+
+            ret2 = fat_sector_write(fs_info,
+                                    fs_info->vol.info_sec,
+                                    FAT_FSINFO_NEXT_FREE_CLUSTER_OFFSET,
+                                    sizeof(le_next_free),
+                                    &le_next_free);
+        }
+    }
+
+    if ( (ret1 < 0) || (ret2 < 0) )
+        return -1;
+
+    return RC_OK;
+}
+
+int
+fat_sync(fat_fs_info_t *fs_info)
+{
+    int rc = RC_OK;
+
+    rc = fat_fat32_update_fsinfo_sector(fs_info);
+    if ( rc != RC_OK )
+        rc = -1;
+
+    fat_buf_release(fs_info);
+
+    if (rtems_bdbuf_syncdev(fs_info->vol.dd) != RTEMS_SUCCESSFUL)
+        rc = -1;
+
+    return rc;
 }
 
 /* fat_shutdown_drive --
@@ -661,17 +846,8 @@ fat_shutdown_drive(fat_fs_info_t *fs_info)
     int            rc = RC_OK;
     int            i = 0;
 
-    if (fs_info->vol.type & FAT_FAT32)
-    {
-        rc = fat_fat32_update_fsinfo_sector(fs_info, fs_info->vol.free_cls,
-                                            fs_info->vol.next_cl);
-        if ( rc != RC_OK )
-            rc = -1;
-    }
-
-    fat_buf_release(fs_info);
-
-    if (rtems_bdbuf_syncdev(fs_info->vol.dd) != RTEMS_SUCCESSFUL)
+    rc = fat_sync(fs_info);
+    if ( rc != RC_OK )
         rc = -1;
 
     for (i = 0; i < FAT_HASH_SIZE; i++)
@@ -724,30 +900,23 @@ fat_init_clusters_chain(
     int                     rc = RC_OK;
     ssize_t                 ret = 0;
     uint32_t                cur_cln = start_cln;
-    char                   *buf;
-
-    buf = calloc(fs_info->vol.bpc, sizeof(char));
-    if ( buf == NULL )
-        rtems_set_errno_and_return_minus_one( EIO );
 
     while ((cur_cln & fs_info->vol.mask) < fs_info->vol.eoc_val)
     {
-        ret = fat_cluster_write(fs_info, cur_cln, buf);
-        if ( ret == -1 )
+        ret = fat_cluster_set(fs_info, cur_cln, 0, fs_info->vol.bpc, 0);
+        if ( ret != fs_info->vol.bpc )
         {
-            free(buf);
             return -1;
         }
 
         rc  = fat_get_fat_cluster(fs_info, cur_cln, &cur_cln);
         if ( rc != RC_OK )
         {
-            free(buf);
             return rc;
         }
 
     }
-    free(buf);
+
     return rc;
 }
 
@@ -848,47 +1017,4 @@ fat_ino_is_unique(
 {
 
     return (ino >= fs_info->uino_base);
-}
-
-/* fat_fat32_update_fsinfo_sector --
- *     Synchronize fsinfo sector for FAT32 volumes
- *
- * PARAMETERS:
- *     fs_info    - FS info
- *     free_count - count of free clusters
- *     next_free  - the next free cluster num
- *
- * RETURNS:
- *     RC_OK on success, or -1 if error occured (errno set appropriately)
- */
-int
-fat_fat32_update_fsinfo_sector(
-    fat_fs_info_t                        *fs_info,
-    uint32_t                              free_count,
-    uint32_t                              next_free
-    )
-{
-    ssize_t                 ret1 = 0, ret2 = 0;
-    uint32_t                le_free_count = 0;
-    uint32_t                le_next_free = 0;
-
-    le_free_count = CT_LE_L(free_count);
-    le_next_free = CT_LE_L(next_free);
-
-    ret1 = _fat_block_write(fs_info,
-                            fs_info->vol.info_sec,
-                            FAT_FSINFO_FREE_CLUSTER_COUNT_OFFSET,
-                            4,
-                            (char *)(&le_free_count));
-
-    ret2 = _fat_block_write(fs_info,
-                            fs_info->vol.info_sec,
-                            FAT_FSINFO_NEXT_FREE_CLUSTER_OFFSET,
-                            4,
-                            (char *)(&le_next_free));
-
-    if ( (ret1 < 0) || (ret2 < 0) )
-        return -1;
-
-    return RC_OK;
 }

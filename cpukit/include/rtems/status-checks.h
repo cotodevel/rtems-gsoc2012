@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * @brief Header file for status checks.
+ * @brief Header File for Status Checks
  *
  * @warning Do not include this file in other header files.  Use it only in
  * source files.
@@ -15,8 +15,9 @@
  * Germany
  * rtems@embedded-brains.de
  *
- * The license and distribution terms for this file may be found in the file
- * LICENSE in this distribution or at http://www.rtems.com/license/LICENSE.
+ * The license and distribution terms for this file may be
+ * found in the file LICENSE in this distribution or at
+ * http://www.rtems.com/license/LICENSE.
  */
 
 #ifndef RTEMS_STATUS_CHECKS_H
@@ -28,15 +29,13 @@ extern "C" {
 
 /**
  * @defgroup rtems_status_checks Status Checks
- *
- * @{
  */
+/**@{**/
 
 /**
  * @name Print Macros
- *
- * @{
  */
+/**@{**/
 
 /**
  * @brief General purpose debug print macro.
@@ -141,9 +140,8 @@ extern "C" {
 
 /**
  * @name Check Macros
- *
- * @{
  */
+/**@{**/
 
 /**
  * @brief Prints message @a msg and returns with status code @a sc if the status
@@ -247,9 +245,8 @@ extern "C" {
 
 /**
  * @name Cleanup Macros
- *
- * @{
  */
+/**@{**/
 
 /**
  * @brief Prints message @a msg and jumps to @a label if the status code @a sc

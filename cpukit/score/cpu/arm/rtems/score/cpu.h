@@ -1,16 +1,14 @@
 /**
  * @file
  *
- * @ingroup ScoreCPU
- *
- * @brief ARM architecture support API.
+ * @brief ARM Architecture Support API
  */
 
 /*
  *  This include file contains information pertaining to the ARM
  *  processor.
  *
- *  Copyright (c) 2009-2011 embedded brains GmbH.
+ *  Copyright (c) 2009-2013 embedded brains GmbH.
  *
  *  Copyright (c) 2007 Ray Xu <Rayx.cn@gmail.com>
  *
@@ -42,11 +40,10 @@
  * @ingroup ScoreCPU
  *
  * @brief ARM specific support.
- *
- * @{
  */
+/**@{**/
 
-#ifdef __thumb__
+#if defined(__thumb__) && !defined(__thumb2__)
   #define ARM_SWITCH_REGISTERS uint32_t arm_switch_reg
   #define ARM_SWITCH_TO_ARM ".align 2\nbx pc\n.arm\n"
   #define ARM_SWITCH_BACK "add %[arm_switch_reg], pc, #1\nbx %[arm_switch_reg]\n.thumb\n"
@@ -62,9 +59,8 @@
 
 /**
  * @name Program Status Register
- *
- * @{
  */
+/**@{**/
 
 #define ARM_PSR_N (1 << 31)
 #define ARM_PSR_Z (1 << 30)
@@ -97,9 +93,8 @@
 
 /**
  * @addtogroup ScoreCPU
- *
- * @{
  */
+/**@{**/
 
 /* If someone uses THUMB we assume she wants minimal code size */
 #ifdef __thumb__
@@ -133,11 +128,7 @@
 
 #define CPU_ISR_PASSES_FRAME_POINTER 0
 
-#if ( ARM_HAS_FPU == 1 )
-  #define CPU_HARDWARE_FP TRUE
-#else
-  #define CPU_HARDWARE_FP FALSE
-#endif
+#define CPU_HARDWARE_FP FALSE
 
 #define CPU_SOFTWARE_FP FALSE
 
@@ -147,7 +138,11 @@
 
 #define CPU_USE_DEFERRED_FP_SWITCH FALSE
 
-#define CPU_PROVIDES_IDLE_THREAD_BODY FALSE
+#if defined(ARM_MULTILIB_ARCH_V7M)
+  #define CPU_PROVIDES_IDLE_THREAD_BODY TRUE
+#else
+  #define CPU_PROVIDES_IDLE_THREAD_BODY FALSE
+#endif
 
 #define CPU_STACK_GROWS_UP FALSE
 
@@ -185,6 +180,9 @@
 #define CPU_STACK_MINIMUM_SIZE (1024 * 4)
 
 /* AAPCS, section 4.1, Fundamental Data Types */
+#define CPU_SIZEOF_POINTER 4
+
+/* AAPCS, section 4.1, Fundamental Data Types */
 #define CPU_ALIGNMENT 8
 
 #define CPU_HEAP_ALIGNMENT CPU_ALIGNMENT
@@ -212,6 +210,18 @@
 
 /** @} */
 
+#ifdef ARM_MULTILIB_VFP_D32
+  #define ARM_CONTEXT_CONTROL_D8_OFFSET 48
+#endif
+
+#define ARM_EXCEPTION_FRAME_SIZE 76
+
+#define ARM_EXCEPTION_FRAME_REGISTER_SP_OFFSET 52
+
+#define ARM_EXCEPTION_FRAME_VFP_CONTEXT_OFFSET 72
+
+#define ARM_VFP_CONTEXT_SIZE 264
+
 #ifndef ASM
 
 #ifdef __cplusplus
@@ -220,9 +230,8 @@ extern "C" {
 
 /**
  * @addtogroup ScoreCPU
- *
- * @{
  */
+/**@{**/
 
 typedef struct {
 #if defined(ARM_MULTILIB_ARCH_V4)
@@ -252,13 +261,21 @@ typedef struct {
 #else
   void *register_sp;
 #endif
+#ifdef ARM_MULTILIB_VFP_D32
+  uint64_t register_d8;
+  uint64_t register_d9;
+  uint64_t register_d10;
+  uint64_t register_d11;
+  uint64_t register_d12;
+  uint64_t register_d13;
+  uint64_t register_d14;
+  uint64_t register_d15;
+#endif
 } Context_Control;
 
 typedef struct {
   /* Not supported */
 } Context_Control_fp;
-
-SCORE_EXTERN Context_Control_fp _CPU_Null_fp_context;
 
 extern uint32_t arm_cpu_mode;
 
@@ -391,6 +408,9 @@ void _CPU_Context_Initialize(
      while (1);                             \
    } while (0);
 
+/**
+ * @brief CPU initialization.
+ */
 void _CPU_Initialize( void );
 
 void _CPU_ISR_install_vector(
@@ -399,6 +419,9 @@ void _CPU_ISR_install_vector(
   proc_ptr *old_handler
 );
 
+/**
+ * @brief CPU switch context.
+ */
 void _CPU_Context_switch( Context_Control *run, Context_Control *heir );
 
 void _CPU_Context_restore( Context_Control *new_context )
@@ -412,9 +435,9 @@ void _CPU_Context_restore( Context_Control *new_context )
   #define _CPU_Stop_multitasking _ARMV7M_Stop_multitasking
 #endif
 
-void _CPU_Context_save_fp( Context_Control_fp **fp_context_ptr );
+void _CPU_Context_volatile_clobber( uintptr_t pattern );
 
-void _CPU_Context_restore_fp( Context_Control_fp **fp_context_ptr );
+void _CPU_Context_validate( uintptr_t pattern );
 
 static inline uint32_t CPU_swap_u32( uint32_t value )
 {
@@ -461,37 +484,18 @@ static inline uint16_t CPU_swap_u16( uint16_t value )
 #endif
 }
 
-/** @} */
+#if CPU_PROVIDES_IDLE_THREAD_BODY == TRUE
+  void *_CPU_Thread_Idle_body( uintptr_t ignored );
+#endif
 
-#if defined(ARM_MULTILIB_ARCH_V4)
+/** @} */
 
 /**
  * @addtogroup ScoreCPUARM
- *
- * @{
  */
+/**@{**/
 
-typedef struct {
-  uint32_t r0;
-  uint32_t r1;
-  uint32_t r2;
-  uint32_t r3;
-  uint32_t r4;
-  uint32_t r5;
-  uint32_t r6;
-  uint32_t r7;
-  uint32_t r8;
-  uint32_t r9;
-  uint32_t r10;
-  uint32_t r11;
-  uint32_t r12;
-  uint32_t sp;
-  uint32_t lr;
-  uint32_t pc;
-  uint32_t cpsr;
-} arm_cpu_context;
-
-typedef void arm_exc_abort_handler( arm_cpu_context *context );
+#if defined(ARM_MULTILIB_ARCH_V4)
 
 typedef enum {
   ARM_EXCEPTION_RESET = 0,
@@ -502,76 +506,83 @@ typedef enum {
   ARM_EXCEPTION_RESERVED = 5,
   ARM_EXCEPTION_IRQ = 6,
   ARM_EXCEPTION_FIQ = 7,
-  MAX_EXCEPTIONS = 8
+  MAX_EXCEPTIONS = 8,
+  ARM_EXCEPTION_MAKE_ENUM_32_BIT = 0xffffffff
 } Arm_symbolic_exception_name;
 
-static inline uint32_t arm_status_irq_enable( void )
-{
-  uint32_t arm_switch_reg;
-  uint32_t psr;
+#endif /* defined(ARM_MULTILIB_ARCH_V4) */
 
-  RTEMS_COMPILER_MEMORY_BARRIER();
+typedef struct {
+  uint32_t register_fpexc;
+  uint32_t register_fpscr;
+  uint64_t register_d0;
+  uint64_t register_d1;
+  uint64_t register_d2;
+  uint64_t register_d3;
+  uint64_t register_d4;
+  uint64_t register_d5;
+  uint64_t register_d6;
+  uint64_t register_d7;
+  uint64_t register_d8;
+  uint64_t register_d9;
+  uint64_t register_d10;
+  uint64_t register_d11;
+  uint64_t register_d12;
+  uint64_t register_d13;
+  uint64_t register_d14;
+  uint64_t register_d15;
+  uint64_t register_d16;
+  uint64_t register_d17;
+  uint64_t register_d18;
+  uint64_t register_d19;
+  uint64_t register_d20;
+  uint64_t register_d21;
+  uint64_t register_d22;
+  uint64_t register_d23;
+  uint64_t register_d24;
+  uint64_t register_d25;
+  uint64_t register_d26;
+  uint64_t register_d27;
+  uint64_t register_d28;
+  uint64_t register_d29;
+  uint64_t register_d30;
+  uint64_t register_d31;
+} ARM_VFP_context;
 
-  __asm__ volatile (
-    ARM_SWITCH_TO_ARM
-    "mrs %[psr], cpsr\n"
-    "bic %[arm_switch_reg], %[psr], #0x80\n"
-    "msr cpsr, %[arm_switch_reg]\n"
-    ARM_SWITCH_BACK
-    : [arm_switch_reg] "=&r" (arm_switch_reg), [psr] "=&r" (psr)
-  );
-
-  return psr;
-}
-
-static inline void arm_status_restore( uint32_t psr )
-{
-  ARM_SWITCH_REGISTERS;
-
-  __asm__ volatile (
-    ARM_SWITCH_TO_ARM
-    "msr cpsr, %[psr]\n"
-    ARM_SWITCH_BACK
-    : ARM_SWITCH_OUTPUT
-    : [psr] "r" (psr)
-  );
-
-  RTEMS_COMPILER_MEMORY_BARRIER();
-}
-
-void arm_exc_data_abort_set_handler( arm_exc_abort_handler handler );
-
-void arm_exc_data_abort( void );
-
-void arm_exc_prefetch_abort_set_handler( arm_exc_abort_handler handler );
-
-void arm_exc_prefetch_abort( void );
-
-void bsp_interrupt_dispatch( void );
-
-void arm_exc_interrupt( void );
-
-void arm_exc_undefined( void );
-
-/** @} */
-
-/* XXX This is out of date */
 typedef struct {
   uint32_t register_r0;
   uint32_t register_r1;
   uint32_t register_r2;
   uint32_t register_r3;
-  uint32_t register_ip;
-  uint32_t register_lr;
+  uint32_t register_r4;
+  uint32_t register_r5;
+  uint32_t register_r6;
+  uint32_t register_r7;
+  uint32_t register_r8;
+  uint32_t register_r9;
+  uint32_t register_r10;
+  uint32_t register_r11;
+  uint32_t register_r12;
+  uint32_t register_sp;
+  void *register_lr;
+  void *register_pc;
+#if defined(ARM_MULTILIB_ARCH_V4)
+  uint32_t register_cpsr;
+  Arm_symbolic_exception_name vector;
+#elif defined(ARM_MULTILIB_ARCH_V7M)
+  uint32_t register_xpsr;
+  uint32_t vector;
+#endif
+  const ARM_VFP_context *vfp_context;
 } CPU_Exception_frame;
 
 typedef CPU_Exception_frame CPU_Interrupt_frame;
 
-#else /* !defined(ARM_MULTILIB_ARCH_V4) */
+void _CPU_Exception_frame_print( const CPU_Exception_frame *frame );
 
-typedef void CPU_Interrupt_frame;
+void _ARM_Exception_default( CPU_Exception_frame *frame );
 
-#endif /* !defined(ARM_MULTILIB_ARCH_V4) */
+/** @} */
 
 #ifdef __cplusplus
 }

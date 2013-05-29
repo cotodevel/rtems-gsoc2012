@@ -1,13 +1,15 @@
 /**
- * @file rtems/serial_mouse.h
+ * @file
+ * 
+ * @brief Serial Mouse Driver
  *
- *  This file describes the Serial Mouse Driver for all boards.
- *  This driver assumes that the BSP or application will provide
- *  an implementation of the method bsp_get_serial_mouse_device()
- *  which tells the driver what serial port device to open() and
- *  what type of mouse is connected.
+ * This file describes the Serial Mouse Driver for all boards.
+ * This driver assumes that the BSP or application will provide
+ * an implementation of the method bsp_get_serial_mouse_device()
+ * which tells the driver what serial port device to open() and
+ * what type of mouse is connected.
  *
- *  This driver relies on the Mouse Parser Engine.
+ * This driver relies on the Mouse Parser Engine.
  */
 
 /*
@@ -23,6 +25,12 @@
 #define __SERIAL_MOUSE_h__
 
 /* functions */
+
+/**
+ *  @defgroup libmisc_serialmouse Serial Mouse Driver
+ *  @ingroup libmisc_mouse
+ */
+/**@{*/
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,13 +43,13 @@ extern "C" {
     serial_mouse_read, serial_mouse_write, serial_mouse_control }
 
 /**
- *  @brief Serial Mouse Driver Initialization
+ * @brief The initialization of the serial mouse driver.
  *
- *  This method initializes the serial mouse driver.
+ * This method initializes the serial mouse driver.
  *
- *  @param[in] major is the mouse device major number
- *  @param[in] minor is the mouse device minor number
- *  @param[in] arguments points to device driver arguments
+ * @param[in] major is the mouse device major number
+ * @param[in] minor is the mouse device minor number
+ * @param[in] arg points to device driver arguments
  */
 rtems_device_driver serial_mouse_initialize(
   rtems_device_major_number  major,
@@ -50,14 +58,14 @@ rtems_device_driver serial_mouse_initialize(
 );
 
 /**
- *  @brief Serial Mouse Driver Open
+ * @brief Open device driver entry point for the serial mouse driver.
  *
- *  This method implements the Open device driver entry
- *  point for the serial mouse driver.
+ * This method implements the Open device driver entry
+ * point for the serial mouse driver.
  *
- *  @param[in] major is the mouse device major number
- *  @param[in] minor is the mouse device minor number
- *  @param[in] arguments points to device driver arguments
+ * @param[in] major is the mouse device major number
+ * @param[in] minor is the mouse device minor number
+ * @param[in] arg points to device driver arguments
  */
 rtems_device_driver serial_mouse_open(
   rtems_device_major_number  major,
@@ -66,14 +74,14 @@ rtems_device_driver serial_mouse_open(
 );
 
 /**
- *  @brief Serial Mouse Driver Close
+ * @brief Close device driver entry point for the serial mouse driver.
  *
- *  This method implements the Close device driver entry
- *  point for the serial mouse driver.
+ * This method implements the Close device driver entry
+ * point for the serial mouse driver.
  *
- *  @param[in] major is the mouse device major number
- *  @param[in] minor is the mouse device minor number
- *  @param[in] arguments points to device driver arguments
+ * @param[in] major is the mouse device major number
+ * @param[in] minor is the mouse device minor number
+ * @param[in] arg points to device driver arguments
  */
 rtems_device_driver serial_mouse_close(
   rtems_device_major_number  major,
@@ -82,14 +90,14 @@ rtems_device_driver serial_mouse_close(
 );
 
 /**
- *  @brief Serial Mouse Driver Read
+ * @brief Read device driver entry point for the serial mouse driver.
  *
- *  This method implements the Read device driver entry
- *  point for the serial mouse driver.
+ * This method implements the Read device driver entry
+ * point for the serial mouse driver.
  *
- *  @param[in] major is the mouse device major number
- *  @param[in] minor is the mouse device minor number
- *  @param[in] arguments points to device driver arguments
+ * @param[in] major is the mouse device major number
+ * @param[in] minor is the mouse device minor number
+ * @param[in] arg points to device driver arguments
  */
 rtems_device_driver serial_mouse_read(
   rtems_device_major_number  major,
@@ -98,14 +106,14 @@ rtems_device_driver serial_mouse_read(
 );
 
 /**
- *  @brief Serial Mouse Driver Write
+ * @brief Write device driver entry point for the serial mouse driver.
  *
- *  This method implements the Write device driver entry
- *  point for the serial mouse driver.
+ * This method implements the Write device driver entry
+ * point for the serial mouse driver.
  *
- *  @param[in] major is the mouse device major number
- *  @param[in] minor is the mouse device minor number
- *  @param[in] arguments points to device driver arguments
+ * @param[in] major is the mouse device major number
+ * @param[in] minor is the mouse device minor number
+ * @param[in] arg points to device driver arguments
  */
 rtems_device_driver serial_mouse_write(
   rtems_device_major_number  major,
@@ -114,14 +122,14 @@ rtems_device_driver serial_mouse_write(
 );
 
 /**
- *  @brief Serial Mouse Driver IO Control
+ * @brief IO Control device driver entry point for the serial mouse driver.
  *
- *  This method implements the IO Control device driver entry
- *  point for the serial mouse driver.
+ * This method implements the IO Control device driver entry
+ * point for the serial mouse driver.
  *
- *  @param[in] major is the mouse device major number
- *  @param[in] minor is the mouse device minor number
- *  @param[in] arguments points to device driver arguments
+ * @param[in] major is the mouse device major number
+ * @param[in] minor is the mouse device minor number
+ * @param[in] arg points to device driver arguments
  */
 rtems_device_driver serial_mouse_control(
   rtems_device_major_number  major,
@@ -130,17 +138,17 @@ rtems_device_driver serial_mouse_control(
 );
 
 /**
- *  @brief Obtain Serial Mouse Configuration Information
+ * @brief Obtain serial mouse configuration information.
  *
- *  This method is implemented by the BSP or application and
- *  tells the driver what device to open() and what type of
- *  mouse is connected.
+ * This method is implemented by the BSP or application and
+ * tells the driver what device to open() and what type of
+ * mouse is connected.
  *
- *  @param[in] name will point to a string with the device name
- *             of the serial port with the mouse connected.
- *  @param[in] type will point to a string with the type of mouse connected.
+ * @param[in] name will point to a string with the device name
+ *            of the serial port with the mouse connected.
+ * @param[in] type will point to a string with the type of mouse connected.
  *
- *  @return This method returns true on success and false on error.
+ * @retval This method returns true on success and false on error.
  */
 bool bsp_get_serial_mouse_device(
   const char **name,
@@ -150,5 +158,5 @@ bool bsp_get_serial_mouse_device(
 #ifdef __cplusplus
 }
 #endif
-
+/**@}*/
 #endif  /* __tty_drv__  */

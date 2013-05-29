@@ -47,6 +47,7 @@ extern "C" {
 #include <rtems/clockdrv.h>
 #include <rtems/iosupp.h>
 #include <bsp/vectors.h>
+#include <bsp/default-initial-extension.h>
 
 /* Constants */
 
